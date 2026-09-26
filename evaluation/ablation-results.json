@@ -1,0 +1,2562 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimensions": 384,
+  "query_count": 15,
+  "multi_document_query_count": 5,
+  "minimum_evidence_score": 0.12,
+  "global_top_k": 5,
+  "family_top_k": 3,
+  "selection_method": "global multi-document coverage, family-filtered score coverage, global coverage, family recall and family MRR; tie-break by index size, chunk count, chunk cap, warm build time, then p50 search latency",
+  "configurations": [
+    {
+      "name": "compact",
+      "chunk_words": 60,
+      "overlap_words": 10,
+      "metrics": {
+        "query_count": 15,
+        "required_family_count": 21,
+        "multi_document_query_count": 5,
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "family_recall_at_1": 0.7143,
+        "family_recall_at_3": 0.7619,
+        "family_recall_at_5": 0.7619,
+        "family_mrr": 0.7497,
+        "all_family_coverage_at_5": 0.7333,
+        "multi_document_all_family_coverage_at_5": 0.2,
+        "mean_unique_documents_top5": 1.4,
+        "mean_unique_sections_top5": 4.2,
+        "search_ms_p50": 16.776,
+        "search_ms_p95": 78.561,
+        "build_seconds_warm": 2.064,
+        "index_bytes": 1998208,
+        "filtered_all_family_coverage_at_5": 1.0,
+        "filtered_family_score_coverage": 1.0
+      },
+      "index": {
+        "status": "ready",
+        "documents": 14,
+        "chunks": 212,
+        "estimated_pages": 34.5,
+        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_provider": "huggingface",
+        "semantic_embeddings": true,
+        "embedding_error": null,
+        "dimensions": 384,
+        "chunk_words": 60,
+        "overlap_words": 10
+      },
+      "queries": [
+        {
+          "id": "remote_days",
+          "query": "international remote work rolling day limit",
+          "expected_prefixes": [
+            "POL-RW-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "security_access",
+          "query": "corporate VPN multi-factor authentication overseas",
+          "expected_prefixes": [
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "pto_carryover",
+          "query": "PTO carry over five days",
+          "expected_prefixes": [
+            "POL-PTO-"
+          ],
+          "global_family_ranks": {
+            "POL-PTO-": 1
+          },
+          "global_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_enrolment",
+          "query": "benefits qualifying life event enrolment",
+          "expected_prefixes": [
+            "POL-BEN-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "conduct_escalation",
+          "query": "harassment confidential HR escalation",
+          "expected_prefixes": [
+            "POL-CON-"
+          ],
+          "global_family_ranks": {
+            "POL-CON-": 1
+          },
+          "global_top_ids": [
+            "POL-CON-01",
+            "POL-REC-01",
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_receipts",
+          "query": "expense receipt threshold",
+          "expected_prefixes": [
+            "POL-EXP-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "service_ticket",
+          "query": "mock ticket does not contact production",
+          "expected_prefixes": [
+            "POL-SVC-"
+          ],
+          "global_family_ranks": {
+            "POL-SVC-": 1
+          },
+          "global_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "approval_matrix",
+          "query": "manager approval matrix tax immigration",
+          "expected_prefixes": [
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-APR-": 1
+          },
+          "global_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "employment_classification",
+          "query": "part-time employment classification",
+          "expected_prefixes": [
+            "POL-ONB-"
+          ],
+          "global_family_ranks": {
+            "POL-ONB-": 1
+          },
+          "global_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "medical_leave",
+          "query": "medical leave documentation privacy",
+          "expected_prefixes": [
+            "POL-LVE-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_confidential_data",
+          "query": "What controls apply when working internationally with confidential data?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 2,
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_approval_controls",
+          "query": "What approvals and security checks apply to international remote work?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1,
+            "POL-SEC-": null,
+            "POL-APR-": null
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-APR-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_approval",
+          "query": "What receipts are required for business expenses and when is manager approval needed?",
+          "expected_prefixes": [
+            "POL-EXP-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1,
+            "POL-APR-": 7
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "leave_record_privacy",
+          "query": "How should medical leave documents be handled and retained privately?",
+          "expected_prefixes": [
+            "POL-LVE-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1,
+            "POL-REC-": null
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_exception_records",
+          "query": "When can a life event change benefits enrollment and how are employee records protected?",
+          "expected_prefixes": [
+            "POL-BEN-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1,
+            "POL-REC-": 10
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-PTO-01",
+            "POL-FLX-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        }
+      ]
+    },
+    {
+      "name": "small",
+      "chunk_words": 90,
+      "overlap_words": 15,
+      "metrics": {
+        "query_count": 15,
+        "required_family_count": 21,
+        "multi_document_query_count": 5,
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "family_recall_at_1": 0.7143,
+        "family_recall_at_3": 0.7619,
+        "family_recall_at_5": 0.8095,
+        "family_mrr": 0.7595,
+        "all_family_coverage_at_5": 0.8,
+        "multi_document_all_family_coverage_at_5": 0.4,
+        "mean_unique_documents_top5": 1.6,
+        "mean_unique_sections_top5": 4.933,
+        "search_ms_p50": 18.679,
+        "search_ms_p95": 66.561,
+        "build_seconds_warm": 2.6,
+        "index_bytes": 1619168,
+        "filtered_all_family_coverage_at_5": 1.0,
+        "filtered_family_score_coverage": 1.0
+      },
+      "index": {
+        "status": "ready",
+        "documents": 14,
+        "chunks": 168,
+        "estimated_pages": 34.5,
+        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_provider": "huggingface",
+        "semantic_embeddings": true,
+        "embedding_error": null,
+        "dimensions": 384,
+        "chunk_words": 90,
+        "overlap_words": 15
+      },
+      "queries": [
+        {
+          "id": "remote_days",
+          "query": "international remote work rolling day limit",
+          "expected_prefixes": [
+            "POL-RW-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "security_access",
+          "query": "corporate VPN multi-factor authentication overseas",
+          "expected_prefixes": [
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "pto_carryover",
+          "query": "PTO carry over five days",
+          "expected_prefixes": [
+            "POL-PTO-"
+          ],
+          "global_family_ranks": {
+            "POL-PTO-": 1
+          },
+          "global_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-PTO-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_enrolment",
+          "query": "benefits qualifying life event enrolment",
+          "expected_prefixes": [
+            "POL-BEN-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "conduct_escalation",
+          "query": "harassment confidential HR escalation",
+          "expected_prefixes": [
+            "POL-CON-"
+          ],
+          "global_family_ranks": {
+            "POL-CON-": 1
+          },
+          "global_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-REC-01",
+            "POL-CON-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_receipts",
+          "query": "expense receipt threshold",
+          "expected_prefixes": [
+            "POL-EXP-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "service_ticket",
+          "query": "mock ticket does not contact production",
+          "expected_prefixes": [
+            "POL-SVC-"
+          ],
+          "global_family_ranks": {
+            "POL-SVC-": 1
+          },
+          "global_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "approval_matrix",
+          "query": "manager approval matrix tax immigration",
+          "expected_prefixes": [
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-APR-": 1
+          },
+          "global_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "employment_classification",
+          "query": "part-time employment classification",
+          "expected_prefixes": [
+            "POL-ONB-"
+          ],
+          "global_family_ranks": {
+            "POL-ONB-": 1
+          },
+          "global_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "medical_leave",
+          "query": "medical leave documentation privacy",
+          "expected_prefixes": [
+            "POL-LVE-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_confidential_data",
+          "query": "What controls apply when working internationally with confidential data?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 2,
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_approval_controls",
+          "query": "What approvals and security checks apply to international remote work?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1,
+            "POL-SEC-": null,
+            "POL-APR-": 8
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-APR-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_approval",
+          "query": "What receipts are required for business expenses and when is manager approval needed?",
+          "expected_prefixes": [
+            "POL-EXP-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1,
+            "POL-APR-": 5
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "leave_record_privacy",
+          "query": "How should medical leave documents be handled and retained privately?",
+          "expected_prefixes": [
+            "POL-LVE-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1,
+            "POL-REC-": null
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_exception_records",
+          "query": "When can a life event change benefits enrollment and how are employee records protected?",
+          "expected_prefixes": [
+            "POL-BEN-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1,
+            "POL-REC-": 8
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-FLX-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        }
+      ]
+    },
+    {
+      "name": "120/20",
+      "chunk_words": 120,
+      "overlap_words": 20,
+      "metrics": {
+        "query_count": 15,
+        "required_family_count": 21,
+        "multi_document_query_count": 5,
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "family_recall_at_1": 0.7143,
+        "family_recall_at_3": 0.7619,
+        "family_recall_at_5": 0.8095,
+        "family_mrr": 0.7604,
+        "all_family_coverage_at_5": 0.8,
+        "multi_document_all_family_coverage_at_5": 0.4,
+        "mean_unique_documents_top5": 1.6,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 11.854,
+        "search_ms_p95": 43.228,
+        "build_seconds_warm": 1.98,
+        "index_bytes": 1248368,
+        "filtered_all_family_coverage_at_5": 1.0,
+        "filtered_family_score_coverage": 1.0
+      },
+      "index": {
+        "status": "ready",
+        "documents": 14,
+        "chunks": 126,
+        "estimated_pages": 34.5,
+        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_provider": "huggingface",
+        "semantic_embeddings": true,
+        "embedding_error": null,
+        "dimensions": 384,
+        "chunk_words": 120,
+        "overlap_words": 20
+      },
+      "queries": [
+        {
+          "id": "remote_days",
+          "query": "international remote work rolling day limit",
+          "expected_prefixes": [
+            "POL-RW-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "security_access",
+          "query": "corporate VPN multi-factor authentication overseas",
+          "expected_prefixes": [
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "pto_carryover",
+          "query": "PTO carry over five days",
+          "expected_prefixes": [
+            "POL-PTO-"
+          ],
+          "global_family_ranks": {
+            "POL-PTO-": 1
+          },
+          "global_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-PTO-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_enrolment",
+          "query": "benefits qualifying life event enrolment",
+          "expected_prefixes": [
+            "POL-BEN-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "conduct_escalation",
+          "query": "harassment confidential HR escalation",
+          "expected_prefixes": [
+            "POL-CON-"
+          ],
+          "global_family_ranks": {
+            "POL-CON-": 1
+          },
+          "global_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-REC-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_receipts",
+          "query": "expense receipt threshold",
+          "expected_prefixes": [
+            "POL-EXP-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "service_ticket",
+          "query": "mock ticket does not contact production",
+          "expected_prefixes": [
+            "POL-SVC-"
+          ],
+          "global_family_ranks": {
+            "POL-SVC-": 1
+          },
+          "global_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "approval_matrix",
+          "query": "manager approval matrix tax immigration",
+          "expected_prefixes": [
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-APR-": 1
+          },
+          "global_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-RW-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "employment_classification",
+          "query": "part-time employment classification",
+          "expected_prefixes": [
+            "POL-ONB-"
+          ],
+          "global_family_ranks": {
+            "POL-ONB-": 1
+          },
+          "global_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "medical_leave",
+          "query": "medical leave documentation privacy",
+          "expected_prefixes": [
+            "POL-LVE-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_confidential_data",
+          "query": "What controls apply when working internationally with confidential data?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 2,
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_approval_controls",
+          "query": "What approvals and security checks apply to international remote work?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1,
+            "POL-SEC-": null,
+            "POL-APR-": 7
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-APR-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_approval",
+          "query": "What receipts are required for business expenses and when is manager approval needed?",
+          "expected_prefixes": [
+            "POL-EXP-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1,
+            "POL-APR-": 5
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "leave_record_privacy",
+          "query": "How should medical leave documents be handled and retained privately?",
+          "expected_prefixes": [
+            "POL-LVE-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1,
+            "POL-REC-": null
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_exception_records",
+          "query": "When can a life event change benefits enrollment and how are employee records protected?",
+          "expected_prefixes": [
+            "POL-BEN-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1,
+            "POL-REC-": 8
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-FLX-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        }
+      ]
+    },
+    {
+      "name": "large",
+      "chunk_words": 160,
+      "overlap_words": 24,
+      "metrics": {
+        "query_count": 15,
+        "required_family_count": 21,
+        "multi_document_query_count": 5,
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "family_recall_at_1": 0.7143,
+        "family_recall_at_3": 0.7619,
+        "family_recall_at_5": 0.8095,
+        "family_mrr": 0.7604,
+        "all_family_coverage_at_5": 0.8,
+        "multi_document_all_family_coverage_at_5": 0.4,
+        "mean_unique_documents_top5": 1.6,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 13.628,
+        "search_ms_p95": 46.988,
+        "build_seconds_warm": 2.021,
+        "index_bytes": 1248368,
+        "filtered_all_family_coverage_at_5": 1.0,
+        "filtered_family_score_coverage": 1.0
+      },
+      "index": {
+        "status": "ready",
+        "documents": 14,
+        "chunks": 126,
+        "estimated_pages": 34.5,
+        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_provider": "huggingface",
+        "semantic_embeddings": true,
+        "embedding_error": null,
+        "dimensions": 384,
+        "chunk_words": 160,
+        "overlap_words": 24
+      },
+      "queries": [
+        {
+          "id": "remote_days",
+          "query": "international remote work rolling day limit",
+          "expected_prefixes": [
+            "POL-RW-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "security_access",
+          "query": "corporate VPN multi-factor authentication overseas",
+          "expected_prefixes": [
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "pto_carryover",
+          "query": "PTO carry over five days",
+          "expected_prefixes": [
+            "POL-PTO-"
+          ],
+          "global_family_ranks": {
+            "POL-PTO-": 1
+          },
+          "global_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-PTO-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_enrolment",
+          "query": "benefits qualifying life event enrolment",
+          "expected_prefixes": [
+            "POL-BEN-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "conduct_escalation",
+          "query": "harassment confidential HR escalation",
+          "expected_prefixes": [
+            "POL-CON-"
+          ],
+          "global_family_ranks": {
+            "POL-CON-": 1
+          },
+          "global_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-REC-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_receipts",
+          "query": "expense receipt threshold",
+          "expected_prefixes": [
+            "POL-EXP-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "service_ticket",
+          "query": "mock ticket does not contact production",
+          "expected_prefixes": [
+            "POL-SVC-"
+          ],
+          "global_family_ranks": {
+            "POL-SVC-": 1
+          },
+          "global_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "approval_matrix",
+          "query": "manager approval matrix tax immigration",
+          "expected_prefixes": [
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-APR-": 1
+          },
+          "global_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-RW-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "employment_classification",
+          "query": "part-time employment classification",
+          "expected_prefixes": [
+            "POL-ONB-"
+          ],
+          "global_family_ranks": {
+            "POL-ONB-": 1
+          },
+          "global_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "medical_leave",
+          "query": "medical leave documentation privacy",
+          "expected_prefixes": [
+            "POL-LVE-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_confidential_data",
+          "query": "What controls apply when working internationally with confidential data?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 2,
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_approval_controls",
+          "query": "What approvals and security checks apply to international remote work?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1,
+            "POL-SEC-": null,
+            "POL-APR-": 7
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-APR-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_approval",
+          "query": "What receipts are required for business expenses and when is manager approval needed?",
+          "expected_prefixes": [
+            "POL-EXP-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1,
+            "POL-APR-": 5
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "leave_record_privacy",
+          "query": "How should medical leave documents be handled and retained privately?",
+          "expected_prefixes": [
+            "POL-LVE-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1,
+            "POL-REC-": null
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_exception_records",
+          "query": "When can a life event change benefits enrollment and how are employee records protected?",
+          "expected_prefixes": [
+            "POL-BEN-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1,
+            "POL-REC-": 8
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-FLX-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        }
+      ]
+    },
+    {
+      "name": "broad",
+      "chunk_words": 220,
+      "overlap_words": 30,
+      "metrics": {
+        "query_count": 15,
+        "required_family_count": 21,
+        "multi_document_query_count": 5,
+        "hit_at_1": 1.0,
+        "hit_at_3": 1.0,
+        "hit_at_5": 1.0,
+        "family_recall_at_1": 0.7143,
+        "family_recall_at_3": 0.7619,
+        "family_recall_at_5": 0.8095,
+        "family_mrr": 0.7604,
+        "all_family_coverage_at_5": 0.8,
+        "multi_document_all_family_coverage_at_5": 0.4,
+        "mean_unique_documents_top5": 1.6,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 13.269,
+        "search_ms_p95": 44.561,
+        "build_seconds_warm": 2.019,
+        "index_bytes": 1248368,
+        "filtered_all_family_coverage_at_5": 1.0,
+        "filtered_family_score_coverage": 1.0
+      },
+      "index": {
+        "status": "ready",
+        "documents": 14,
+        "chunks": 126,
+        "estimated_pages": 34.5,
+        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_provider": "huggingface",
+        "semantic_embeddings": true,
+        "embedding_error": null,
+        "dimensions": 384,
+        "chunk_words": 220,
+        "overlap_words": 30
+      },
+      "queries": [
+        {
+          "id": "remote_days",
+          "query": "international remote work rolling day limit",
+          "expected_prefixes": [
+            "POL-RW-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "security_access",
+          "query": "corporate VPN multi-factor authentication overseas",
+          "expected_prefixes": [
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "pto_carryover",
+          "query": "PTO carry over five days",
+          "expected_prefixes": [
+            "POL-PTO-"
+          ],
+          "global_family_ranks": {
+            "POL-PTO-": 1
+          },
+          "global_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-PTO-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_enrolment",
+          "query": "benefits qualifying life event enrolment",
+          "expected_prefixes": [
+            "POL-BEN-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "conduct_escalation",
+          "query": "harassment confidential HR escalation",
+          "expected_prefixes": [
+            "POL-CON-"
+          ],
+          "global_family_ranks": {
+            "POL-CON-": 1
+          },
+          "global_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-REC-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-CON-01",
+            "POL-CON-01",
+            "POL-CON-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_receipts",
+          "query": "expense receipt threshold",
+          "expected_prefixes": [
+            "POL-EXP-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "service_ticket",
+          "query": "mock ticket does not contact production",
+          "expected_prefixes": [
+            "POL-SVC-"
+          ],
+          "global_family_ranks": {
+            "POL-SVC-": 1
+          },
+          "global_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "approval_matrix",
+          "query": "manager approval matrix tax immigration",
+          "expected_prefixes": [
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-APR-": 1
+          },
+          "global_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-RW-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-APR-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "employment_classification",
+          "query": "part-time employment classification",
+          "expected_prefixes": [
+            "POL-ONB-"
+          ],
+          "global_family_ranks": {
+            "POL-ONB-": 1
+          },
+          "global_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-ONB-01",
+            "POL-ONB-01",
+            "POL-ONB-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "medical_leave",
+          "query": "medical leave documentation privacy",
+          "expected_prefixes": [
+            "POL-LVE-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_confidential_data",
+          "query": "What controls apply when working internationally with confidential data?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 2,
+            "POL-SEC-": 1
+          },
+          "global_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01",
+            "POL-RW-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "international_approval_controls",
+          "query": "What approvals and security checks apply to international remote work?",
+          "expected_prefixes": [
+            "POL-RW-",
+            "POL-SEC-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-RW-": 1,
+            "POL-SEC-": null,
+            "POL-APR-": 7
+          },
+          "global_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-APR-01",
+            "POL-SEC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "expense_approval",
+          "query": "What receipts are required for business expenses and when is manager approval needed?",
+          "expected_prefixes": [
+            "POL-EXP-",
+            "POL-APR-"
+          ],
+          "global_family_ranks": {
+            "POL-EXP-": 1,
+            "POL-APR-": 5
+          },
+          "global_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-APR-01",
+            "POL-APR-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "leave_record_privacy",
+          "query": "How should medical leave documents be handled and retained privately?",
+          "expected_prefixes": [
+            "POL-LVE-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-LVE-": 1,
+            "POL-REC-": null
+          },
+          "global_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-PTO-01",
+            "POL-LVE-01",
+            "POL-LVE-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-LVE-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        },
+        {
+          "id": "benefit_exception_records",
+          "query": "When can a life event change benefits enrollment and how are employee records protected?",
+          "expected_prefixes": [
+            "POL-BEN-",
+            "POL-REC-"
+          ],
+          "global_family_ranks": {
+            "POL-BEN-": 1,
+            "POL-REC-": 8
+          },
+          "global_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-FLX-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "each_family_has_score_at_least_0_12": true,
+          "filtered_top_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-REC-01",
+            "POL-REC-01"
+          ],
+          "filtered_all_families_at_5": true
+        }
+      ]
+    }
+  ],
+  "selected_configuration": {
+    "name": "120/20",
+    "chunk_words": 120,
+    "overlap_words": 20,
+    "metrics": {
+      "query_count": 15,
+      "required_family_count": 21,
+      "multi_document_query_count": 5,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "family_recall_at_1": 0.7143,
+      "family_recall_at_3": 0.7619,
+      "family_recall_at_5": 0.8095,
+      "family_mrr": 0.7604,
+      "all_family_coverage_at_5": 0.8,
+      "multi_document_all_family_coverage_at_5": 0.4,
+      "mean_unique_documents_top5": 1.6,
+      "mean_unique_sections_top5": 5,
+      "search_ms_p50": 11.854,
+      "search_ms_p95": 43.228,
+      "build_seconds_warm": 1.98,
+      "index_bytes": 1248368,
+      "filtered_all_family_coverage_at_5": 1.0,
+      "filtered_family_score_coverage": 1.0
+    },
+    "index": {
+      "status": "ready",
+      "documents": 14,
+      "chunks": 126,
+      "estimated_pages": 34.5,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_provider": "huggingface",
+      "semantic_embeddings": true,
+      "embedding_error": null,
+      "dimensions": 384,
+      "chunk_words": 120,
+      "overlap_words": 20
+    },
+    "queries": [
+      {
+        "id": "remote_days",
+        "query": "international remote work rolling day limit",
+        "expected_prefixes": [
+          "POL-RW-"
+        ],
+        "global_family_ranks": {
+          "POL-RW-": 1
+        },
+        "global_top_ids": [
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "security_access",
+        "query": "corporate VPN multi-factor authentication overseas",
+        "expected_prefixes": [
+          "POL-SEC-"
+        ],
+        "global_family_ranks": {
+          "POL-SEC-": 1
+        },
+        "global_top_ids": [
+          "POL-SEC-01",
+          "POL-SEC-01",
+          "POL-RW-01",
+          "POL-SEC-01",
+          "POL-RW-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-SEC-01",
+          "POL-SEC-01",
+          "POL-SEC-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "pto_carryover",
+        "query": "PTO carry over five days",
+        "expected_prefixes": [
+          "POL-PTO-"
+        ],
+        "global_family_ranks": {
+          "POL-PTO-": 1
+        },
+        "global_top_ids": [
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-LVE-01",
+          "POL-PTO-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-PTO-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "benefit_enrolment",
+        "query": "benefits qualifying life event enrolment",
+        "expected_prefixes": [
+          "POL-BEN-"
+        ],
+        "global_family_ranks": {
+          "POL-BEN-": 1
+        },
+        "global_top_ids": [
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "conduct_escalation",
+        "query": "harassment confidential HR escalation",
+        "expected_prefixes": [
+          "POL-CON-"
+        ],
+        "global_family_ranks": {
+          "POL-CON-": 1
+        },
+        "global_top_ids": [
+          "POL-CON-01",
+          "POL-CON-01",
+          "POL-REC-01",
+          "POL-CON-01",
+          "POL-CON-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-CON-01",
+          "POL-CON-01",
+          "POL-CON-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "expense_receipts",
+        "query": "expense receipt threshold",
+        "expected_prefixes": [
+          "POL-EXP-"
+        ],
+        "global_family_ranks": {
+          "POL-EXP-": 1
+        },
+        "global_top_ids": [
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "service_ticket",
+        "query": "mock ticket does not contact production",
+        "expected_prefixes": [
+          "POL-SVC-"
+        ],
+        "global_family_ranks": {
+          "POL-SVC-": 1
+        },
+        "global_top_ids": [
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "approval_matrix",
+        "query": "manager approval matrix tax immigration",
+        "expected_prefixes": [
+          "POL-APR-"
+        ],
+        "global_family_ranks": {
+          "POL-APR-": 1
+        },
+        "global_top_ids": [
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-RW-01",
+          "POL-APR-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-APR-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "employment_classification",
+        "query": "part-time employment classification",
+        "expected_prefixes": [
+          "POL-ONB-"
+        ],
+        "global_family_ranks": {
+          "POL-ONB-": 1
+        },
+        "global_top_ids": [
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "medical_leave",
+        "query": "medical leave documentation privacy",
+        "expected_prefixes": [
+          "POL-LVE-"
+        ],
+        "global_family_ranks": {
+          "POL-LVE-": 1
+        },
+        "global_top_ids": [
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-PTO-01",
+          "POL-LVE-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "international_confidential_data",
+        "query": "What controls apply when working internationally with confidential data?",
+        "expected_prefixes": [
+          "POL-RW-",
+          "POL-SEC-"
+        ],
+        "global_family_ranks": {
+          "POL-RW-": 2,
+          "POL-SEC-": 1
+        },
+        "global_top_ids": [
+          "POL-SEC-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-SEC-01",
+          "POL-RW-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-SEC-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-SEC-01",
+          "POL-RW-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "international_approval_controls",
+        "query": "What approvals and security checks apply to international remote work?",
+        "expected_prefixes": [
+          "POL-RW-",
+          "POL-SEC-",
+          "POL-APR-"
+        ],
+        "global_family_ranks": {
+          "POL-RW-": 1,
+          "POL-SEC-": null,
+          "POL-APR-": 7
+        },
+        "global_top_ids": [
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-APR-01",
+          "POL-SEC-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "expense_approval",
+        "query": "What receipts are required for business expenses and when is manager approval needed?",
+        "expected_prefixes": [
+          "POL-EXP-",
+          "POL-APR-"
+        ],
+        "global_family_ranks": {
+          "POL-EXP-": 1,
+          "POL-APR-": 5
+        },
+        "global_top_ids": [
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-APR-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-APR-01",
+          "POL-APR-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "leave_record_privacy",
+        "query": "How should medical leave documents be handled and retained privately?",
+        "expected_prefixes": [
+          "POL-LVE-",
+          "POL-REC-"
+        ],
+        "global_family_ranks": {
+          "POL-LVE-": 1,
+          "POL-REC-": null
+        },
+        "global_top_ids": [
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-PTO-01",
+          "POL-LVE-01",
+          "POL-LVE-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-REC-01",
+          "POL-REC-01"
+        ],
+        "filtered_all_families_at_5": true
+      },
+      {
+        "id": "benefit_exception_records",
+        "query": "When can a life event change benefits enrollment and how are employee records protected?",
+        "expected_prefixes": [
+          "POL-BEN-",
+          "POL-REC-"
+        ],
+        "global_family_ranks": {
+          "POL-BEN-": 1,
+          "POL-REC-": 8
+        },
+        "global_top_ids": [
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-FLX-01",
+          "POL-BEN-01",
+          "POL-BEN-01"
+        ],
+        "each_family_has_score_at_least_0_12": true,
+        "filtered_top_ids": [
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-REC-01",
+          "POL-REC-01"
+        ],
+        "filtered_all_families_at_5": true
+      }
+    ]
+  }
+}

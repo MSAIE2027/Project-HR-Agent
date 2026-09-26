@@ -1,0 +1,703 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimensions": 384,
+  "chunk_words": 120,
+  "overlap_words": 20,
+  "corpus_chunks": 126,
+  "query_count": 15,
+  "multi_document_query_count": 5,
+  "minimum_evidence_score": 0.12,
+  "top_k_values": [
+    1,
+    3,
+    5,
+    8
+  ],
+  "ranking_weights": {
+    "current": {
+      "weights": {
+        "dense": 1.0,
+        "lexical_ratio": 0.08,
+        "title_hits": 0.025,
+        "phrase": 0.08
+      },
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.333,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.6,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.9048,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 2.333,
+          "mean_unique_sections": 8.0
+        }
+      }
+    },
+    "dense_only": {
+      "weights": {
+        "dense": 1.0,
+        "lexical_ratio": 0.0,
+        "title_hits": 0.0,
+        "phrase": 0.0
+      },
+      "top_k": {
+        "1": {
+          "hit_at_k": 0.9333,
+          "family_recall_at_k": 0.6667,
+          "all_family_coverage_at_k": 0.6,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.4,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.867,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.9048,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 2.867,
+          "mean_unique_sections": 8.0
+        }
+      }
+    },
+    "cosine_half": {
+      "weights": {
+        "dense": 0.5,
+        "lexical_ratio": 0.08,
+        "title_hits": 0.025,
+        "phrase": 0.08
+      },
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.267,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.533,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 2.067,
+          "mean_unique_sections": 8.0
+        }
+      }
+    },
+    "cosine_2x": {
+      "weights": {
+        "dense": 2.0,
+        "lexical_ratio": 0.08,
+        "title_hits": 0.025,
+        "phrase": 0.08
+      },
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.467,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.733,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.9048,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 2.533,
+          "mean_unique_sections": 8.0
+        }
+      }
+    },
+    "lexical_2x": {
+      "weights": {
+        "dense": 1.0,
+        "lexical_ratio": 0.16,
+        "title_hits": 0.05,
+        "phrase": 0.16
+      },
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.267,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.533,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 2.067,
+          "mean_unique_sections": 8.0
+        }
+      }
+    }
+  },
+  "mmr_comparison": {
+    "0.7": {
+      "candidate_pool": 10,
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.267,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.667,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.9048,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 2.267,
+          "mean_unique_sections": 8.0
+        }
+      }
+    },
+    "0.5": {
+      "candidate_pool": 10,
+      "top_k": {
+        "1": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.7143,
+          "all_family_coverage_at_k": 0.6667,
+          "multi_document_all_family_coverage_at_k": 0.0,
+          "mean_unique_documents": 1.0,
+          "mean_unique_sections": 1.0
+        },
+        "3": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8095,
+          "all_family_coverage_at_k": 0.8,
+          "multi_document_all_family_coverage_at_k": 0.4,
+          "mean_unique_documents": 1.4,
+          "mean_unique_sections": 3.0
+        },
+        "5": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.8571,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 1.667,
+          "mean_unique_sections": 5.0
+        },
+        "8": {
+          "hit_at_k": 1.0,
+          "family_recall_at_k": 0.9048,
+          "all_family_coverage_at_k": 0.8667,
+          "multi_document_all_family_coverage_at_k": 0.6,
+          "mean_unique_documents": 2.2,
+          "mean_unique_sections": 8.0
+        }
+      }
+    }
+  },
+  "actual_route": {
+    "expected_family_recall": 1.0,
+    "all_family_query_coverage": 1.0,
+    "multi_document_all_family_coverage": 1.0,
+    "retrieval_methods": [
+      "huggingface_dense_cosine"
+    ],
+    "queries": [
+      {
+        "id": "remote_days",
+        "expected_prefixes": [
+          "POL-RW-"
+        ],
+        "selected_prefixes": [
+          "POL-RW-"
+        ],
+        "citation_ids": [
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "security_access",
+        "expected_prefixes": [
+          "POL-SEC-"
+        ],
+        "selected_prefixes": [
+          "POL-SEC-"
+        ],
+        "citation_ids": [
+          "POL-SEC-01",
+          "POL-SEC-01",
+          "POL-SEC-01",
+          "POL-SEC-01",
+          "POL-SEC-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "pto_carryover",
+        "expected_prefixes": [
+          "POL-PTO-"
+        ],
+        "selected_prefixes": [
+          "POL-PTO-"
+        ],
+        "citation_ids": [
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-PTO-01",
+          "POL-PTO-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "benefit_enrolment",
+        "expected_prefixes": [
+          "POL-BEN-"
+        ],
+        "selected_prefixes": [
+          "POL-BEN-"
+        ],
+        "citation_ids": [
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-BEN-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "conduct_escalation",
+        "expected_prefixes": [
+          "POL-CON-"
+        ],
+        "selected_prefixes": [
+          "POL-CON-"
+        ],
+        "citation_ids": [
+          "POL-CON-01",
+          "POL-CON-01",
+          "POL-CON-01",
+          "POL-CON-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "escalated"
+      },
+      {
+        "id": "expense_receipts",
+        "expected_prefixes": [
+          "POL-EXP-"
+        ],
+        "selected_prefixes": [
+          "POL-EXP-"
+        ],
+        "citation_ids": [
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-EXP-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "service_ticket",
+        "expected_prefixes": [
+          "POL-SVC-"
+        ],
+        "selected_prefixes": [
+          "POL-SVC-"
+        ],
+        "citation_ids": [
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01",
+          "POL-SVC-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "approval_matrix",
+        "expected_prefixes": [
+          "POL-APR-"
+        ],
+        "selected_prefixes": [
+          "POL-APR-"
+        ],
+        "citation_ids": [
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-APR-01",
+          "POL-APR-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "employment_classification",
+        "expected_prefixes": [
+          "POL-ONB-"
+        ],
+        "selected_prefixes": [
+          "POL-ONB-"
+        ],
+        "citation_ids": [
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01",
+          "POL-ONB-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "medical_leave",
+        "expected_prefixes": [
+          "POL-LVE-"
+        ],
+        "selected_prefixes": [
+          "POL-LVE-"
+        ],
+        "citation_ids": [
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-LVE-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "international_confidential_data",
+        "expected_prefixes": [
+          "POL-RW-",
+          "POL-SEC-"
+        ],
+        "selected_prefixes": [
+          "POL-SEC-",
+          "POL-RW-"
+        ],
+        "citation_ids": [
+          "POL-SEC-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-SEC-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "international_approval_controls",
+        "expected_prefixes": [
+          "POL-RW-",
+          "POL-SEC-",
+          "POL-APR-"
+        ],
+        "selected_prefixes": [
+          "POL-SEC-",
+          "POL-APR-",
+          "POL-RW-"
+        ],
+        "citation_ids": [
+          "POL-SEC-01",
+          "POL-APR-01",
+          "POL-RW-01",
+          "POL-RW-01",
+          "POL-RW-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "expense_approval",
+        "expected_prefixes": [
+          "POL-EXP-",
+          "POL-APR-"
+        ],
+        "selected_prefixes": [
+          "POL-EXP-",
+          "POL-APR-"
+        ],
+        "citation_ids": [
+          "POL-EXP-01",
+          "POL-APR-01",
+          "POL-EXP-01",
+          "POL-EXP-01",
+          "POL-APR-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "leave_record_privacy",
+        "expected_prefixes": [
+          "POL-LVE-",
+          "POL-REC-"
+        ],
+        "selected_prefixes": [
+          "POL-LVE-",
+          "POL-REC-"
+        ],
+        "citation_ids": [
+          "POL-LVE-01",
+          "POL-REC-01",
+          "POL-LVE-01",
+          "POL-LVE-01",
+          "POL-REC-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      },
+      {
+        "id": "benefit_exception_records",
+        "expected_prefixes": [
+          "POL-BEN-",
+          "POL-REC-"
+        ],
+        "selected_prefixes": [
+          "POL-BEN-",
+          "POL-REC-"
+        ],
+        "citation_ids": [
+          "POL-BEN-01",
+          "POL-REC-01",
+          "POL-BEN-01",
+          "POL-BEN-01",
+          "POL-REC-01"
+        ],
+        "all_expected_families_cited": true,
+        "status": "completed"
+      }
+    ],
+    "read_only_golden_policy_subset": {
+      "item_count": 6,
+      "status_accuracy": 1.0,
+      "citation_prefix_accuracy": 1.0,
+      "groundedness_proxy": 1.0,
+      "items": [
+        {
+          "id": "POL-01",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01",
+            "POL-PTO-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 1.0,
+          "groundedness_pass": true
+        },
+        {
+          "id": "POL-02",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01",
+            "POL-EXP-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 1.0,
+          "groundedness_pass": true
+        },
+        {
+          "id": "POL-03",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01",
+            "POL-BEN-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 1.0,
+          "groundedness_pass": true
+        },
+        {
+          "id": "POL-04",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-SEC-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 0.5,
+          "groundedness_pass": true
+        },
+        {
+          "id": "POL-05",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01",
+            "POL-SEC-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 1.0,
+          "groundedness_pass": true
+        },
+        {
+          "id": "POL-06",
+          "status": "completed",
+          "status_pass": true,
+          "citation_ids": [
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01",
+            "POL-SVC-01"
+          ],
+          "citation_accuracy_pass": true,
+          "keyword_score": 1.0,
+          "groundedness_pass": true
+        }
+      ]
+    }
+  },
+  "baseline_top5_order_mismatch_ids": [],
+  "baseline_top10_candidate_set_mismatch_ids": [],
+  "methodology": [
+    "Retrieval comparison and read-only route verification; MiniLM 384d and 120/20 chunks are fixed.",
+    "Weight variants rescore every chunk using the production cosine, lexical overlap, title-hit, and exact-phrase components.",
+    "MMR reranks the production-score top 10 using chunk-to-chunk embedding cosine; lambda controls relevance versus diversity.",
+    "Actual orchestrator routing is exercised only on policy questions; execution aborts if any tool besides policy search is selected.",
+    "The route searches the top three results per selected family, seeds one result per family, then MMR-reranks up to ten candidates to five at lambda 0.5.",
+    "Expected family labels are hand-authored and do not constitute independent semantic answer judgments."
+  ]
+}

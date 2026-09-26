@@ -1,0 +1,58 @@
+[
+  {
+    "employee_id": "E1001",
+    "available_days": 14,
+    "accrued_days": 20,
+    "carried_days": 2,
+    "used_days": 8
+  },
+  {
+    "employee_id": "E1002",
+    "available_days": 8,
+    "accrued_days": 8,
+    "carried_days": 0,
+    "used_days": 0
+  },
+  {
+    "employee_id": "E1003",
+    "available_days": 0,
+    "accrued_days": 0,
+    "carried_days": 0,
+    "used_days": 0
+  },
+  {
+    "employee_id": "E1004",
+    "available_days": 7,
+    "accrued_days": 10,
+    "carried_days": 1,
+    "used_days": 4
+  },
+  {
+    "employee_id": "E1005",
+    "available_days": 22,
+    "accrued_days": 20,
+    "carried_days": 5,
+    "used_days": 3
+  },
+  {
+    "employee_id": "E1006",
+    "available_days": 0,
+    "accrued_days": 0,
+    "carried_days": 0,
+    "used_days": 0
+  },
+  {
+    "employee_id": "E1007",
+    "available_days": 11,
+    "accrued_days": 20,
+    "carried_days": 0,
+    "used_days": 9
+  },
+  {
+    "employee_id": "E1008",
+    "available_days": 6,
+    "accrued_days": 8,
+    "carried_days": 0,
+    "used_days": 2
+  }
+]

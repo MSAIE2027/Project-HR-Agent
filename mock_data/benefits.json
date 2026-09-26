@@ -1,0 +1,58 @@
+[
+  {
+    "employee_id": "E1001",
+    "status": "enrolled",
+    "medical_plan": "MSAIE Core",
+    "dental_plan": "MSAIE Dental",
+    "next_action": "No action required"
+  },
+  {
+    "employee_id": "E1002",
+    "status": "eligible-not-enrolled",
+    "medical_plan": "None",
+    "dental_plan": "None",
+    "next_action": "Review the 30-day new-hire enrolment window"
+  },
+  {
+    "employee_id": "E1003",
+    "status": "not-eligible",
+    "medical_plan": "None",
+    "dental_plan": "None",
+    "next_action": "Refer to contract terms"
+  },
+  {
+    "employee_id": "E1004",
+    "status": "pending-hours-review",
+    "medical_plan": "Pending",
+    "dental_plan": "Pending",
+    "next_action": "HR must validate weekly hours"
+  },
+  {
+    "employee_id": "E1005",
+    "status": "enrolled",
+    "medical_plan": "MSAIE Plus",
+    "dental_plan": "MSAIE Dental",
+    "next_action": "No action required"
+  },
+  {
+    "employee_id": "E1006",
+    "status": "not-eligible",
+    "medical_plan": "None",
+    "dental_plan": "None",
+    "next_action": "Intern programme benefits do not include these plans"
+  },
+  {
+    "employee_id": "E1007",
+    "status": "enrolled",
+    "medical_plan": "MSAIE Core",
+    "dental_plan": "MSAIE Dental",
+    "next_action": "No action required"
+  },
+  {
+    "employee_id": "E1008",
+    "status": "eligible-not-enrolled",
+    "medical_plan": "None",
+    "dental_plan": "None",
+    "next_action": "Contact HR before the enrolment deadline"
+  }
+]

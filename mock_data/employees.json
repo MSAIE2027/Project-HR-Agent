@@ -1,0 +1,98 @@
+[
+  {
+    "employee_id": "E1001",
+    "name": "Maya Chen",
+    "employment_type": "full-time",
+    "months_service": 26,
+    "office_id": "SG-01",
+    "country": "Singapore",
+    "manager_id": "M2001",
+    "manager_email": "manager.one@example.invalid",
+    "remote_days_used_rolling_12m": 4,
+    "data_access": "standard"
+  },
+  {
+    "employee_id": "E1002",
+    "name": "Noah Williams",
+    "employment_type": "full-time",
+    "months_service": 4,
+    "office_id": "AU-01",
+    "country": "Australia",
+    "manager_id": "M2001",
+    "manager_email": "manager.one@example.invalid",
+    "remote_days_used_rolling_12m": 0,
+    "data_access": "standard"
+  },
+  {
+    "employee_id": "E1003",
+    "name": "Aisha Rahman",
+    "employment_type": "contractor",
+    "months_service": 18,
+    "office_id": "MY-01",
+    "country": "Malaysia",
+    "manager_id": "M2002",
+    "manager_email": "manager.two@example.invalid",
+    "remote_days_used_rolling_12m": 12,
+    "data_access": "restricted"
+  },
+  {
+    "employee_id": "E1004",
+    "name": "Lucas Silva",
+    "employment_type": "part-time",
+    "months_service": 11,
+    "office_id": "UK-01",
+    "country": "United Kingdom",
+    "manager_id": "M2002",
+    "manager_email": "manager.two@example.invalid",
+    "remote_days_used_rolling_12m": 2,
+    "data_access": "standard"
+  },
+  {
+    "employee_id": "E1005",
+    "name": "Sofia Alvarez",
+    "employment_type": "full-time",
+    "months_service": 72,
+    "office_id": "US-01",
+    "country": "United States",
+    "manager_id": "M2003",
+    "manager_email": "manager.three@example.invalid",
+    "remote_days_used_rolling_12m": 19,
+    "data_access": "restricted"
+  },
+  {
+    "employee_id": "E1006",
+    "name": "Haruto Sato",
+    "employment_type": "intern",
+    "months_service": 3,
+    "office_id": "JP-01",
+    "country": "Japan",
+    "manager_id": "M2003",
+    "manager_email": "manager.three@example.invalid",
+    "remote_days_used_rolling_12m": 0,
+    "data_access": "standard"
+  },
+  {
+    "employee_id": "E1007",
+    "name": "Amara Okafor",
+    "employment_type": "full-time",
+    "months_service": 38,
+    "office_id": "DE-01",
+    "country": "Germany",
+    "manager_id": "M2004",
+    "manager_email": "manager.four@example.invalid",
+    "remote_days_used_rolling_12m": 6,
+    "data_access": "standard"
+  },
+  {
+    "employee_id": "E1008",
+    "name": "Ethan Tan",
+    "employment_type": "fixed-term",
+    "months_service": 8,
+    "office_id": "SG-01",
+    "country": "Singapore",
+    "manager_id": "M2004",
+    "manager_email": "manager.four@example.invalid",
+    "remote_days_used_rolling_12m": 1,
+    "data_access": "standard"
+  }
+]

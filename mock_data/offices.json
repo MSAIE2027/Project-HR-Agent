@@ -1,0 +1,44 @@
+[
+  {
+    "office_id": "SG-01",
+    "city": "Singapore",
+    "timezone": "Asia/Singapore",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "AU-01",
+    "city": "Sydney",
+    "timezone": "Australia/Sydney",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "MY-01",
+    "city": "Kuala Lumpur",
+    "timezone": "Asia/Kuala_Lumpur",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "UK-01",
+    "city": "London",
+    "timezone": "Europe/London",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "US-01",
+    "city": "Seattle",
+    "timezone": "America/Los_Angeles",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "JP-01",
+    "city": "Tokyo",
+    "timezone": "Asia/Tokyo",
+    "emergency_route": "local emergency services then fictional security desk"
+  },
+  {
+    "office_id": "DE-01",
+    "city": "Berlin",
+    "timezone": "Europe/Berlin",
+    "emergency_route": "local emergency services then fictional security desk"
+  }
+]
