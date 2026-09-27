@@ -85,6 +85,17 @@ with TestClient(app) as client:
         assert response.status_code == 503
         assert "required OpenRouter configuration" in response.json()["detail"]
 
+    def test_readiness_checks_live_mcp_discovery(monkeypatch) -> None:
+        async def unavailable_discovery():
+            raise main_module.MCPGatewayError("MCP stdio connection failed")
+
+        monkeypatch.setattr(app.state.mcp_gateway, "discover", unavailable_discovery)
+
+        response = client.get("/health/ready")
+
+        assert response.status_code == 503
+        assert "must be ready" in response.json()["detail"]
+
     def test_malformed_openrouter_authority_is_degraded_not_internal_error(monkeypatch) -> None:
         monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://[invalid/api/v1")
         monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-secret-not-real")
@@ -123,6 +134,58 @@ with TestClient(app) as client:
         assert ".example-strip[hidden] { display: none; }" in response.text
         assert "exampleStrip.hidden = true" in response.text
         assert client.get("/legacy").status_code == 404
+
+    def test_stdio_chat_reuses_mcp_process_and_reports_disconnect(monkeypatch) -> None:
+        import mcp.client.stdio as stdio_module
+
+        monkeypatch.setenv("MSAIE_MCP_TRANSPORT", "stdio")
+        original_stdio_client = stdio_module.stdio_client
+        original_gateway = app.state.mcp_gateway
+        original_mcp = app.state.mcp
+        process_starts = 0
+
+        def count_stdio_process_starts(parameters):
+            nonlocal process_starts
+            process_starts += 1
+            return original_stdio_client(parameters)
+
+        monkeypatch.setattr(stdio_module, "stdio_client", count_stdio_process_starts)
+        try:
+            with TestClient(app) as stdio_app:
+                first = stdio_app.post(
+                    "/chat",
+                    json={"message": "How many PTO days do full-time employees accrue?"},
+                )
+                second = stdio_app.post(
+                    "/chat",
+                    json={"message": "What remote-work reviews are required for E1001?"},
+                )
+                assert first.status_code == second.status_code == 200
+                assert first.json()["mcp"]["transport"] == "stdio"
+                assert second.json()["mcp"]["transport"] == "stdio"
+                assert first.json()["citations"] and second.json()["citations"]
+                assert process_starts == 1
+
+                gateway = app.state.mcp_gateway
+
+                class DisconnectedSession:
+                    async def list_tools(self):
+                        raise main_module.MCPGatewayError("simulated stdio process exit")
+
+                gateway._persistent_session = DisconnectedSession()
+                failed = stdio_app.post(
+                    "/chat",
+                    json={"message": "How many PTO days do full-time employees accrue?"},
+                )
+                assert failed.status_code == 200
+                assert failed.json()["status"] == "mcp_unavailable"
+                assert gateway._persistent_session is not None
+                assert stdio_app.get("/health/ready").status_code == 503
+                assert process_starts == 1
+        finally:
+            # TestClient shares app.state when nested inside the module-level client.
+            app.state.mcp_gateway = original_gateway
+            app.state.mcp = original_mcp
 
     def test_index_browser_exposes_sqlite_document_and_chunk_rows_without_vectors() -> None:
         documents_response = client.get("/api/index/documents")
@@ -357,7 +420,7 @@ with TestClient(app) as client:
         captured: dict = {}
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -405,7 +468,7 @@ with TestClient(app) as client:
         captured: dict = {}
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -440,7 +503,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -461,7 +524,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -517,7 +580,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -579,7 +642,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -633,7 +696,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -695,7 +758,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -749,7 +812,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
@@ -798,7 +861,7 @@ with TestClient(app) as client:
         )
 
         class FakeOrchestrator:
-            def __init__(self) -> None:
+            def __init__(self, gateway=None) -> None:
                 pass
 
             async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:

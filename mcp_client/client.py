@@ -3,7 +3,8 @@ from __future__ import annotations
 import json
 import os
 import sys
-from contextlib import asynccontextmanager
+from asyncio import Lock
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, AsyncIterator
@@ -60,11 +61,23 @@ class _StdioSession:
         self.session = session
 
     async def list_tools(self) -> list[str]:
-        response = await self.session.list_tools()
+        try:
+            response = await self.session.list_tools()
+        except Exception as exc:
+            raise MCPGatewayError(
+                f"MCP tool discovery failed: {type(exc).__name__}: {exc}"
+            ) from exc
         return sorted(tool.name for tool in response.tools)
 
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        result = await self.session.call_tool(name, arguments)
+        try:
+            result = await self.session.call_tool(name, arguments)
+        except MCPGatewayError:
+            raise
+        except Exception as exc:
+            raise MCPGatewayError(
+                f"MCP tool call {name} failed: {type(exc).__name__}: {exc}"
+            ) from exc
         if getattr(result, "isError", False):
             message = " ".join(getattr(item, "text", "") for item in result.content)
             raise MCPGatewayError(message or f"MCP tool {name} returned an error")
@@ -88,27 +101,87 @@ class MCPGateway:
         self.transport = (transport or os.getenv("MSAIE_MCP_TRANSPORT", "stdio")).lower()
         if self.transport not in {"stdio", "inprocess"}:
             raise ValueError("MSAIE_MCP_TRANSPORT must be 'stdio' or 'inprocess'")
+        self._session_lock = Lock()
+        self._persistent_stack: AsyncExitStack | None = None
+        self._persistent_session: _StdioSession | None = None
+        self._persistent_mode = False
+
+    def _stdio_parameters(self) -> Any:
+        from mcp import StdioServerParameters
+
+        environment = dict(os.environ)
+        existing = environment.get("PYTHONPATH", "")
+        environment["PYTHONPATH"] = str(ROOT) + (os.pathsep + existing if existing else "")
+        return StdioServerParameters(
+            command=sys.executable,
+            args=["-m", "mcp_server.server"],
+            env=environment,
+        )
+
+    async def start(self) -> None:
+        """Start one stdio server for this gateway's managed application lifetime."""
+        if self.transport == "inprocess":
+            self._persistent_mode = True
+            return
+        self._persistent_mode = True
+        try:
+            from mcp import ClientSession
+            from mcp.client.stdio import stdio_client
+        except ImportError as exc:
+            raise MCPGatewayError("The official MCP Python SDK is not installed") from exc
+
+        async with self._session_lock:
+            if self._persistent_session is not None:
+                return
+            stack = AsyncExitStack()
+            try:
+                read_stream, write_stream = await stack.enter_async_context(
+                    stdio_client(self._stdio_parameters())
+                )
+                session = await stack.enter_async_context(ClientSession(read_stream, write_stream))
+                await session.initialize()
+            except Exception as exc:
+                await stack.aclose()
+                if isinstance(exc, MCPGatewayError):
+                    raise
+                raise MCPGatewayError(
+                    f"MCP stdio connection failed: {type(exc).__name__}: {exc}"
+                ) from exc
+            self._persistent_stack = stack
+            self._persistent_session = _StdioSession(session)
+
+    async def close(self) -> None:
+        """Stop the managed stdio process when its owning application shuts down."""
+        if not self._persistent_mode or self.transport == "inprocess":
+            self._persistent_mode = False
+            return
+        async with self._session_lock:
+            stack = self._persistent_stack
+            self._persistent_stack = None
+            self._persistent_session = None
+            self._persistent_mode = False
+            if stack is not None:
+                await stack.aclose()
 
     @asynccontextmanager
     async def session(self) -> AsyncIterator[Any]:
         if self.transport == "inprocess":
             yield _InProcessSession()
             return
+        if self._persistent_mode:
+            await self.start()
+            async with self._session_lock:
+                if self._persistent_session is None:
+                    raise MCPGatewayError("The managed MCP stdio session is unavailable")
+                yield self._persistent_session
+            return
         try:
-            from mcp import ClientSession, StdioServerParameters
+            from mcp import ClientSession
             from mcp.client.stdio import stdio_client
         except ImportError as exc:
             raise MCPGatewayError("The official MCP Python SDK is not installed") from exc
-        environment = dict(os.environ)
-        existing = environment.get("PYTHONPATH", "")
-        environment["PYTHONPATH"] = str(ROOT) + (os.pathsep + existing if existing else "")
-        parameters = StdioServerParameters(
-            command=sys.executable,
-            args=["-m", "mcp_server.server"],
-            env=environment,
-        )
         try:
-            async with stdio_client(parameters) as (read_stream, write_stream):
+            async with stdio_client(self._stdio_parameters()) as (read_stream, write_stream):
                 async with ClientSession(read_stream, write_stream) as session:
                     await session.initialize()
                     yield _StdioSession(session)

@@ -9,10 +9,10 @@ flowchart LR
     User[Employee] --> UI[Browser chat and SQLite viewer]
     UI --> API[FastAPI]
 
-    subgraph Service["One local or Render Python service"]
+    subgraph Service["Python app service · required stdio path"]
         API --> Agent[Deterministic orchestrator<br/>privacy, routing, confirmation]
         Agent --> Client[Official MCP client]
-        Client <-->|stdio tools/list and tools/call| Server[FastMCP server]
+        Client <-->|stdio tools/list and tools/call| Server[FastMCP server<br/>one process per app lifetime]
         Server --> Tools[Typed HR and policy tools]
         Tools --> Records[(Synthetic employee<br/>PTO and benefits records)]
         Tools --> Query[Local MiniLM query embedding]
@@ -43,7 +43,7 @@ flowchart LR
     class Validate,Answer,Fail output
 ```
 
-**At a glance:** retrieval and embeddings are local; SQLite stores policy vectors and citation metadata; synthetic HR tools provide typed records through real MCP calls; OpenRouter is the required final answer composer. Refusals that stop before evidence retrieval do not call the LLM. The composer cannot authorize actions, and invalid or unavailable generation fails closed.
+**At a glance:** retrieval and embeddings are local; SQLite stores policy vectors and citation metadata; in the required stdio path, synthetic HR tools run in one reused official MCP process; OpenRouter is the required final answer composer. The local quick-start defaults to in-process MCP, while CI and Render use stdio. Refusals that stop before evidence retrieval do not call the LLM. The composer cannot authorize actions, and invalid or unavailable generation fails closed.
 
 ### Data and storage
 

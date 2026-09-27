@@ -25,11 +25,16 @@ from rag.index import get_index
 async def lifespan(app: FastAPI):
     app.state.index = get_index().ensure()
     gateway = MCPGateway()
+    app.state.mcp_gateway = gateway
     try:
+        await gateway.start()
         app.state.mcp = await gateway.discover()
     except MCPGatewayError as exc:
         app.state.mcp = {"status": "unavailable", "transport": gateway.transport, "error": str(exc), "tools": []}
-    yield
+    try:
+        yield
+    finally:
+        await gateway.close()
 
 
 app = FastAPI(
@@ -57,6 +62,10 @@ class ChatResponse(BaseModel):
     llm: dict[str, Any]
 
 
+def _mcp_gateway() -> MCPGateway:
+    return getattr(app.state, "mcp_gateway", None) or MCPGateway()
+
+
 def _llm_failure_response(
     detail: str,
     *,
@@ -80,10 +89,10 @@ def _llm_failure_response(
 
 
 @app.get("/health")
-async def health(deep: bool = Query(False)) -> dict[str, Any]:
+async def health(deep: bool = Query(True)) -> dict[str, Any]:
     mcp_status = getattr(app.state, "mcp", {"status": "unknown", "tools": []})
     if deep:
-        gateway = MCPGateway()
+        gateway = _mcp_gateway()
         try:
             mcp_status = await gateway.discover()
             app.state.mcp = mcp_status
@@ -110,7 +119,7 @@ async def health(deep: bool = Query(False)) -> dict[str, Any]:
 
 @app.get("/health/ready")
 async def readiness() -> dict[str, Any]:
-    report = await health(deep=False)
+    report = await health(deep=True)
     if report["status"] != "ok":
         raise HTTPException(
             status_code=503,
@@ -121,7 +130,7 @@ async def readiness() -> dict[str, Any]:
 
 @app.get("/api/tools")
 async def tools() -> dict[str, Any]:
-    gateway = MCPGateway()
+    gateway = _mcp_gateway()
     try:
         return await gateway.discover()
     except MCPGatewayError as exc:
@@ -168,7 +177,7 @@ def index_document_chunks(
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> dict[str, Any]:
     reset_refinement_status()
-    orchestrator = MSAIEOrchestrator()
+    orchestrator = MSAIEOrchestrator(_mcp_gateway())
     result = await orchestrator.handle(request.message, request.confirm_action)
 
     provider = get_provider()

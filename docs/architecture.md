@@ -2,7 +2,7 @@
 
 ## Request lifecycle
 
-The browser calls the FastAPI app in app/main.py. The application starts the SQLite policy index and discovers the configured tool set. Each chat request is routed through agent/orchestrator.py, which chooses tools, checks structured results, retrieves policy evidence, applies safety and confirmation rules, and produces a controlled draft.
+The browser calls the FastAPI app in app/main.py. The application starts the SQLite policy index and discovers the configured tool set. In the required demo and Render stdio configuration, the FastAPI lifespan also starts one managed MCP process and reuses it for requests. The local quick-start defaults to in-process MCP. Each chat request is routed through agent/orchestrator.py, which chooses tools, checks structured results, retrieves policy evidence, applies safety and confirmation rules, and produces a controlled draft.
 
 Every successful citation-bearing answer passes through the required OpenRouter response-generation step. The chain tries `qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, and `google/gemma-4-26b-a4b-it:free`, followed by `openrouter/free`. OpenRouter receives the controlled draft, retrieved policy text, and structured facts; citation metadata stays on the application response. The model formats and enriches the draft, but cannot select tools, change eligibility, or authorize an action. Deterministic checks preserve workflow status, supported numbers, and required safety language. They reject detectable process narration and truncated output; these checks are not semantic entailment judgments. If every route fails or returns invalid output, `/chat` returns HTTP 503 without exposing the draft. Requests refused before retrieval stop before the LLM.
 
@@ -47,7 +47,10 @@ sequenceDiagram
 The server registers eight typed tools on the MCP SDK FastMCP server.
 
 - inprocess calls functions through TOOL_REGISTRY directly. It is the local default and does not validate MCP serialization or protocol behavior.
-- stdio starts mcp_server.server as a subprocess. The official MCP client initializes the session, discovers tools, and calls them over stdio.
+- stdio starts one `mcp_server.server` subprocess for the FastAPI app lifetime. The official MCP client initializes the session once, discovers tools, and reuses the session for chat requests. A lock serializes each orchestrated tool sequence over that shared session; app shutdown closes it. This keeps the MiniLM model resident and avoids creating another Python model process for every turn.
+- Standalone smoke and evaluation callers that do not manage an app lifetime may still use a temporary stdio session.
+
+If the persistent MCP connection fails, the current request returns an explicit MCP-unavailable result. `/health/ready` performs live MCP discovery so an exited child process is not reported as ready; restart the service to create a fresh session. The first policy search after app start may load MiniLM in the long-lived MCP process; later turns reuse those model weights and SQLite connections. The app serializes MCP tool sequences while leaving answer generation outside that lock. The deployment record tracks whether this lifecycle fits the Render memory limit.
 
 ## Retrieval
 

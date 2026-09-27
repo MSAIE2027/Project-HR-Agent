@@ -56,11 +56,11 @@ flowchart LR
     class Validate,Answer,Fail outcome
 ```
 
-The app, orchestrator, MCP subprocess, JSON records, and SQLite index run in one service. MiniLM weights are downloaded from Hugging Face and inference runs locally; OpenRouter is the external text-generation provider. Every successful citation-bearing response passes through OpenRouter and deterministic validation. Refusals that stop before retrieval do not call the provider.
+The app, orchestrator, JSON records, and SQLite index run in one service. In the required demo and Render stdio configuration, one lifecycle-managed MCP subprocess runs alongside the app; the local quick-start defaults to in-process MCP. MiniLM weights are downloaded from Hugging Face and inference runs locally; OpenRouter is the external text-generation provider. Every successful citation-bearing response passes through OpenRouter and deterministic validation. Refusals that stop before retrieval do not call the provider.
 
 ## MCP transport behavior
 
-The local default is in-process. It calls TOOL_REGISTRY functions directly and does not exercise MCP serialization or protocol negotiation. The stdio option launches mcp_server.server as a subprocess, discovers tools through the official MCP client, and exercises FastMCP over the protocol.
+The local default is in-process. It calls TOOL_REGISTRY functions directly and does not exercise MCP serialization or protocol negotiation. The app's stdio mode starts one `mcp_server.server` subprocess for the FastAPI lifespan, discovers tools through the official MCP client, reuses the session for requests, and closes it at shutdown. A lock serializes each tool sequence over the shared session. One-off smoke and evaluation callers that do not manage an app lifetime use temporary stdio sessions.
 
 The retrieval comparison does not change MCP transport or dependencies.
 
