@@ -133,7 +133,7 @@
 
 - Full local suite: **117 passed**, one third-party Starlette/AnyIO deprecation warning, against the pinned MiniLM INT8 ONNX SQLite index.
 - Focused smoke-verifier, LLM, and public `/chat` fallback suite: **52 passed**.
-- `git diff --check` passed. Full GitHub Actions for the published verifier change is pending.
+- `git diff --check` passed. Full GitHub Actions run [36353250083](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36353250083) passed all jobs on `83dbb50`, including the pinned-index build, full suite, MCP smoke, and both golden evaluations. The Render deploy job was skipped because the deploy gate is disabled.
 
 ## Review — tokenizer configuration and readiness
 

@@ -18,6 +18,8 @@
 
 The current hosted answer path has now been exercised after the OpenRouter daily cap: the request trace showed the account-quota 429 and OpenCode's actual resolved model. The template response path also appeared for a supported read-only request. The smoke verifier accepts a SQLite response only when the allow-listed `remote_work_eligible` key, provider, response mode, cache hit, upstream provider, template version, and matching trace event agree. It checks the complete configured OpenRouter/OpenCode route sequence, allowing direct handoff only after a traced account-quota 429. Confirmation-gated PTO still requires live generation and fails closed if every model is unavailable. Credentials and provider response bodies were not retained.
 
+The verifier update is published on main at `83dbb50` and passed full [GitHub Actions run 36353250083](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36353250083). Render remains on runtime `703a180` (`dep-daso4le0tbcc7389lbm0`); the deploy job was skipped because automatic deployment is disabled, and this update did not change runtime behavior.
+
 ## Earlier preflight before OpenCode credential update: 071dfb8
 
 **Date:** 2026-09-27 | **Service:** [Project-HR-Agent](https://project-hr-agent.onrender.com) | **Deployed commit:** `eeceda7132bf64545f51a0a61f00fc0c332eaed2` | **CI:** [run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed | **Render deployment:** `dep-dasl2lh7lnhs739ltkb0` | **Command:** `./.venv/bin/python scripts/smoke_hosted_demo.py --timeout 90` | **Inputs:** synthetic employee IDs only
