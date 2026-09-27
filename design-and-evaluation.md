@@ -118,7 +118,7 @@ Dense local embeddings use cosine similarity plus bounded lexical and title sign
 
 ## Deployment choice
 
-`render.yaml` describes one free-tier Python web service containing the UI/API, orchestrator, stdio MCP server, synthetic JSON data, and SQLite policy index. The index is built with the service image; no paid database or separate MCP host is required. Credentials are supplied as environment variables. This keeps the deployment within the course's single-service free-tier option while preserving the real MCP protocol path. The hosted service's cold-start latency has not been isolated; local startup and stdio timings below are not Render cold-start measurements. Live readiness and hosted answer-generation acceptance are tracked separately in [`deployed.md`](deployed.md).
+`render.yaml` describes one free-tier Python web service containing the UI/API, orchestrator, stdio MCP server, synthetic JSON data, and SQLite policy index. The index is built with the service image; no paid database or separate MCP host is required. Credentials are supplied as environment variables. This keeps the deployment within the course's single-service free-tier option while preserving the real MCP protocol path. One hosted Free wake-to-ready sample took 33.466 seconds; it is a single observation, not a typical latency or percentile. Local startup and stdio timings below are not Render cold-start measurements. Live readiness and hosted answer-generation acceptance are tracked separately in [`deployed.md`](deployed.md).
 
 ## Refiner fact contract
 

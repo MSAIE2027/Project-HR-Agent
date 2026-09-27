@@ -57,8 +57,18 @@ The live home page showed **Service online**. `/health/ready`, `/api/index/docum
 
 That earlier preflight passed both privacy refusals, then attempted remote-work generation. All four routes (`qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, `google/gemma-4-26b-a4b-it:free`, and `openrouter/free`) returned HTTP 429; the public API returned HTTP 503 with `llm_refinement.status=unavailable` and no resolved model. The app withheld its draft, and the preflight stopped before PTO. No confirmation-gated action was enabled. The user later replaced the local and Render keys; this older run does not establish their current quota.
 
+## Render Free-plan wake and OpenCode recheck (2026-09-27)
+
+Render service metadata confirmed the web compute plan is Free (plan=free) with one instance; buildPlan=starter is the separate build-pipeline tier. Render documents a 15-minute idle spin-down threshold and says startup takes about one minute ([Free service limits](https://render.com/docs/free)). Application logs were quiet from 21:21:40 UTC until a new process started at 22:09:49.932 UTC; the exact platform sleep event was not exposed.
+
+A readiness-only probe started at 22:09:28.687832 UTC and first returned HTTP 200 at 22:10:02.155213 UTC (**33.466 seconds**, three attempts). The first post-wake read-only chat took **16.216 seconds**, returned HTTP 200 with five citations and status provisionally_eligible, and used the SQLite cached_template route because live model routes failed. This was a successful app response, but not LLM generation.
+
+After the OpenCode credential update, a separate read-only request on the already-warm instance ran from 22:18:02.042895 to 22:18:08.715677 UTC (**6.672 seconds**). It returned HTTP 200, five citations, status provisionally_eligible, and completed refinement from provider opencode-zen, model space-bunny-free, after OpenRouter account quota and four model attempts. The expected policy-search, profile, and compliance tools ran; no confirmation-gated action ran. Answer text and credential values were excluded.
+
+These are individual observations, not an SLA, percentile, or capacity benchmark. The 33.466-second result measures wake-to-ready round-trip. The 16.216-second chat used SQLite, while the successful 6.672-second OpenCode chat ran on the warm instance; do not report either as a cold-start-to-live-model-answer time.
+
 ## Remaining demo gates
 
-The latest hosted smoke passed privacy refusals, remote-work guidance, and the unconfirmed PTO draft. The presenter can demonstrate the confirmed fictional email step using the explicit confirmation control; it creates only a mock draft and sends no message. Hosted cold-start duration remains unmeasured, and the private repository still needs course-grader read access. Free model availability varied during this check; the safe SQLite template can answer only supported read-only requests, while confirmation-gated actions fail closed if live generation is unavailable.
+The latest hosted smoke passed privacy refusals, remote-work guidance, and the unconfirmed PTO draft. The presenter can demonstrate the confirmed fictional email step using the explicit confirmation control; it creates only a mock draft and sends no message. One hosted wake-to-ready sample is recorded above, while typical startup latency remains unknown. The private repository still needs course-grader read access. Free model availability varies; the safe SQLite template can answer only supported read-only requests, while confirmation-gated actions fail closed if live generation is unavailable.
 
 The live smoke command and its CLI contract tests are [`scripts/smoke_hosted_demo.py`](../scripts/smoke_hosted_demo.py) and [`tests/test_hosted_smoke_cli.py`](../tests/test_hosted_smoke_cli.py). A successful local provider example is recorded in [`openrouter-chain-smoke.md`](openrouter-chain-smoke.md); it does not establish current hosted availability.
