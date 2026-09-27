@@ -6,9 +6,17 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from pathlib import Path
+import sys
 from typing import Any
 
 import httpx
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from agent.llm_routes import OPENROUTER_MODEL_CHAIN, OPENCODE_ZEN_MODELS
 
 
 REQUIRED_TOOLS = {
@@ -142,6 +150,9 @@ def _cached_template_summary(payload: dict[str, Any]) -> dict[str, Any] | None:
         return None
 
     traced_models: list[str] = []
+    router_models: list[str] = []
+    opencode_models: list[str] = []
+    opencode_started = False
     for attempt in model_attempts:
         if not isinstance(attempt, dict):
             return None
@@ -151,14 +162,45 @@ def _cached_template_summary(payload: dict[str, Any]) -> dict[str, Any] | None:
             return None
         provider = attempt.get("provider")
         if provider == "opencode-zen":
+            opencode_started = True
+            opencode_models.append(model)
             traced_models.append(f"opencode/{model}")
         elif provider is None:
+            if opencode_started:
+                return None
+            router_models.append(model)
             traced_models.append(model)
         else:
             return None
     if traced_models != attempted_models:
         return None
+    failure_scope = refinement.get("failure_scope")
+    quota_handoff = failure_scope == "account_quota"
+    quota_attempts = [
+        index
+        for index, attempt in enumerate(model_attempts)
+        if attempt.get("failure_scope") == "account_quota"
+    ]
+    if failure_scope not in {None, "account_quota"}:
+        return None
+    if quota_handoff:
+        if (
+            router_models != [OPENROUTER_MODEL_CHAIN[0]]
+            or quota_attempts != [0]
+            or model_attempts[0].get("failure_scope") != "account_quota"
+            or model_attempts[0].get("http_status") != "429"
+        ):
+            return None
+    elif quota_attempts or router_models != list(OPENROUTER_MODEL_CHAIN):
+        return None
+    expected_opencode_models = (
+        list(OPENCODE_ZEN_MODELS) if upstream == "openrouter+opencode-zen" else []
+    )
+    if opencode_models != expected_opencode_models:
+        return None
     if any(event.get(field) != refinement.get(field) for field in ("attempted_models", "model_attempts", "attempts")):
+        return None
+    if event.get("failure_scope") != failure_scope:
         return None
     if len(_model_attempt_summaries(payload)) != attempts:
         return None

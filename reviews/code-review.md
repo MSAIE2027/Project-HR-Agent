@@ -111,6 +111,30 @@
 
 **Review summary:** Standards — 0 confirmed hard violations; 3 judgment-call smells. Spec — 2 findings fixed and covered by regression tests; no remaining implementation mismatch identified.
 
+## Follow-up — fallback-chain trace completeness
+
+**Review date:** 2026-09-27
+
+**Code baseline:** `a24154d` (user-confirmed); follow-up verifier changes build on `6dfa1eb`.
+
+**Review scope:** The SQLite-template acceptance check in the hosted smoke CLI.
+
+### Standards
+
+- The smoke CLI and provider runtime now share the default route lists from `agent/llm_routes.py`, avoiding a second independently maintained model list.
+- No additional repository-standard violation or actionable design smell was found in this focused change.
+
+### Spec
+
+- Follow-up review found the verifier could accept mutually consistent but truncated model-attempt traces. The verifier now requires the full OpenRouter chain before OpenCode for model/provider failures, or exactly one first-route OpenRouter `account_quota` 429 followed by the complete configured OpenCode chain. It rejects unreported quota markers and provider-order mismatches.
+- The public `/chat` regression still verifies a model-scoped 429 exhausts the four OpenRouter routes before OpenCode. The verifier's ten trace-contract variants cover full and truncated routes, quota attribution, ordering, and trace consistency.
+
+### Verification
+
+- Full local suite: **117 passed**, one third-party Starlette/AnyIO deprecation warning, against the pinned MiniLM INT8 ONNX SQLite index.
+- Focused smoke-verifier, LLM, and public `/chat` fallback suite: **52 passed**.
+- `git diff --check` passed. Full GitHub Actions for the published verifier change is pending.
+
 ## Review — tokenizer configuration and readiness
 
 **Review date:** 2026-09-27

@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from agent.llm_routes import OPENROUTER_MODEL_CHAIN, OPENCODE_ZEN_MODELS
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SMOKE_SCRIPT = PROJECT_ROOT / "scripts" / "smoke_hosted_demo.py"
@@ -50,6 +52,61 @@ PRIVATE_ANSWER_SENTINEL = "PRIVATE_SYNTHETIC_ANSWER_MUST_NOT_BE_PRINTED"
 PROVIDER_BODY_SENTINEL = "RAW_PROVIDER_BODY_MUST_NOT_BE_PRINTED"
 
 
+def _cached_route_overrides(
+    router_models: list[str],
+    opencode_models: list[str],
+    *,
+    failure_scope: str | None = None,
+) -> dict[str, Any]:
+    model_attempts = [
+        {
+            "model": model,
+            "outcome": "unavailable",
+            "error_type": "HTTPStatusError",
+            "http_status": "429",
+            **({"failure_scope": "account_quota"} if failure_scope and index == 0 else {}),
+        }
+        for index, model in enumerate(router_models)
+    ]
+    model_attempts.extend(
+        {
+            "provider": "opencode-zen",
+            "model": model,
+            "outcome": "unavailable",
+            "error_type": "HTTPStatusError",
+            "http_status": "403",
+        }
+        for model in opencode_models
+    )
+    return {
+        "failure_scope": failure_scope,
+        "attempted_models": [
+            *router_models,
+            *(f"opencode/{model}" for model in opencode_models),
+        ],
+        "attempts": len(model_attempts),
+        "model_attempts": model_attempts,
+    }
+
+
+def _misreported_quota_route_overrides() -> dict[str, Any]:
+    overrides = _cached_route_overrides(list(OPENROUTER_MODEL_CHAIN), list(OPENCODE_ZEN_MODELS))
+    overrides["model_attempts"][0]["failure_scope"] = "account_quota"
+    return overrides
+
+
+def _reordered_route_overrides() -> dict[str, Any]:
+    overrides = _cached_route_overrides(list(OPENROUTER_MODEL_CHAIN), list(OPENCODE_ZEN_MODELS))
+    router_attempts = overrides["model_attempts"][: len(OPENROUTER_MODEL_CHAIN)]
+    opencode_attempts = overrides["model_attempts"][len(OPENROUTER_MODEL_CHAIN) :]
+    overrides["model_attempts"] = [*opencode_attempts, *router_attempts]
+    overrides["attempted_models"] = [
+        *(f"opencode/{model}" for model in OPENCODE_ZEN_MODELS),
+        *OPENROUTER_MODEL_CHAIN,
+    ]
+    return overrides
+
+
 def _chat_response(
     *,
     status: str,
@@ -86,6 +143,7 @@ def _chat_response(
                 "upstream_provider": "openrouter+opencode-zen",
                 "model": None,
                 "cache_hit": True,
+                "failure_scope": "account_quota",
                 "response_mode": "sqlite_template",
                 "template_key": template_key or "remote_work_positive_v1",
                 "template_version": "1",
@@ -369,12 +427,44 @@ def test_hosted_smoke_cli_does_not_confirm_mock_email_by_default() -> None:
     ("refinement_overrides", "trace_refinement_overrides", "expected_status"),
     [
         ({}, {}, "passed"),
+        (
+            _cached_route_overrides([OPENROUTER_MODEL_CHAIN[0]], list(OPENCODE_ZEN_MODELS)),
+            {},
+            "failed",
+        ),
+        (
+            _cached_route_overrides(list(OPENROUTER_MODEL_CHAIN), list(OPENCODE_ZEN_MODELS)),
+            {},
+            "passed",
+        ),
+        (
+            _cached_route_overrides(
+                [OPENROUTER_MODEL_CHAIN[0]],
+                list(OPENCODE_ZEN_MODELS[:1]),
+                failure_scope="account_quota",
+            ),
+            {},
+            "failed",
+        ),
+        (_misreported_quota_route_overrides(), {}, "failed"),
+        (_reordered_route_overrides(), {}, "failed"),
         ({}, {"upstream_provider": "openrouter"}, "failed"),
         ({}, {"template_version": "2"}, "failed"),
         ({"model_attempts": []}, {}, "failed"),
         ({"attempted_models": ["qwen/qwen3.8-27b:free"]}, {}, "failed"),
     ],
-    ids=["complete-trace", "upstream-mismatch", "version-mismatch", "no-attempts", "attempt-count-mismatch"],
+    ids=[
+        "complete-trace",
+        "truncated-model-scoped-chain",
+        "complete-model-scoped-chain",
+        "truncated-opencode-quota-handoff",
+        "unreported-account-quota",
+        "provider-order-mismatch",
+        "upstream-mismatch",
+        "version-mismatch",
+        "no-attempts",
+        "attempt-count-mismatch",
+    ],
 )
 def test_hosted_smoke_cli_requires_consistent_sqlite_trace_and_attempts(
     refinement_overrides: dict[str, Any],
@@ -439,7 +529,7 @@ def test_hosted_smoke_cli_requires_consistent_sqlite_trace_and_attempts(
         assert remote_work["template_key"] == "remote_work_eligible"
         assert remote_work["template_version"] == "1"
         assert remote_work["upstream_provider"] == "openrouter+opencode-zen"
-        assert remote_work["attempts"] == 4
+        assert remote_work["attempts"] == refinement_overrides.get("attempts", 4)
         assert report["checks"][3]["response_source"] == "live_model"
     else:
         assert result.returncode == 1
