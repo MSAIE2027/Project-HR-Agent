@@ -1,8 +1,8 @@
-# Hosted PTO Smoke — Failed Closed at LLM Generation
+# Hosted PTO Smoke Evidence — Chronological
 
 **Date:** 2026-09-27
-**Hosted SHA:** `1130dde62a5751c2fd64ee19092c2b16f7c4dfed`
-**Render deploy:** `dep-das9kd59fdbs73cfutpg` (`live`)
+**Initial hosted SHA:** `1130dde62a5751c2fd64ee19092c2b16f7c4dfed`
+**Initial Render deploy:** `dep-das9kd59fdbs73cfutpg` (`live` at capture time)
 **Service:** `https://project-hr-agent.onrender.com`
 **Data:** Synthetic employee `E1001`; no real employee records were used.
 
@@ -120,6 +120,16 @@ A separate local orchestration run used the real spawned stdio MCP server for sy
 
 A local, fresh stdio MCP process discovered the eight tools in 1.3 seconds; its first Hugging Face dense policy search took 10.4 seconds while the child process loaded `sentence-transformers/all-MiniLM-L6-v2`. The current web request opens a fresh stdio process per chat. This is a concrete cold-path cost to address and measure; it does not alone explain the hosted timeouts and provider 429 responses.
 
+## Latest hosted release — 2026-09-27
+
+GitHub Actions run [36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067) passed on commit `6ce0da8fd3d410d5a1093006463b5896d114fea4`. Render deployment `dep-dasdc7fpn0mc73fu752g` is live on that exact commit. `GET /health/ready` returned HTTP 200 with a ready 14-document, 182-chunk, 384-dimensional Hugging Face MiniLM index and all eight stdio MCP tools.
+
+The hosted UI and SQLite inspection path are also available: `GET /` returned HTTP 200 with the Evaluator & Test Lab, `/api/index/documents` returned 14 documents and 182 chunks with `vectors_exposed=false`, and `/api/index/documents/POL-PTO-01/chunks` returned 13 text rows with vectors omitted.
+
+A synthetic PTO balance request for `E1002` returned HTTP 503 after 79.2 seconds. Its tool sequence was `search_policy_documents`, `lookup_employee_profile`, `check_pto_balance`, and `check_policy_compliance`. Each configured route (`qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, `google/gemma-4-26b-a4b-it:free`, and `openrouter/free`) returned HTTP 429. No citations or resolved model were returned; the application withheld the unrefined draft.
+
+The local `.env` key authenticated successfully with `GET https://openrouter.ai/api/v1/key`. Sanitized metadata reported `is_free_tier=true`, `free_model_daily_requests.limit=50`, `used=51`, and `remaining=0`. OpenRouter currently lists 50 requests per day for its Free plan ([pricing](https://openrouter.ai/pricing/)). This gives a likely explanation for local free-route failures and is consistent with the hosted 429 pattern; the metadata check used the local key and did not read back or compare Render's secret value. No paid model was called, and no raw key, provider response body, or generated text is retained.
+
 ## Gate
 
-The deployment is live and health-checked, but it is not ready for a recorded end-to-end demo. A local PTO response succeeded earlier with resolved model `inclusionai/ling-3.0-flash-fin:free`. After the key replacement, two hosted synthetic PTO requests still returned HTTP 503 after all four model attempts were marked unavailable; neither returned citations or a resolved model. Earlier hosted requests include the 52.9-second 429 retry and a client timeout after 101.2 seconds. Local `/chat` tests now cover citation-metadata separation, supported word-to-digit normalization, rejection of unsupported numbers, process-narration leaks, mixed employee ID/name comparisons, and medical-file requests. These safeguards have not yet been deployed or verified against a live hosted answer. Keep testing synthetic hosted requests until a new tested SHA returns HTTP 200, includes `check_pto_balance` and citations, records `llm_refinement.status=completed` with the actual resolved model, and passes the strengthened reasoning-output gate.
+The deployed code is CI-verified, live, health-checked, and includes the current safety and answer-validation changes. It is not ready for a recorded end-to-end demo while the OpenRouter free daily quota is exhausted. After quota replenishment, verify a synthetic hosted response returns HTTP 200, includes `check_pto_balance` and citations, records `llm_refinement.status=completed` with the actual resolved model, and passes the strengthened reasoning-output gate. Then validate the remote-work scenario and confirmation-gated mock action on this deployed SHA.
