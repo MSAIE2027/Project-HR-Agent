@@ -17,6 +17,16 @@
 
 The ONNX index builds and serves successfully on Render, and the first policy embedding request completed without restarting the service. The hosted answer path reached OpenRouter after policy retrieval and structured checks, but the provider returned an identifiable account-wide free-tier quota 429 on `qwen/qwen3.8-27b:free`. The configured fallback chain correctly stopped after one attempt, returned HTTP 503, and did not expose the retrieval draft. No other model or `openrouter/free` was attempted because the account-wide cap applies to the chain. The remaining demo gate is a successful citation-bearing request after account quota is available. Credentials, the provider response body, and generated answer text were not retained.
 
+## Idle-wake readiness recheck
+
+**Date:** 2026-09-27 | **Deployment:** `dep-dasl2lh7lnhs739ltkb0` serving `eeceda7` | **Inputs:** public health endpoint only; no employee data or LLM request
+
+After an idle period, the public browser tab displayed Render's application-loading interstitial. Render logs showed successful `GET /health/ready` checks by 17:57:05 UTC. A fresh no-cache request at 18:01:53 UTC returned HTTP 200 in about 1.2 seconds, with `status=ok`, the SQLite index ready (14 documents, 182 chunks, 384 dimensions, pinned MiniLM ONNX revision), all eight stdio MCP tools available, and OpenRouter configured with Qwen → Nemotron Lightning → Gemma → `openrouter/free`. This confirms configuration and readiness only; it does not establish a successful LLM answer or resolved model.
+
+The browser tab continued to display its earlier loading interstitial after the endpoint was healthy, so the endpoint response is the authoritative readiness check. This observation does not isolate or measure cold-start duration. Render memory samples for the newly started instance were 147,595,260 bytes at 17:57, 185,184,260 at 17:58, 222,978,050 at 17:59, and 224,882,690 at 18:00 UTC, below the 536,870,900-byte service limit. These few samples do not establish peak or concurrent capacity. Hosted answer acceptance remains blocked by the earlier account-wide quota response.
+
+At 18:06 UTC, a read-only OpenRouter current-key request using the local `.env` key reported `is_free_tier=true` and `free_model_daily_requests={used: 51, limit: 50, remaining: 0}`. OpenRouter documents this field in its [current-key API](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key); its [pricing page](https://openrouter.ai/pricing/) lists the free plan's 50 requests/day. No model request was sent after this check. This metadata belongs to the local key and does not verify the Render key's identity or quota state.
+
 Earlier PyTorch deployment samples peaked at 536,264,700 bytes against a 536,870,900-byte limit and later settled at 493,432,830 bytes. A later first-query attempt on the PyTorch runtime restarted after a roughly 409 MB sample. Those historical samples do not prove an OOM event or concurrency capacity. The ONNX first-query observations above show lower memory use in this one hosted run; more samples are still needed to characterize capacity.
 
 ## Earlier read-only hosted checks on the prior runtime

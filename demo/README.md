@@ -12,6 +12,8 @@ MSAIE_MCP_TRANSPORT=stdio ./scripts/start_local.sh --no-browser
 
 Open `http://127.0.0.1:8000/`. Check `http://127.0.0.1:8000/health?deep=true` for app status, MCP discovery, policy-index metadata, embedding configuration, and required OpenRouter status. To show the SQLite index, open **Evaluator & Test Lab → SQLite policy index**, select `POL-PTO-01`, and expand a chunk. The live read-only endpoints return 14 document rows and 13 chunks for `POL-PTO-01`; the view omits vector payloads and database paths. Do not display `.env` or secrets. To stop a foreground run, press `Ctrl-C`; for a detached run, use `./scripts/stop_local.sh`.
 
+Render's free service can sleep while idle. For a hosted recording, open the application ahead of time and wait until [`/health/ready`](https://project-hr-agent.onrender.com/health/ready) returns JSON with `status=ok`, then reload the app page. A browser tab may retain Render's loading interstitial after the endpoint is healthy. This readiness check does not prove OpenRouter generation; keep the live-answer gate below in place.
+
 Every citation-bearing response goes to OpenRouter after MCP retrieval and deterministic workflow checks. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B in order, then falls back to `openrouter/free`. Each route gets one request capped at 12 seconds so the full chain leaves time for RAG/MCP work before the public HTTP deadline. The LLM composes and enriches the final wording using the controlled draft, retrieved policy snippets, and structured facts; it does not choose tools or approve actions. Set `MSAIE_LLM_API_KEY` (or the legacy `OPENROUTER_API_KEY`) in the ignored local `.env`, restart the app, and verify `llm_provider.status=configured` in `/health?deep=true`. The chat trace must show `llm_refinement` with `status=completed`, the selected model, and attempted models after the MCP calls. If all attempts fail, the HTTP 503 includes the sanitized MCP/model trace and withholds the retrieval draft. Refusals that stop before retrieval do not call the LLM.
 
 Before recording, run:
@@ -67,6 +69,19 @@ Use the visible confirmation control. The second run must include `draft_hr_emai
 
 The browser includes fixed scenarios for E1001, E1002, E1003, E1004, and E1005. Use the prompt chips to show a full-time employee, a recently hired employee, a contractor, a part-time employee, and an employee near the remote-work limit. These records are stable across page reloads so the grader can repeat the same question and observe the same structured result. The UI does not randomize employee data.
 
+## Course metric evidence to show
+
+The supplied course blueprint groups evidence into quality, behavior, and system metrics. Put all three on screen during the evaluation segment; the workflow demos alone do not cover the system-metric requirement.
+
+| Metric family | Show | Current evidence and limit |
+|---|---|---|
+| Quality | The two 30-case reports, citation coverage, and keyword score. | Groundedness proxy, citation-prefix accuracy, and exact tool-sequence accuracy are 1.0; mean keyword score is 0.95. These are deterministic fixture checks, not independent semantic judgments, and OpenRouter generation is excluded. |
+| Behavior | The remote-work and PTO traces, the pre-confirmation stop, the confirmed mock action, and an early safety refusal. | Workflow completion is 5/5 in each report. The examples use fixed synthetic cases and do not establish behavior for arbitrary conversations. |
+| System | The latency reports, retrieval comparison/ablation, and hosted memory observations. | In-process priming is 733.66 ms; warm p50/p95 are 28.05/147.84 ms. Stdio priming is 2,864.73 ms; fresh-process p50/p95 are 1,723.99/1,857.45 ms. Both exclude OpenRouter. The hosted ONNX memory samples are 71,155,710 bytes after startup and 274,866,180 bytes after the first policy request, against a 536,870,900-byte limit; they are not a capacity benchmark. |
+| Cold start | A hosted post-idle wake-to-ready measurement and a separate first model-backed request measurement, or explicitly identify this evidence as still open. | Hosted cold-start duration has not been measured. Local priming, fresh MCP subprocess timings, and memory samples are not Render cold-start latency. |
+
+For a valid hosted cold-start sample, first confirm from Render service events/metrics that the instance has spun down. Start an external timer before the first `/health/ready` request and stop it at the first HTTP 200; record this as wake-to-ready round-trip time. Then time the first synthetic model-backed policy request separately after quota is available. Record the deployment SHA, UTC timestamps, HTTP outcomes, and sample count. A single observation is one sample, not a percentile or a capacity claim. The end-to-end policy request includes OpenRouter time; label that scope and do not substitute local evaluation latency for it.
+
 ## Eight-minute recording outline
 
 | Time | Segment |
@@ -76,7 +91,7 @@ The browser includes fixed scenarios for E1001, E1002, E1003, E1004, and E1005. 
 | 1:35–3:05 | Complete Task A; point out tool names, arguments, results, citations, provisional status, and remaining approvals. |
 | 3:05–5:10 | Complete Task B; show the unconfirmed stop, user confirmation, mock draft, and no-send statement. |
 | 5:10–6:10 | Demonstrate injection refusal or sensitive-case escalation and explain the boundary. |
-| 6:10–7:10 | Show the 30-case evaluation, retrieval ablation, and metric limitations. |
+| 6:10–7:10 | Show quality, behavior, and system evidence: 30-case results and proxy limits; local latency with priming separated from p50/p95; retrieval ablation; hosted memory; and the explicit hosted cold-start measurement status. |
 | 7:10–8:20 | Show CI/Render configuration and state the current hosted status accurately; record the final workflow only after the hosted success gate passes. |
 
 The course prompt asks for a 7–10 minute narrated screen-share of the deployed application, with both agentic tasks completed end-to-end. The narration must explain MCP tool names, arguments, results, citations, and final behavior, and briefly cover design, deployment, CI/CD, and evaluation. For group submissions, every group member must speak, appear on camera, and show government ID; follow the course's agreement and submission instructions. Keep identity documents and the final recording out of this repository; upload the recording only through the course's designated submission flow. Current hosted acceptance evidence is in [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md); local provider evidence does not establish current hosted availability.
@@ -87,5 +102,6 @@ The course prompt asks for a 7–10 minute narrated screen-share of the deployed
 - Clear personal notifications and close terminals that may show credentials.
 - Keep the trace, citations, confirmation state, and final status visible when discussing each task.
 - Record the current commit, local test command/result, and provider/runtime details without exposing keys.
+- Show the quality, behavior, and system metric families. Label local latency separately from hosted measurements, identify deterministic scores as proxies, and state that hosted cold-start latency remains unmeasured until a valid post-idle sample is recorded.
 - Do not describe local latency as hosted latency or proxy scores as semantic accuracy.
 - If a task fails during recording, stop, capture the exact status/trace, and correct the issue before recording a take; do not conceal a failure by editing its expected result.
