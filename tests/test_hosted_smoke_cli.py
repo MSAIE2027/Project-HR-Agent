@@ -56,6 +56,8 @@ def _chat_response(
     citations: list[str] | None = None,
     tool_arguments: dict[str, dict[str, Any]] | None = None,
     refinement_status: str | None = None,
+    refinement_provider: str = "openrouter",
+    template_key: str | None = None,
 ) -> dict[str, Any]:
     trace = [
         {"step": 1, "event": "discover_tools", "tools": TOOL_NAMES, "transport": "stdio"}
@@ -73,12 +75,25 @@ def _chat_response(
     citation_rows = [{"document_id": name} for name in citations or []]
     refinement: dict[str, Any] = {"status": "not_called", "model": None}
     if refinement_status:
-        refinement = {
-            "status": refinement_status,
-            "provider": "openrouter",
-            "model": "qwen/qwen3.8-27b:free",
-            "attempted_models": ["qwen/qwen3.8-27b:free"],
-        }
+        if refinement_status == "cached_template":
+            refinement = {
+                "status": refinement_status,
+                "provider": refinement_provider,
+                "upstream_provider": "openrouter+opencode-zen",
+                "model": None,
+                "cache_hit": True,
+                "response_mode": "sqlite_template",
+                "template_key": template_key or "remote_work_positive_v1",
+                "template_version": "1",
+                "attempted_models": ["qwen/qwen3.8-27b:free", "opencode/space-bunny-free"],
+            }
+        else:
+            refinement = {
+                "status": refinement_status,
+                "provider": refinement_provider,
+                "model": "qwen/qwen3.8-27b:free",
+                "attempted_models": ["qwen/qwen3.8-27b:free"],
+            }
         trace.append({"step": len(trace) + 1, "event": "llm_refinement", **refinement})
     return {
         "answer": answer,
@@ -306,6 +321,117 @@ def test_hosted_smoke_cli_does_not_confirm_mock_email_by_default() -> None:
     assert len(server.chat_requests) == 4
     assert all(request["confirm_action"] is False for request in server.chat_requests)
     assert PRIVATE_ANSWER_SENTINEL not in result.stdout
+
+
+def test_hosted_smoke_cli_accepts_traced_sqlite_template_for_read_only_case() -> None:
+    def respond(request: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        message = request["message"]
+        if "medical" in message.lower():
+            return 200, _chat_response(
+                status="refused",
+                answer="Use the confidential HR channel; no employee records were accessed.",
+            )
+        if "E1004 and E1003" in message:
+            return 200, _chat_response(
+                status="refused",
+                answer="Ask about one synthetic employee ID per request; no employee records were accessed.",
+            )
+        if "overseas" in message.lower():
+            return 200, _chat_response(
+                status="provisionally_eligible",
+                answer=(
+                    "E1001 is provisionally eligible after manager, HR, tax, information security, "
+                    "and immigration review."
+                ),
+                tools=["search_policy_documents", "lookup_employee_profile", "check_policy_compliance"],
+                citations=["POL-RW-01", "POL-SEC-01", "POL-APR-01"],
+                tool_arguments=REMOTE_TOOL_ARGUMENTS,
+                refinement_status="cached_template",
+                refinement_provider="sqlite",
+                template_key="remote_work_eligible",
+            )
+        if "draft an email" in message.lower():
+            return 200, _chat_response(
+                status="confirmation_required",
+                answer="Explicit confirmation is required before a mock email draft can be created.",
+                tools=[
+                    "search_policy_documents",
+                    "lookup_employee_profile",
+                    "check_pto_balance",
+                    "check_policy_compliance",
+                ],
+                citations=["POL-PTO-01"],
+                tool_arguments=PTO_TOOL_ARGUMENTS,
+                refinement_status="completed",
+            )
+        raise AssertionError(f"Unexpected smoke request: {message}")
+
+    with _hosted_app(respond) as server:
+        result = _run_smoke(server)
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["status"] == "passed"
+    remote_work = report["checks"][2]
+    assert remote_work["status"] == "provisionally_eligible"
+    assert remote_work["response_source"] == "sqlite_template"
+    assert remote_work["provider"] == "sqlite"
+    assert remote_work["template_key"] == "remote_work_eligible"
+    assert report["checks"][3]["response_source"] == "live_model"
+    assert len(server.chat_requests) == 4
+
+
+def test_hosted_smoke_cli_rejects_sqlite_template_for_confirmation_gated_pto() -> None:
+    def respond(request: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        message = request["message"]
+        if "medical" in message.lower():
+            return 200, _chat_response(
+                status="refused",
+                answer="Use the confidential HR channel; no employee records were accessed.",
+            )
+        if "E1004 and E1003" in message:
+            return 200, _chat_response(
+                status="refused",
+                answer="Ask about one synthetic employee ID per request; no employee records were accessed.",
+            )
+        if "overseas" in message.lower():
+            return 200, _chat_response(
+                status="provisionally_eligible",
+                answer="Provisionally eligible after manager, HR, tax, information security, and immigration review.",
+                tools=["search_policy_documents", "lookup_employee_profile", "check_policy_compliance"],
+                citations=["POL-RW-01"],
+                tool_arguments=REMOTE_TOOL_ARGUMENTS,
+                refinement_status="completed",
+            )
+        if "draft an email" in message.lower():
+            return 200, _chat_response(
+                status="confirmation_required",
+                answer="Explicit confirmation is required before a mock email draft can be created.",
+                tools=[
+                    "search_policy_documents",
+                    "lookup_employee_profile",
+                    "check_pto_balance",
+                    "check_policy_compliance",
+                ],
+                citations=["POL-PTO-01"],
+                tool_arguments=PTO_TOOL_ARGUMENTS,
+                refinement_status="cached_template",
+                refinement_provider="sqlite",
+                template_key="pto_request",
+            )
+        raise AssertionError(f"Unexpected smoke request: {message}")
+
+    with _hosted_app(respond) as server:
+        result = _run_smoke(server)
+
+    assert result.returncode == 1
+    report = json.loads(result.stdout)
+    assert report["status"] == "failed"
+    assert report["failed_check"]["name"] == "pto_confirmation_gate"
+    assert report["failed_check"]["reason"] == "llm_refinement_incomplete"
+    assert report["failed_check"]["llm_status"] == "cached_template"
+    assert PRIVATE_ANSWER_SENTINEL not in result.stdout
+    assert len(server.chat_requests) == 4
 
 
 def test_hosted_smoke_cli_checks_structured_tool_arguments() -> None:

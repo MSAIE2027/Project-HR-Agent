@@ -83,6 +83,46 @@ def _has_completed_refinement(payload: dict[str, Any]) -> tuple[bool, str | None
     return completed, model if isinstance(model, str) and model else None, attempts
 
 
+def _cached_template_summary(payload: dict[str, Any]) -> dict[str, str] | None:
+    refinement = _refinement(payload)
+    template_key = refinement.get("template_key")
+    if (
+        refinement.get("status") != "cached_template"
+        or refinement.get("provider") != "sqlite"
+        or refinement.get("response_mode") != "sqlite_template"
+        or refinement.get("cache_hit") is not True
+        or template_key != "remote_work_eligible"
+    ):
+        return None
+    trace = payload.get("trace")
+    if not isinstance(trace, list):
+        return None
+    event = next(
+        (
+            item
+            for item in reversed(trace)
+            if isinstance(item, dict)
+            and item.get("event") == "llm_refinement"
+            and item.get("status") == "cached_template"
+        ),
+        None,
+    )
+    if not isinstance(event, dict):
+        return None
+    if (
+        event.get("provider") != "sqlite"
+        or event.get("response_mode") != "sqlite_template"
+        or event.get("cache_hit") is not True
+        or event.get("template_key") != template_key
+    ):
+        return None
+    upstream = refinement.get("upstream_provider")
+    version = refinement.get("template_version")
+    if not isinstance(upstream, str) or not isinstance(version, str) or not version:
+        return None
+    return {"provider": "sqlite", "template_key": template_key}
+
+
 def _model_attempt_summaries(payload: dict[str, Any]) -> list[dict[str, str]]:
     attempts = _refinement(payload).get("model_attempts")
     if not isinstance(attempts, list):
@@ -172,6 +212,7 @@ def _post_chat(
     confirm_action: bool = False,
     expect_confirmation: bool = False,
     expect_llm: bool = True,
+    allow_cached_template: bool = False,
 ) -> dict[str, Any]:
     try:
         response = client.post(
@@ -234,14 +275,26 @@ def _post_chat(
 
     model: str | None = None
     attempts = 0
+    response_source: str | None = None
+    provider: str | None = None
+    template_key: str | None = None
     if expect_llm:
-        completed, model, attempts = _has_completed_refinement(payload)
-        if not completed:
-            raise _fail(
-                name,
-                "llm_refinement_incomplete",
-                llm_status=_refinement(payload).get("status"),
-            )
+        cached = _cached_template_summary(payload) if allow_cached_template else None
+        if cached:
+            response_source = "sqlite_template"
+            provider = cached["provider"]
+            template_key = cached["template_key"]
+        else:
+            completed, model, attempts = _has_completed_refinement(payload)
+            if not completed:
+                raise _fail(
+                    name,
+                    "llm_refinement_incomplete",
+                    llm_status=_refinement(payload).get("status"),
+                )
+            refinement = _refinement(payload)
+            response_source = "live_model"
+            provider = refinement.get("provider") if isinstance(refinement.get("provider"), str) else None
     else:
         trace = payload.get("trace")
         if isinstance(trace, list) and any(
@@ -259,6 +312,9 @@ def _post_chat(
         "citation_documents": citation_ids,
         "model": model,
         "attempts": attempts,
+        "response_source": response_source,
+        "provider": provider,
+        "template_key": template_key,
     }
 
 
@@ -317,6 +373,7 @@ def run(base_url: str, timeout_seconds: float, *, confirm_mock_email: bool = Fal
                         },
                     },
                     "citation_prefix": "POL-RW-",
+                    "allow_cached_template": True,
                 },
                 {
                     "name": "pto_confirmation_gate",
@@ -354,6 +411,7 @@ def run(base_url: str, timeout_seconds: float, *, confirm_mock_email: bool = Fal
                     confirm_action=check.get("confirm_action", False),
                     expect_confirmation=check.get("expect_confirmation", False),
                     expect_llm=check.get("expect_llm", True),
+                    allow_cached_template=check.get("allow_cached_template", False),
                 )
                 report["checks"].append(summary)
 

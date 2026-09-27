@@ -28,3 +28,4 @@ OpenCode Zen's current official catalog lists Nemotron 3.5 Lightning Free, Big P
 - Public `/chat` tests cover OpenRouter account-quota routing to OpenCode Zen, validated responses, and SQLite fallback when the primary quota is exhausted.
 - `/api/index/documents` lists seeded template metadata; UI tests assert the SQLite template viewer is available.
 - `agent/response_cache.py`, `agent/llm.py`, `rag/index.py`, and `app/main.py` implement the path.
+- Hosted smoke on Render runtime `703a180` completed remote-work and PTO confirmation-gate responses using `opencode-zen` / `space-bunny-free` after an OpenRouter account-quota 429. A prior supported read-only remote-work call exercised the traced SQLite template. Free-route availability varied across attempts, including 403 responses and timeouts; the confirmation gate remained active and no mock action was invoked. See [`../../evidence/hosted-pto-smoke.md`](../../evidence/hosted-pto-smoke.md).
