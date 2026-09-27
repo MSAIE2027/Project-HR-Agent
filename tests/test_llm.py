@@ -197,11 +197,18 @@ def test_provider_status_handles_malformed_authority_without_raising(monkeypatch
     assert status["endpoint_host"] == ""
 
 
-def test_per_model_timeout_is_capped_to_keep_fallback_bounded(monkeypatch) -> None:
+def test_per_model_timeout_is_capped_to_leave_room_for_mcp_and_edge(monkeypatch) -> None:
     monkeypatch.setenv("MSAIE_LLM_TIMEOUT_SECONDS", "90")
     provider = OpenAICompatibleProvider()
 
-    assert provider.timeout_seconds == 18.0
+    assert provider.timeout_seconds == 12.0
+
+
+def test_per_model_timeout_defaults_to_twelve_seconds(monkeypatch) -> None:
+    monkeypatch.delenv("MSAIE_LLM_TIMEOUT_SECONDS", raising=False)
+    provider = OpenAICompatibleProvider()
+
+    assert provider.timeout_seconds == 12.0
 
 
 @pytest.mark.parametrize(

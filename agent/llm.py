@@ -337,9 +337,9 @@ class OpenAICompatibleProvider:
         self.model = OPENROUTER_PRIMARY_MODELS[0]
         self.model_chain = _model_chain()
         self.provider_type = "openrouter" if urlparse(self.base_url).hostname == "openrouter.ai" else "openai-compatible"
-        configured_timeout = float(os.getenv("MSAIE_LLM_TIMEOUT_SECONDS", "18"))
-        # Keep slow free endpoints from preventing the chain from reaching later candidates.
-        self.timeout_seconds = max(1.0, min(configured_timeout, 18.0))
+        configured_timeout = float(os.getenv("MSAIE_LLM_TIMEOUT_SECONDS", "12"))
+        # Leave request time for MCP/RAG work before the public HTTP edge deadline.
+        self.timeout_seconds = max(1.0, min(configured_timeout, 12.0))
 
     async def refine(
         self,

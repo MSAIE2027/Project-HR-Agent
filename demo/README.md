@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Rehearse locally as needed; the course recording must use the deployed public URL once the linked Render service is synchronized and verified. The reviewed source is published, and hosted CI passed for `42de2e8`; Render has assigned `https://project-hr-agent.onrender.com` but reports no deploy history, so no live application URL is verified yet.
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. The course recording should use the deployed public URL after the linked Render service is synchronized and verified. Hosted CI passed for `022dcfd`; Render has deployed that tested SHA, and the health endpoints pass. A live PTO generation must still return a safe, validated answer with `llm_refinement=completed` before recording.
 
 ## Start and verify
 
@@ -12,7 +12,7 @@ MSAIE_MCP_TRANSPORT=stdio ./scripts/start_local.sh --no-browser
 
 Open `http://127.0.0.1:8000/`. Check `http://127.0.0.1:8000/health?deep=true` for app status, MCP discovery, policy-index metadata, embedding configuration, and required OpenRouter status. Do not display `.env` or secrets. To stop a foreground run, press `Ctrl-C`; for a detached run, use `./scripts/stop_local.sh`.
 
-Every citation-bearing response goes to OpenRouter after MCP retrieval and deterministic workflow checks. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B in order, then falls back to `openrouter/free`. Each route gets one request capped at 18 seconds. The LLM composes and enriches the final wording using the controlled draft, retrieved policy snippets, and structured facts; it does not choose tools or approve actions. Set `MSAIE_LLM_API_KEY` in the ignored local `.env`, restart the app, and verify `llm_provider.status=configured` in `/health?deep=true`. The chat trace must show `llm_refinement` with `status=completed`, the selected model, and attempted models after the MCP calls. If all attempts fail, the HTTP 503 includes the sanitized MCP/model trace and withholds the retrieval draft. Refusals that stop before retrieval do not call the LLM.
+Every citation-bearing response goes to OpenRouter after MCP retrieval and deterministic workflow checks. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B in order, then falls back to `openrouter/free`. Each route gets one request capped at 12 seconds so the full chain leaves time for RAG/MCP work before the public HTTP deadline. The LLM composes and enriches the final wording using the controlled draft, retrieved policy snippets, and structured facts; it does not choose tools or approve actions. Set `MSAIE_LLM_API_KEY` in the ignored local `.env`, restart the app, and verify `llm_provider.status=configured` in `/health?deep=true`. The chat trace must show `llm_refinement` with `status=completed`, the selected model, and attempted models after the MCP calls. If all attempts fail, the HTTP 503 includes the sanitized MCP/model trace and withholds the retrieval draft. Refusals that stop before retrieval do not call the LLM.
 
 Before recording, run:
 
