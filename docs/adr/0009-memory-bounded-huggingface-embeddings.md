@@ -1,0 +1,44 @@
+# ADR 0009: Run pinned MiniLM with quantized ONNX Runtime
+
+**Status:** Accepted; local implementation verified, hosted resource effect pending deployment
+**Date:** 2026-09-27
+
+## Context
+
+The service uses Hugging Face MiniLM locally for policy-query embeddings and stores document vectors in its service-local SQLite index. During the previous Render deployment, memory samples reached 536,264,700 bytes against a 536,870,900-byte limit. An earlier request ended with HTTP 502 and the process restarted without a Python exception or explicit out-of-memory record. The close memory headroom supports resource pressure as a likely risk, but does not prove that memory caused that restart.
+
+The previous runtime loaded Sentence Transformers and PyTorch for a 384-dimensional embedding model. The retrieval baseline, chunking, policy data, and OpenRouter response-generation path must remain unchanged while reducing embedding-runtime overhead.
+
+## Decision
+
+Use the same Hugging Face repository, `sentence-transformers/all-MiniLM-L6-v2`, pinned to revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`. Load `onnx/model_quint8_avx2.onnx` and `tokenizer.json` from that revision with `onnxruntime`, Hugging Face Hub, and `tokenizers`. Run CPU inference with sequential execution and one intra/inter-op thread by default. Apply the model's attention-mask mean pooling and L2 normalization before storing or searching 384-dimensional vectors.
+
+Persist the embedding backend and revision in SQLite metadata. Include them in the index configuration signature so an embedding implementation or revision change rebuilds the index. Cache the runtime by both model and resolved revision, and reject unsupported local Hugging Face model IDs before attempting a download. Keep the Hugging Face embedding settings independent from the required OpenRouter response-refinement settings.
+
+## Evidence and validation
+
+- Local ONNX vectors were compared with FP32 Sentence Transformers output for four policy queries. Cosine similarity ranged from 0.991501 to 0.994461; this is a narrow parity check, not a broad retrieval-quality result.
+- A fresh SQLite index built with 14 documents, 182 chunks, 384 dimensions, semantic embeddings enabled, the pinned revision, and no embedding error.
+- The production-vs-independent retrieval ordering and candidate-set check matched on 15/15 queries. The existing read-only six-case policy slice passed; the chunk ablation was rerun and retained 120/20 as the smallest tied configuration.
+- Full local pytest completed with 99 passed and one third-party deprecation warning. MCP stdio smoke and both 30-case orchestrator evaluations completed on the ONNX index. The golden evaluations still exclude live LLM generation (`llm_generation_included=false`).
+- The clean-build release gate verifies the exact MiniLM repository and revision, ONNX backend, 384 dimensions, and 120/20 chunk configuration. The same assertion is configured in GitHub Actions and `render.yaml`.
+- Local process peak RSS was 121.6 MB during the ONNX experiment. That local result is not directly comparable to Render's prior memory sample and does not establish hosted capacity.
+
+## Consequences
+
+- Fresh installs no longer need PyTorch or Sentence Transformers for the production embedding path, reducing runtime dependencies and avoiding loading the full PyTorch stack.
+- New indexes use a pinned quantized model export and record which backend/revision produced their vectors. Old indexes rebuild because the configuration signature changes.
+- The selected `quint8_avx2` export requires a compatible CPU instruction set. The index build check fails if the backend cannot load or produce the required semantic index.
+- GitHub Actions and the Render build must install the same pinned dependencies and build/assert the same index before release. The candidate's local gate passes; clean hosted CI and Render deployment remain pending.
+- This change does not mitigate OpenRouter rate limits. Every citation-bearing response still requires the configured OpenRouter chain and fails closed if no model returns a valid answer.
+- Hosted memory and the live answer path remain unverified until a CI-passing commit is manually deployed and the hosted acceptance smoke is rerun.
+
+## Alternatives considered
+
+- Keep PyTorch and increase the Render plan: would retain the previous runtime profile and add a recurring hosting cost; no plan change is made here.
+- Use sparse hashing: lighter, but it would replace the selected semantic MiniLM baseline and alter retrieval behavior.
+- Use a remote embedding API: it would add another live-provider dependency and move query embeddings off the service; it is not the selected architecture.
+
+## Revisit when
+
+Revisit if the pinned ONNX backend fails on Render's CPU, the hosted cold-load still approaches the memory limit, or a larger independently judged retrieval set shows material quality loss.

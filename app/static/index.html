@@ -843,7 +843,7 @@
         document.getElementById('metric-chunk-detail').textContent = `${rag.chunks || 0} chunks · ${rag.estimated_pages || 0} metadata-est. pages`;
         const temperature = provider.temperature === undefined || provider.temperature === null ? 'not called' : Number(provider.temperature).toFixed(1);
         const chainNote = modelChain.length ? ` · route order ${modelChain.join(' → ')}` : '';
-        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${chainNote} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces show the selected live route and any fallbacks.`;
+        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${chainNote} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.embedding_backend || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces show the selected live route and any fallbacks.`;
         setHealth(data.status === 'ok' ? 'online' : 'degraded', data.status === 'ok' ? 'Service online' : 'Service degraded');
       } catch (error) {
         document.getElementById('metric-service').textContent = 'Offline';
@@ -896,7 +896,7 @@
           select.append(option);
         });
         const index = payload.index || {};
-        summary.textContent = `${index.documents || 0} policy documents · ${index.chunks || 0} chunks · ${index.embedding_provider || 'unknown'} vectors (${index.dimensions || 0} dimensions)`;
+        summary.textContent = `${index.documents || 0} policy documents · ${index.chunks || 0} chunks · ${index.embedding_model || 'unknown'} · ${index.embedding_backend || index.embedding_provider || 'unknown'} (${index.dimensions || 0} dimensions)`;
         indexDocumentsLoaded = true;
         await loadIndexDocumentChunks(select.value);
       } catch (error) {

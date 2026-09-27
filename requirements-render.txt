@@ -1,4 +1,2 @@
 -r requirements.txt
-# Render and Ubuntu CI are CPU-only. Pin the official CPU wheel so pip does not
-# select the much larger CUDA-enabled PyPI build for the same public version.
-torch==2.14.0+cpu
+# Hugging Face MiniLM inference runs with the compact CPU ONNX Runtime export.

@@ -1,5 +1,8 @@
 {
   "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_provider": "huggingface",
+  "embedding_backend": "onnxruntime-quint8-avx2",
+  "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
   "embedding_dimensions": 384,
   "corpus_document_count": 14,
   "corpus_word_count": 15034,
@@ -25,17 +28,17 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7381,
+        "family_mrr": 0.744,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
         "filtered_family_score_coverage": 1.0,
-        "mean_unique_documents_top5": 1.333,
-        "mean_unique_sections_top5": 4.267,
-        "search_ms_p50": 20.733,
-        "search_ms_p95": 112.157,
-        "build_seconds_warm": 3.928,
-        "index_bytes": 3065288
+        "mean_unique_documents_top5": 1.267,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 12.77,
+        "search_ms_p95": 65.472,
+        "build_seconds_warm": 7.737,
+        "index_bytes": 1792208
       },
       "index": {
         "status": "ready",
@@ -45,6 +48,8 @@
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
+        "embedding_backend": "onnxruntime-quint8-avx2",
+        "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
         "semantic_embeddings": true,
         "embedding_error": null,
         "dimensions": 384,
@@ -114,7 +119,7 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-PTO-01",
@@ -162,7 +167,7 @@
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01",
-            "POL-PER-01"
+            "POL-CON-01"
           ],
           "filtered_top_ids": [
             "POL-CON-01",
@@ -306,16 +311,16 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
-            "POL-EQP-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_all_families_at_5": true,
           "each_family_has_score_at_least_0_12": true
@@ -359,7 +364,7 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": null
+            "POL-APR-": 8
           },
           "global_top_ids": [
             "POL-EXP-01",
@@ -420,9 +425,9 @@
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
+            "POL-ONB-01",
             "POL-BEN-01",
-            "POL-BEN-01",
-            "POL-BEN-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-BEN-01",
@@ -450,17 +455,17 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7434,
+        "family_mrr": 0.744,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
         "filtered_family_score_coverage": 1.0,
-        "mean_unique_documents_top5": 1.4,
-        "mean_unique_sections_top5": 4.533,
-        "search_ms_p50": 18.821,
-        "search_ms_p95": 100.919,
-        "build_seconds_warm": 3.894,
-        "index_bytes": 2665648
+        "mean_unique_documents_top5": 1.267,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 13.895,
+        "search_ms_p95": 71.855,
+        "build_seconds_warm": 9.173,
+        "index_bytes": 1792208
       },
       "index": {
         "status": "ready",
@@ -470,6 +475,8 @@
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
+        "embedding_backend": "onnxruntime-quint8-avx2",
+        "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
         "semantic_embeddings": true,
         "embedding_error": null,
         "dimensions": 384,
@@ -539,7 +546,7 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-PTO-01",
@@ -635,7 +642,7 @@
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01",
-            "POL-PER-01"
+            "POL-SVC-01"
           ],
           "filtered_top_ids": [
             "POL-SVC-01",
@@ -731,16 +738,16 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-EQP-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_all_families_at_5": true,
           "each_family_has_score_at_least_0_12": true
@@ -784,7 +791,7 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 9
+            "POL-APR-": 8
           },
           "global_top_ids": [
             "POL-EXP-01",
@@ -845,9 +852,9 @@
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-BEN-01",
             "POL-ONB-01",
-            "POL-BEN-01"
+            "POL-BEN-01",
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-BEN-01",
@@ -875,16 +882,16 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7488,
+        "family_mrr": 0.744,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
         "filtered_family_score_coverage": 1.0,
         "mean_unique_documents_top5": 1.267,
         "mean_unique_sections_top5": 5,
-        "search_ms_p50": 17.024,
-        "search_ms_p95": 77.013,
-        "build_seconds_warm": 3.449,
+        "search_ms_p50": 12.764,
+        "search_ms_p95": 63.789,
+        "build_seconds_warm": 7.253,
         "index_bytes": 1792208
       },
       "index": {
@@ -895,6 +902,8 @@
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
+        "embedding_backend": "onnxruntime-quint8-avx2",
+        "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
         "semantic_embeddings": true,
         "embedding_error": null,
         "dimensions": 384,
@@ -964,7 +973,7 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-PTO-01",
@@ -1156,16 +1165,16 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_all_families_at_5": true,
           "each_family_has_score_at_least_0_12": true
@@ -1181,7 +1190,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 10
+            "POL-APR-": null
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -1272,7 +1281,7 @@
             "POL-BEN-01",
             "POL-ONB-01",
             "POL-BEN-01",
-            "POL-BEN-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-BEN-01",
@@ -1300,16 +1309,16 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7488,
+        "family_mrr": 0.744,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
         "filtered_family_score_coverage": 1.0,
         "mean_unique_documents_top5": 1.267,
         "mean_unique_sections_top5": 5,
-        "search_ms_p50": 16.491,
-        "search_ms_p95": 75.559,
-        "build_seconds_warm": 3.366,
+        "search_ms_p50": 18.185,
+        "search_ms_p95": 74.323,
+        "build_seconds_warm": 7.224,
         "index_bytes": 1792208
       },
       "index": {
@@ -1320,6 +1329,8 @@
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
+        "embedding_backend": "onnxruntime-quint8-avx2",
+        "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
         "semantic_embeddings": true,
         "embedding_error": null,
         "dimensions": 384,
@@ -1389,7 +1400,7 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-PTO-01",
@@ -1581,16 +1592,16 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_all_families_at_5": true,
           "each_family_has_score_at_least_0_12": true
@@ -1606,7 +1617,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 10
+            "POL-APR-": null
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -1697,7 +1708,7 @@
             "POL-BEN-01",
             "POL-ONB-01",
             "POL-BEN-01",
-            "POL-BEN-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-BEN-01",
@@ -1725,16 +1736,16 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7488,
+        "family_mrr": 0.744,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
         "filtered_family_score_coverage": 1.0,
         "mean_unique_documents_top5": 1.267,
         "mean_unique_sections_top5": 5,
-        "search_ms_p50": 15.322,
-        "search_ms_p95": 69.268,
-        "build_seconds_warm": 3.386,
+        "search_ms_p50": 14.621,
+        "search_ms_p95": 71.516,
+        "build_seconds_warm": 9.107,
         "index_bytes": 1792208
       },
       "index": {
@@ -1745,6 +1756,8 @@
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
+        "embedding_backend": "onnxruntime-quint8-avx2",
+        "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
         "semantic_embeddings": true,
         "embedding_error": null,
         "dimensions": 384,
@@ -1814,7 +1827,7 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-PTO-01",
@@ -2006,16 +2019,16 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "filtered_all_families_at_5": true,
           "each_family_has_score_at_least_0_12": true
@@ -2031,7 +2044,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 10
+            "POL-APR-": null
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -2122,7 +2135,7 @@
             "POL-BEN-01",
             "POL-ONB-01",
             "POL-BEN-01",
-            "POL-BEN-01"
+            "POL-PTO-01"
           ],
           "filtered_top_ids": [
             "POL-BEN-01",
@@ -2151,16 +2164,16 @@
       "family_recall_at_1": 0.7143,
       "family_recall_at_3": 0.7619,
       "family_recall_at_5": 0.7619,
-      "family_mrr": 0.7488,
+      "family_mrr": 0.744,
       "all_family_coverage_at_5": 0.7333,
       "multi_document_all_family_coverage_at_5": 0.2,
       "filtered_all_family_coverage_at_5": 1.0,
       "filtered_family_score_coverage": 1.0,
       "mean_unique_documents_top5": 1.267,
       "mean_unique_sections_top5": 5,
-      "search_ms_p50": 17.024,
-      "search_ms_p95": 77.013,
-      "build_seconds_warm": 3.449,
+      "search_ms_p50": 12.764,
+      "search_ms_p95": 63.789,
+      "build_seconds_warm": 7.253,
       "index_bytes": 1792208
     },
     "index": {
@@ -2171,6 +2184,8 @@
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_provider": "huggingface",
+      "embedding_backend": "onnxruntime-quint8-avx2",
+      "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
       "semantic_embeddings": true,
       "embedding_error": null,
       "dimensions": 384,
@@ -2240,7 +2255,7 @@
           "POL-PTO-01",
           "POL-PTO-01",
           "POL-PTO-01",
-          "POL-LVE-01"
+          "POL-PTO-01"
         ],
         "filtered_top_ids": [
           "POL-PTO-01",
@@ -2432,16 +2447,16 @@
         "global_top_ids": [
           "POL-SEC-01",
           "POL-RW-01",
-          "POL-SEC-01",
           "POL-RW-01",
-          "POL-RW-01"
+          "POL-RW-01",
+          "POL-SEC-01"
         ],
         "filtered_top_ids": [
           "POL-SEC-01",
           "POL-RW-01",
-          "POL-SEC-01",
           "POL-RW-01",
-          "POL-RW-01"
+          "POL-RW-01",
+          "POL-SEC-01"
         ],
         "filtered_all_families_at_5": true,
         "each_family_has_score_at_least_0_12": true
@@ -2457,7 +2472,7 @@
         "global_family_ranks": {
           "POL-RW-": 1,
           "POL-SEC-": null,
-          "POL-APR-": 10
+          "POL-APR-": null
         },
         "global_top_ids": [
           "POL-RW-01",
@@ -2548,7 +2563,7 @@
           "POL-BEN-01",
           "POL-ONB-01",
           "POL-BEN-01",
-          "POL-BEN-01"
+          "POL-PTO-01"
         ],
         "filtered_top_ids": [
           "POL-BEN-01",

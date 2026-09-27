@@ -14,7 +14,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from evaluation.run_ablation import MINIMUM_EVIDENCE_SCORE, QUERIES
-from rag.index import DEFAULT_LOCAL_MODEL, RagIndex, _dense_cosine, _local_embeddings, tokenize
+from rag.index import (
+    DEFAULT_LOCAL_MODEL,
+    HF_EMBEDDING_BACKEND,
+    HF_EMBEDDING_REVISION,
+    RagIndex,
+    _dense_cosine,
+    _local_embeddings,
+    tokenize,
+)
 
 POOL = 10
 TOP_K = (1, 3, 5, 8)
@@ -301,6 +309,9 @@ def run() -> dict[str, Any]:
         route = asyncio.run(_route_results(path))
         return {
             "embedding_model": DEFAULT_LOCAL_MODEL,
+            "embedding_provider": stats["embedding_provider"],
+            "embedding_backend": stats["embedding_backend"],
+            "embedding_revision": stats["embedding_revision"],
             "embedding_dimensions": 384,
             "chunk_words": 120,
             "overlap_words": 20,
@@ -315,7 +326,7 @@ def run() -> dict[str, Any]:
             "baseline_top5_order_mismatch_ids": top5_order_mismatches,
             "baseline_top10_candidate_set_mismatch_ids": top10_candidate_mismatches,
             "methodology": [
-                "Retrieval comparison and read-only route verification; MiniLM 384d and 120/20 chunks are fixed.",
+                f"Retrieval comparison and read-only route verification; MiniLM 384d, {HF_EMBEDDING_BACKEND}, pinned revision {HF_EMBEDDING_REVISION}, and 120/20 chunks are fixed.",
                 "Weight variants rescore every chunk using the production cosine, lexical overlap, title-hit, and exact-phrase components.",
                 "MMR reranks the production-score top 10 using chunk-to-chunk embedding cosine; lambda controls relevance versus diversity.",
                 "Actual orchestrator routing is exercised only on policy questions; execution aborts if any tool besides policy search is selected.",
@@ -336,7 +347,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# MiniLM Top-k, Routing, MMR, and Weight Comparison",
         "",
-        "Retrieval-only experiment. MiniLM (384 dimensions), 120/20 chunks, corpus, and query labels are fixed. No pytest, LLM generation, employee lookups, or action tools are used.",
+        f"Retrieval-only experiment. MiniLM (384 dimensions), {report['embedding_backend']} from pinned HF revision {report['embedding_revision']}, 120/20 chunks, corpus, and query labels are fixed. No pytest, LLM generation, employee lookups, or action tools are used.",
         "",
         f"Queries: {report['query_count']} total; {report['multi_document_query_count']} multi-family. Index chunks: {report['corpus_chunks']}.",
         "",
@@ -409,7 +420,7 @@ def to_markdown(report: dict[str, Any]) -> str:
         "",
         "## Limits",
         "",
-        "The hand-authored query set is small and its labels are not independent semantic judgments. Global MMR and score-weight comparisons are retrieval diagnostics, not answer-correctness judgments. Production now uses lambda 0.5 MMR over the score-ranked top ten, with one seed per explicitly routed family and a five-citation limit. Embedding, chunk size, and scoring weights remain unchanged. Reassess this choice on a larger independently reviewed query set and latency measurements.",
+        "The hand-authored query set is small and its labels are not independent semantic judgments. Global MMR and score-weight comparisons are retrieval diagnostics, not answer-correctness judgments. Production now uses the pinned ONNX MiniLM backend, lambda 0.5 MMR over the score-ranked top ten, one seed per explicitly routed family, and a five-citation limit. This experiment fixes the embedding model/backend and 120/20 chunks while varying ranking and routing choices. Reassess on a larger independently reviewed query set and latency measurements.",
         "",
     ]
     return "\n".join(lines)

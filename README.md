@@ -117,7 +117,7 @@ cp .env.example .env
 ./scripts/start_local.sh
 ```
 
-The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads `sentence-transformers/all-MiniLM-L6-v2` from Hugging Face. Embeddings run inside the app service and are stored in its SQLite vector index; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
+The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads the pinned Hugging Face `sentence-transformers/all-MiniLM-L6-v2` INT8 ONNX export. Embeddings run locally through CPU ONNX Runtime and are stored in the SQLite vector index; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
 
 For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is available for quick local development, while the demo and CI exercise the official MCP SDK client and FastMCP server over stdio.
 
@@ -126,7 +126,7 @@ For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is 
 Keep provider credentials in the ignored `.env` file or shell environment. Never commit secrets.
 
 - OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY` (or legacy `OPENROUTER_API_KEY` for local runs), and `MSAIE_LLM_FALLBACK_MODEL`.
-- Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions.
+- Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions, pinned to Hugging Face revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` and run with the `onnx/model_quint8_avx2.onnx` CPU export. SQLite stores vectors; ONNX Runtime embeds queries locally.
 - `/`: synthetic HR workspace and evaluator lab.
 - `/health` and `/health/ready`: service, SQLite index, MCP, and provider status.
 - `/api/index/documents` and `/api/index/documents/{document_id}/chunks`: read-only SQLite index preview without stored vectors.

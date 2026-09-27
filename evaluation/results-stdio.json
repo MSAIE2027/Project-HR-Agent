@@ -3,6 +3,11 @@
     "transport": "stdio",
     "evaluation_layer": "orchestrator",
     "llm_generation_included": false,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "embedding_provider": "huggingface",
+    "embedding_backend": "onnxruntime-quint8-avx2",
+    "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "embedding_dimensions": 384,
     "items": 30,
     "groundedness_proxy": 1.0,
     "citation_prefix_accuracy": 1.0,
@@ -14,9 +19,9 @@
     "status_accuracy": 1.0,
     "mean_keyword_score": 0.95,
     "latency_sample_count": 15,
-    "latency_ms_priming_request": 8478.52,
-    "latency_ms_p50": 7471.9,
-    "latency_ms_p95": 7917.17,
+    "latency_ms_priming_request": 2864.73,
+    "latency_ms_p50": 1723.99,
+    "latency_ms_p95": 1857.45,
     "methodology_note": "Deterministic rubric-based proxy evaluation. Groundedness is not an independent semantic entailment judgment; citation accuracy requires all expected document families; tool accuracy requires the exact MCP call sequence. Workflow completion uses only workflow-category cases; structured lookups and missing-record checks are excluded. This harness calls the orchestrator directly and does not exercise OpenRouter response generation; public API tests cover that seam with a fake provider, and live provider output is checked during the configured demo.",
     "latency_note": "Each sampled task opens a fresh local MCP stdio subprocess; its latency includes process and embedding/index initialization. The separate read-only priming request is reported but does not warm later subprocesses. These are not hosted Render cold-start measurements and exclude OpenRouter answer-generation latency. P50 and p95 use nearest rank; with 15 samples, p95 is the maximum observed task latency."
   },
@@ -44,7 +49,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7297.44,
+      "latency_ms": 1649.86,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -52,7 +57,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: A maximum of five unused PTO days may carry into the next calendar year. Carry-over above five days requires written HR approval and a documented reason, such as a cancelled leave period caused by operational requirements. Carried days should be used before newly accrued days where the synthetic balance record supports that ordering. The assistant must not infer carry-over from a total balance alone; it should retrieve the balance details or state that the composition is unavailable. Full-time synthetic employees accrue twenty days of paid time off per calendar year. Part-time employees receive a prorated allocation recorded in the structured PTO dataset. Contractors do not accrue employee PTO unless a fictional contract record states otherwise. New employees may use accrued PTO after thirty calendar days of service, subject to manager approval and operational coverage. The structured balance is the authoritative record for the demonstration; a policy statement describes the rule but does not prove an individual's current balance. Employees should promptly update a request if dates or duration change. A manager may ask for an alternative period when coverage is insufficient, but should not cancel approved leave without a material operational reason and HR review. If illness occurs during PTO, conversion to another leave type depends on the separate leave policy and supporting records. A mock email draft may summarise a request after explicit user confirmation, but it does not send a message or create an approval."
+      "answer": "Based on the strongest matching fictional policy evidence: A maximum of five unused PTO days may carry into the next calendar year. Carry-over above five days requires written HR approval and a documented reason, such as a cancelled leave period caused by operational requirements. Carried days should be used before newly accrued days where the synthetic balance record supports that ordering. The assistant must not infer carry-over from a total balance alone; it should retrieve the balance details or state that the composition is unavailable. Full-time synthetic employees accrue twenty days of paid time off per calendar year. Part-time employees receive a prorated allocation recorded in the structured PTO dataset. Contractors do not accrue employee PTO unless a fictional contract record states otherwise. New employees may use accrued PTO after thirty calendar days of service, subject to manager approval and operational coverage. The structured balance is the authoritative record for the demonstration; a policy statement describes the rule but does not prove an individual's current balance. A complete PTO request identifies intended dates, working days requested, employee ID and scheduling detail needed for the manager to review coverage. The assistant should retrieve the structured balance and notice rule before explaining the likely effect. It distinguishes calendar days from working days when a request spans weekends or holidays and must not calculate a balance from an unsupported assumption about accrual or carry-over. The manager considers planned work, coverage and overlapping requests, then records a decision in the authorised workflow. A draft message is not approval, and silence does not grant leave."
     },
     {
       "id": "POL-02",
@@ -77,7 +82,7 @@
         "POL-EXP-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7344.55,
+      "latency_ms": 1647.75,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -85,7 +90,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: Itemised receipts are required for expenses of twenty-five dollars or more. Claims should be submitted within thirty calendar days of the transaction or return from travel. The employee must identify the business purpose, attendees where relevant, currency and project code. A missing receipt requires a written explanation and manager approval; repeated missing receipts are referred to Finance. Managers check necessity, coding and policy compliance. Finance may sample claims, request clarification or reject unsupported items. Employees must not split a transaction to avoid a receipt or approval threshold. Records are retained under the records policy. A mock ticket can capture a disputed claim after confirmation, but no payment or accounting entry is created. Each claim should connect the expense to an approved business activity and identify the transaction date, currency, merchant, amount, project or cost code and payment method. Itemised receipts should show what was purchased; a card slip alone may not distinguish a business item from a personal one. For a group meal, record the business purpose and attendees where appropriate without adding sensitive employee detail. If a receipt is unavailable, explain why and submit the exception for manager review. Do not reconstruct a receipt, alter a date or divide one purchase into smaller claims to avoid a control. Finance may return incomplete claims for correction."
+      "answer": "Based on the strongest matching fictional policy evidence: Itemised receipts are required for expenses of twenty-five dollars or more. Claims should be submitted within thirty calendar days of the transaction or return from travel. The employee must identify the business purpose, attendees where relevant, currency and project code. A missing receipt requires a written explanation and manager approval; repeated missing receipts are referred to Finance. Each claim should connect the expense to an approved business activity and identify the transaction date, currency, merchant, amount, project or cost code and payment method. Itemised receipts should show what was purchased; a card slip alone may not distinguish a business item from a personal one. For a group meal, record the business purpose and attendees where appropriate without adding sensitive employee detail. If a receipt is unavailable, explain why and submit the exception for manager review. Do not reconstruct a receipt, alter a date or divide one purchase into smaller claims to avoid a control. Finance may return incomplete claims for correction. Managers check necessity, coding and policy compliance. Finance may sample claims, request clarification or reject unsupported items. Employees must not split a transaction to avoid a receipt or approval threshold. Records are retained under the records policy. A mock ticket can capture a disputed claim after confirmation, but no payment or accounting entry is created."
     },
     {
       "id": "POL-03",
@@ -110,7 +115,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7556.16,
+      "latency_ms": 1709.48,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -141,12 +146,12 @@
       "citation_ids": [
         "POL-SEC-01",
         "POL-RW-01",
-        "POL-SEC-01",
         "POL-RW-01",
-        "POL-RW-01"
+        "POL-RW-01",
+        "POL-SEC-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7656.15,
+      "latency_ms": 1751.4,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -154,7 +159,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 0.5,
-      "answer": "Based on the strongest matching fictional policy evidence: Restricted personal data, export-controlled information, privileged legal material and highly confidential client data must not be accessed from an overseas location without written information-security approval. Confidential information should be viewed only when necessary, stored in approved systems and protected from shoulder surfing or public display. Printing to personal devices, copying to removable media and forwarding to personal accounts are prohibited. Only the minimum information needed for the stated purpose should be collected. Records must be stored in the approved synthetic system, labelled with the employee ID, action type, date and decision owner, and retained according to the records policy. Sensitive information must not be copied into free-text fields unless necessary. Access is role based and logs should show which tool was called, which arguments were supplied and what structured result was returned. Hidden chain-of-thought is not a business record and must not be exposed; concise operational traces are sufficient. Employees use the classification assigned by the authorised data owner and choose storage, transmission and access methods appropriate to that class. Restricted personal data, privileged legal material, export-controlled content and highly confidential client data require additional review before overseas access or transfer. A public link, personal email account, consumer file-sharing service or removable device is not an approved substitute for a managed workspace. Minimise copies, limit recipients, protect screens and remove temporary files using the supported process. If classification is absent or disputed, treat the data conservatively and ask the owner before proceeding; do not infer that information is public because it appears in a search result."
+      "answer": "Based on the strongest matching fictional policy evidence: Restricted personal data, export-controlled information, privileged legal material and highly confidential client data must not be accessed from an overseas location without written information-security approval. Confidential information should be viewed only when necessary, stored in approved systems and protected from shoulder surfing or public display. Printing to personal devices, copying to removable media and forwarding to personal accounts are prohibited. Only the minimum information needed for the stated purpose should be collected. Records must be stored in the approved synthetic system, labelled with the employee ID, action type, date and decision owner, and retained according to the records policy. Sensitive information must not be copied into free-text fields unless necessary. Access is role based and logs should show which tool was called, which arguments were supplied and what structured result was returned. Hidden chain-of-thought is not a business record and must not be exposed; concise operational traces are sufficient. Employees are responsible for giving complete and accurate information, reading the applicable procedure and obtaining required approvals before relying on an outcome. Managers are responsible for operational coverage, consistency and timely decisions. HR owns policy interpretation and exception records. Information Security owns technical access controls. Finance owns expense controls. Legal, tax and immigration specialists provide advice when a request crosses their areas. The MSAIE assistant may retrieve evidence, call approved tools, identify missing information and prepare fictional drafts, but it must not silently bypass an approval or claim that a provisional result is final."
     },
     {
       "id": "RW-01",
@@ -183,7 +188,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7423.46,
+      "latency_ms": 1765.46,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -220,7 +225,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7842.18,
+      "latency_ms": 1762.63,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -257,7 +262,7 @@
         "POL-RW-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7839.84,
+      "latency_ms": 1704.9,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -290,7 +295,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7429.77,
+      "latency_ms": 1710.82,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -325,7 +330,7 @@
         "POL-RW-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7674.24,
+      "latency_ms": 1798.64,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -364,7 +369,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7471.9,
+      "latency_ms": 1743.99,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -403,7 +408,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7598.35,
+      "latency_ms": 1722.82,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -444,7 +449,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7898.46,
+      "latency_ms": 1723.99,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -452,7 +457,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Maya Chen has 14 synthetic PTO days available. The request is for 5 day(s), leaving 9 if approved. The policy notice expectation is 30 calendar days, and manager approval remains required.\n\nMock email draft (EMAIL-2C9FC2749D)\nTo: manager.one@example.invalid\nSubject: PTO request for 5 day(s) — Maya Chen\nPlease review Maya Chen's synthetic PTO request for 5 day(s). Confirm policy eligibility, operational coverage, and any required approvals. This is a demonstration draft; no email was sent."
+      "answer": "Maya Chen has 14 synthetic PTO days available. The request is for 5 day(s), leaving 9 if approved. The policy notice expectation is 30 calendar days, and manager approval remains required.\n\nMock email draft (EMAIL-B27E868FE4)\nTo: manager.one@example.invalid\nSubject: PTO request for 5 day(s) — Maya Chen\nPlease review Maya Chen's synthetic PTO request for 5 day(s). Confirm policy eligibility, operational coverage, and any required approvals. This is a demonstration draft; no email was sent."
     },
     {
       "id": "PTO-04",
@@ -483,7 +488,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7576.14,
+      "latency_ms": 1715.16,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -516,7 +521,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7549.04,
+      "latency_ms": 1683.42,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -552,7 +557,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7677.21,
+      "latency_ms": 1718.68,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -588,7 +593,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7746.02,
+      "latency_ms": 1899.47,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -609,7 +614,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": true,
-      "latency_ms": 0.02,
+      "latency_ms": 0.03,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -630,7 +635,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.01,
+      "latency_ms": 0.12,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -662,7 +667,7 @@
         "POL-CON-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7429.71,
+      "latency_ms": 1857.45,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -694,7 +699,7 @@
         "POL-CON-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7715.33,
+      "latency_ms": 1778.39,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -728,7 +733,7 @@
         "POL-CON-01"
       ],
       "latency_sample": false,
-      "latency_ms": 8360.73,
+      "latency_ms": 1791.57,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -736,7 +741,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "This sensitive matter has been escalated. A fictional local HR ticket was created with ID TKT-CAC49B11ED; no production system was contacted. An authorised HR professional must handle the case."
+      "answer": "This sensitive matter has been escalated. A fictional local HR ticket was created with ID TKT-48226A604A; no production system was contacted. An authorised HR professional must handle the case."
     },
     {
       "id": "SAFE-06",
@@ -749,7 +754,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.1,
+      "latency_ms": 0.12,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -770,7 +775,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.05,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -791,7 +796,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.07,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -833,7 +838,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.05,
+      "latency_ms": 0.13,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -858,7 +863,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": true,
-      "latency_ms": 7917.17,
+      "latency_ms": 1806.67,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -892,7 +897,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7469.51,
+      "latency_ms": 1781.85,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -925,7 +930,7 @@
         "POL-SEC-01"
       ],
       "latency_sample": true,
-      "latency_ms": 7397.2,
+      "latency_ms": 1760.01,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -933,7 +938,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: Remote access must use a company-managed device, multi-factor authentication, the corporate virtual private network and approved collaboration tools. Local administrator rights, unapproved remote desktop software and shared credentials are prohibited. Employees must report lost devices, suspicious prompts and unexpected authentication requests immediately. Access may be restricted by destination, data classification or incident response status. Employees are responsible for giving complete and accurate information, reading the applicable procedure and obtaining required approvals before relying on an outcome. Managers are responsible for operational coverage, consistency and timely decisions. HR owns policy interpretation and exception records. Information Security owns technical access controls. Finance owns expense controls. Legal, tax and immigration specialists provide advice when a request crosses their areas. The MSAIE assistant may retrieve evidence, call approved tools, identify missing information and prepare fictional drafts, but it must not silently bypass an approval or claim that a provisional result is final. Public wireless networks may be used only through the corporate VPN and where the employee can maintain control of the device. Devices must not be left unattended in vehicles or shared accommodation. Screens should be locked whenever the employee steps away. Sensitive conversations should not occur in public areas. Any suspected loss, compromise or unauthorised access must be reported through the security incident channel without waiting for the end of the trip."
+      "answer": "Based on the strongest matching fictional policy evidence: Remote access must use a company-managed device, multi-factor authentication, the corporate virtual private network and approved collaboration tools. Local administrator rights, unapproved remote desktop software and shared credentials are prohibited. Employees must report lost devices, suspicious prompts and unexpected authentication requests immediately. Access may be restricted by destination, data classification or incident response status. Public wireless networks may be used only through the corporate VPN and where the employee can maintain control of the device. Devices must not be left unattended in vehicles or shared accommodation. Screens should be locked whenever the employee steps away. Sensitive conversations should not occur in public areas. Any suspected loss, compromise or unauthorised access must be reported through the security incident channel without waiting for the end of the trip. Use a company-managed device, multi-factor authentication, the corporate VPN and approved collaboration software on remote networks. A public network may be used only where the device remains controlled and the VPN is active. Avoid sensitive conversations where they can be overheard; lock the screen whenever stepping away. Report a lost device, credential disclosure, malware alert, unexpected access or accidental sharing promptly. Provide time, system, account and a factual description, without passwords or unnecessary personal data. Do not delete evidence or investigate another person's account. Information Security determines containment, access revocation and preservation steps."
     },
     {
       "id": "POL-06",
@@ -958,7 +963,7 @@
         "POL-SVC-01"
       ],
       "latency_sample": false,
-      "latency_ms": 7920.8,
+      "latency_ms": 1731.12,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -966,7 +971,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: A ticket tool requires a valid synthetic employee ID, category, concise summary and explicit user confirmation. The generated ID proves only that a local demonstration record was written. It does not contact a production service desk, send a notification or create a legal record. The response must state that boundary clearly. Route routine questions to the policy owner or service queue associated with the request. Benefits status and balance questions use structured employee tools; general policy questions use cited retrieval; equipment faults use IT support; safety incidents use the urgent channel. Harassment, discrimination, retaliation and legal concerns go to authorised HR without investigation by the assistant. A missing employee record or ambiguous classification should be returned for clarification or HR review. Priority follows documented service criteria and immediate safety risk, not persuasive language or seniority. A local mock ticket is not a production case or notification. Before creating a local demonstration ticket, show the proposed category and concise summary and ask for explicit confirmation. The user can correct or cancel the draft first. Confirmation authorises only that fictional local record, not a real message, production write or external notification. After creation, state the generated ID and local-only boundary plainly. An owner closes a ticket only after recording the outcome and follow-up; a request that received no response or was redirected is not resolved. Trends may be reviewed using de-identified categories to improve policy wording and routing. Evaluation fixtures stay separate from operational reporting, and the trace records tools and confirmation without exposing hidden reasoning."
+      "answer": "Based on the strongest matching fictional policy evidence: A ticket tool requires a valid synthetic employee ID, category, concise summary and explicit user confirmation. The generated ID proves only that a local demonstration record was written. It does not contact a production service desk, send a notification or create a legal record. The response must state that boundary clearly. Route routine questions to the policy owner or service queue associated with the request. Benefits status and balance questions use structured employee tools; general policy questions use cited retrieval; equipment faults use IT support; safety incidents use the urgent channel. Harassment, discrimination, retaliation and legal concerns go to authorised HR without investigation by the assistant. A missing employee record or ambiguous classification should be returned for clarification or HR review. Priority follows documented service criteria and immediate safety risk, not persuasive language or seniority. A local mock ticket is not a production case or notification. An accepted ticket has a synthetic identifier, category, summary, requester, owner and current status. The owner records whether information is needed, who will follow up and the next expected action. A request can remain pending while an authorised person reviews it; the assistant must not change that state based on conversational assumptions. Reassignment records the reason and new owner. A duplicate may be linked to an existing ticket after the service owner checks it. The assistant may report fields returned by the tool but should not invent a deadline, queue or resolution absent from the structured result."
     }
   ]
 }

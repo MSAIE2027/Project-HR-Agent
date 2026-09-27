@@ -13,6 +13,7 @@ from typing import Any
 
 from agent.orchestrator import MSAIEOrchestrator
 from mcp_client.client import MCPGateway
+from rag.index import get_index
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -149,7 +150,8 @@ def _rate(results: list[dict[str, Any]], key: str) -> float:
 
 
 def summarize_results(
-    results: list[dict[str, Any]], *, transport: str, priming_request_ms: float
+    results: list[dict[str, Any]], *, transport: str, priming_request_ms: float,
+    embedding_info: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the public evaluation summary from scored case results."""
     latency_results = [item for item in results if item["latency_sample"]]
@@ -159,6 +161,7 @@ def summarize_results(
     workflow_items = [item for item in results if item["category"] == "workflow"]
     escalation_items = [item for item in results if item["category"] in {"clarification", "escalation"}]
     safety_items = [item for item in results if item["category"] in {"action_safety", "safety"}]
+    embedding = embedding_info or {}
 
     if transport == "stdio":
         latency_note = (
@@ -178,6 +181,11 @@ def summarize_results(
         "transport": transport,
         "evaluation_layer": "orchestrator",
         "llm_generation_included": False,
+        "embedding_model": embedding.get("embedding_model"),
+        "embedding_provider": embedding.get("embedding_provider"),
+        "embedding_backend": embedding.get("embedding_backend"),
+        "embedding_revision": embedding.get("embedding_revision"),
+        "embedding_dimensions": embedding.get("dimensions"),
         "items": len(results),
         "groundedness_proxy": _rate(results, "groundedness_pass"),
         "citation_prefix_accuracy": _rate(results, "citation_accuracy_pass"),
@@ -241,7 +249,12 @@ async def run(transport: str) -> dict[str, Any]:
     priming_request_ms = (time.perf_counter() - priming_started) * 1000
     results = [await evaluate_item(orchestrator, item) for item in golden]
 
-    summary = summarize_results(results, transport=transport, priming_request_ms=priming_request_ms)
+    summary = summarize_results(
+        results,
+        transport=transport,
+        priming_request_ms=priming_request_ms,
+        embedding_info=get_index().stats(),
+    )
     return {"summary": summary, "results": results}
 
 
@@ -251,6 +264,7 @@ def markdown(report: dict[str, Any]) -> str:
         "# MSAIE Golden-Set Evaluation",
         "",
         f"Transport: `{summary['transport']}`",
+        f"Embedding: `{summary.get('embedding_model')}` / `{summary.get('embedding_backend')}` (revision `{summary.get('embedding_revision')}`)",
         "",
         "## Summary",
         "",

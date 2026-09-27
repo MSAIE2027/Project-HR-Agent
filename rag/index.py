@@ -15,6 +15,7 @@ from threading import Lock
 from typing import Any
 
 import httpx
+import numpy as np
 
 from rag.ingest import chunk_sections, load_policy_sections
 
@@ -29,6 +30,10 @@ STOP_WORDS = {
 HASH_MODEL = "msaie-hashing-tfidf-v1"
 DEFAULT_LOCAL_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_REMOTE_MODEL = DEFAULT_LOCAL_MODEL
+HF_EMBEDDING_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+HF_ONNX_MODEL_FILE = "onnx/model_quint8_avx2.onnx"
+HF_EMBEDDING_BACKEND = "onnxruntime-quint8-avx2"
+HF_EMBEDDING_MAX_LENGTH = 256
 _LOCK = Lock()
 
 
@@ -96,6 +101,14 @@ def _embedding_config_signature() -> str:
         "model": config["model"] if config else _requested_embedding_model(),
         "base_url": config["base_url"] if config else None,
     }
+    if not config:
+        signature.update(
+            {
+                "backend": HF_EMBEDDING_BACKEND,
+                "revision": _local_embedding_revision(_requested_embedding_model()),
+                "onnx_model_file": HF_ONNX_MODEL_FILE,
+            }
+        )
     return hashlib.sha256(json.dumps(signature, sort_keys=True).encode("utf-8")).hexdigest()
 
 
@@ -111,16 +124,91 @@ def _policy_source_fingerprint() -> str:
     return digest.hexdigest()
 
 
-@lru_cache(maxsize=2)
-def _local_embedding_model(model_name: str) -> Any:
-    from sentence_transformers import SentenceTransformer
+def _local_embedding_revision(model_name: str) -> str:
+    if model_name == DEFAULT_LOCAL_MODEL:
+        return HF_EMBEDDING_REVISION
+    return os.getenv("MSAIE_EMBEDDING_REVISION", "main")
 
-    return SentenceTransformer(model_name)
+
+class HuggingFaceOnnxEmbedder:
+    """Run the pinned MiniLM checkpoint with the Hugging Face INT8 ONNX export."""
+
+    def __init__(self, model_name: str, revision: str) -> None:
+        if model_name != DEFAULT_LOCAL_MODEL:
+            raise ValueError(
+                f"Local Hugging Face embeddings supports only {DEFAULT_LOCAL_MODEL}"
+            )
+
+        from huggingface_hub import hf_hub_download
+        from tokenizers import Tokenizer
+        import onnxruntime as ort
+
+        model_path = hf_hub_download(
+            repo_id=model_name,
+            filename=HF_ONNX_MODEL_FILE,
+            revision=revision,
+        )
+        tokenizer_path = hf_hub_download(
+            repo_id=model_name,
+            filename="tokenizer.json",
+            revision=revision,
+        )
+        self.tokenizer = Tokenizer.from_file(tokenizer_path)
+        self.tokenizer.enable_truncation(max_length=HF_EMBEDDING_MAX_LENGTH)
+        self.tokenizer.enable_padding()
+
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = max(1, int(os.getenv("MSAIE_EMBEDDING_THREADS", "1")))
+        options.inter_op_num_threads = 1
+        options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        self.session = ort.InferenceSession(
+            model_path,
+            sess_options=options,
+            providers=["CPUExecutionProvider"],
+        )
+        self.input_names = {item.name for item in self.session.get_inputs()}
+        self.output_name = self.session.get_outputs()[0].name
+
+    def encode(
+        self,
+        texts: list[str],
+        *,
+        normalize_embeddings: bool = True,
+        batch_size: int = 32,
+    ) -> np.ndarray:
+        if not texts:
+            return np.empty((0, 384), dtype=np.float32)
+
+        vectors: list[np.ndarray] = []
+        for offset in range(0, len(texts), max(1, batch_size)):
+            batch = texts[offset : offset + max(1, batch_size)]
+            encodings = self.tokenizer.encode_batch(batch)
+            values = {
+                "input_ids": np.asarray([item.ids for item in encodings], dtype=np.int64),
+                "attention_mask": np.asarray(
+                    [item.attention_mask for item in encodings], dtype=np.int64
+                ),
+                "token_type_ids": np.asarray([item.type_ids for item in encodings], dtype=np.int64),
+            }
+            inputs = {name: values[name] for name in self.input_names}
+            hidden = self.session.run([self.output_name], inputs)[0].astype(np.float32)
+            mask = values["attention_mask"][..., None].astype(np.float32)
+            pooled = (hidden * mask).sum(axis=1) / np.maximum(mask.sum(axis=1), 1.0)
+            if normalize_embeddings:
+                pooled /= np.maximum(np.linalg.norm(pooled, axis=1, keepdims=True), 1e-12)
+            vectors.append(pooled)
+        return np.concatenate(vectors, axis=0)
+
+
+@lru_cache(maxsize=2)
+def _local_embedding_model(model_name: str, revision: str) -> HuggingFaceOnnxEmbedder:
+    return HuggingFaceOnnxEmbedder(model_name, revision)
 
 
 def _local_embeddings(texts: list[str], model_name: str) -> list[list[float]]:
-    model = _local_embedding_model(model_name)
-    vectors = model.encode(texts, normalize_embeddings=True).tolist()
+    revision = _local_embedding_revision(model_name)
+    model = _local_embedding_model(model_name, revision)
+    vectors = model.encode(texts, normalize_embeddings=True, batch_size=32).tolist()
     return [[float(value) for value in vector] for vector in vectors]
 
 
@@ -207,6 +295,8 @@ class RagIndex:
             embedding_config = _embedding_config()
             actual_model = HASH_MODEL
             provider = "local-hashing-fallback"
+            embedding_backend = "sparse-hash"
+            embedding_revision = ""
             vector_format = "sparse"
             embedding_error = ""
             idf: dict[str, float] = {}
@@ -225,6 +315,7 @@ class RagIndex:
                     vectors = dense_vectors
                     actual_model = embedding_config["model"]
                     provider = "openrouter"
+                    embedding_backend = "remote-api"
                     vector_format = "dense"
                 except Exception as exc:
                     embedding_error = str(exc)[:500]
@@ -240,6 +331,8 @@ class RagIndex:
                     vectors = dense_vectors
                     actual_model = requested_model
                     provider = "huggingface"
+                    embedding_backend = HF_EMBEDDING_BACKEND
+                    embedding_revision = _local_embedding_revision(requested_model)
                     vector_format = "dense"
                 except Exception as exc:
                     embedding_error = str(exc)[:500]
@@ -283,6 +376,8 @@ class RagIndex:
                         ("embedding_config_signature", _embedding_config_signature()),
                         ("source_fingerprint", source_fingerprint),
                         ("embedding_provider", provider),
+                        ("embedding_backend", embedding_backend),
+                        ("embedding_revision", embedding_revision),
                         ("embedding_error", embedding_error),
                         ("vector_format", vector_format),
                         ("dimensions", str(dimensions)),
@@ -577,6 +672,8 @@ class RagIndex:
             "embedding_model": metadata.get("embedding_model", "unknown"),
             "requested_embedding_model": metadata.get("requested_embedding_model", "unknown"),
             "embedding_provider": metadata.get("embedding_provider", "unknown"),
+            "embedding_backend": metadata.get("embedding_backend", "unknown"),
+            "embedding_revision": metadata.get("embedding_revision") or None,
             "semantic_embeddings": metadata.get("vector_format") == "dense",
             "embedding_error": metadata.get("embedding_error") or None,
             "dimensions": int(metadata.get("dimensions", "0")),

@@ -54,3 +54,31 @@
 - Full CI and deployment have not run for this working-tree change.
 
 **Review summary:** Standards — 0 violations and 0 actionable smells. Spec — 0 remaining implementation mismatches or scope-creep findings. Hosted answer acceptance is a separate open release gate.
+
+## Code review — ONNX embedding mitigation and release checks
+
+**Review date:** 2026-09-27
+
+**Code baseline:** `a24154d` (user-confirmed)
+
+**Review scope:** Local Hugging Face MiniLM ONNX embedding implementation, SQLite metadata and rebuild behavior, CI/Render index gates, related requirements/evidence documentation, and the private presenter vault.
+
+### Standards
+
+- No actionable violation of the repository's `AGENTS.md` was found. The implementation keeps the production model/chunk baseline fixed and covers behavior through the public `RagIndex` seam.
+- Review found that the embedder's one-model ONNX artifact could be requested under an arbitrary model ID. It now rejects unsupported local model IDs before downloading and records the fallback reason.
+- Review found that the cache key omitted the resolved model revision. The cache now keys by model and revision; the public index regression verifies that a revision change loads a new runtime.
+
+### Spec
+
+- The SRS requires a pinned 384-dimensional MiniLM index with 120/20 chunks. Review found that CI and Render only asserted that some semantic embedding revision existed. Both build gates now require the exact model revision, backend, 384 dimensions, and 120/20 settings.
+- No remaining implementation mismatch or unrelated scope change was found in this review. OpenRouter composition remains required for citation-bearing answers, and the ONNX change leaves that path unchanged.
+- Clean CI and hosted verification remain open release gates; local results do not prove Render memory behavior or successful live OpenRouter generation.
+
+### Verification
+
+- Full local suite: **99 passed**, one third-party Starlette/AnyIO deprecation warning.
+- Pinned SQLite build assertion, FastMCP stdio discovery/tool-call smoke, compile check, both 30-case evaluation transports with thresholds, YAML parsing, and `git diff --check` passed.
+- Candidate changes have not yet passed GitHub Actions or been deployed to Render.
+
+**Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed. Hosted answer acceptance is still an external release gate.

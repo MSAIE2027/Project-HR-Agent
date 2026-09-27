@@ -16,6 +16,7 @@ from evaluation.run_evaluation import (
     summarize_results,
 )
 from mcp_client.client import MCPGateway
+from rag.index import HF_EMBEDDING_BACKEND, HF_EMBEDDING_REVISION
 
 
 def test_golden_set_evaluation_thresholds() -> None:
@@ -37,6 +38,8 @@ def test_golden_set_evaluation_thresholds() -> None:
     assert summary["latency_sample_count"] == len(LATENCY_SAMPLE_IDS)
     assert 10 <= summary["latency_sample_count"] <= 20
     assert summary["latency_ms_priming_request"] > 0
+    assert summary["embedding_backend"] == HF_EMBEDDING_BACKEND
+    assert summary["embedding_revision"] == HF_EMBEDDING_REVISION
 
 
 def test_latency_percentiles_use_nearest_rank() -> None:
@@ -171,6 +174,7 @@ def test_workflow_completion_excludes_lookups_and_missing_records() -> None:
     assert summary["workflow_case_count"] == 1
     assert summary["workflow_completion_rate"] == 1.0
     assert summary["llm_generation_included"] is False
+    assert summary["embedding_backend"] is None
     assert "OpenRouter answer generation included | No; orchestrator-level evaluation" in markdown(
         {"summary": summary, "results": results}
     )

@@ -1,5 +1,8 @@
 {
   "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_provider": "huggingface",
+  "embedding_backend": "onnxruntime-quint8-avx2",
+  "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
   "embedding_dimensions": 384,
   "chunk_words": 120,
   "overlap_words": 20,
@@ -51,7 +54,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 2.0,
+          "mean_unique_documents": 1.933,
           "mean_unique_sections": 8.0
         }
       }
@@ -85,7 +88,7 @@
           "family_recall_at_k": 0.7619,
           "all_family_coverage_at_k": 0.7333,
           "multi_document_all_family_coverage_at_k": 0.2,
-          "mean_unique_documents": 1.467,
+          "mean_unique_documents": 1.333,
           "mean_unique_sections": 5.0
         },
         "8": {
@@ -124,10 +127,10 @@
         },
         "5": {
           "hit_at_k": 1.0,
-          "family_recall_at_k": 0.8095,
-          "all_family_coverage_at_k": 0.8,
-          "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 1.333,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.267,
           "mean_unique_sections": 5.0
         },
         "8": {
@@ -135,7 +138,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 1.867,
+          "mean_unique_documents": 1.733,
           "mean_unique_sections": 8.0
         }
       }
@@ -169,15 +172,15 @@
           "family_recall_at_k": 0.7619,
           "all_family_coverage_at_k": 0.7333,
           "multi_document_all_family_coverage_at_k": 0.2,
-          "mean_unique_documents": 1.333,
+          "mean_unique_documents": 1.267,
           "mean_unique_sections": 5.0
         },
         "8": {
           "hit_at_k": 1.0,
-          "family_recall_at_k": 0.8571,
-          "all_family_coverage_at_k": 0.8,
-          "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 2.133,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.867,
           "mean_unique_sections": 8.0
         }
       }
@@ -208,10 +211,10 @@
         },
         "5": {
           "hit_at_k": 1.0,
-          "family_recall_at_k": 0.8095,
-          "all_family_coverage_at_k": 0.8,
-          "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 1.333,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
+          "mean_unique_documents": 1.267,
           "mean_unique_sections": 5.0
         },
         "8": {
@@ -219,7 +222,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 1.867,
+          "mean_unique_documents": 1.733,
           "mean_unique_sections": 8.0
         }
       }
@@ -247,9 +250,9 @@
         },
         "5": {
           "hit_at_k": 1.0,
-          "family_recall_at_k": 0.8095,
-          "all_family_coverage_at_k": 0.8,
-          "multi_document_all_family_coverage_at_k": 0.4,
+          "family_recall_at_k": 0.7619,
+          "all_family_coverage_at_k": 0.7333,
+          "multi_document_all_family_coverage_at_k": 0.2,
           "mean_unique_documents": 1.333,
           "mean_unique_sections": 5.0
         },
@@ -258,7 +261,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 2.133,
+          "mean_unique_documents": 2.0,
           "mean_unique_sections": 8.0
         }
       }
@@ -287,7 +290,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 1.467,
+          "mean_unique_documents": 1.4,
           "mean_unique_sections": 5.0
         },
         "8": {
@@ -295,7 +298,7 @@
           "family_recall_at_k": 0.8095,
           "all_family_coverage_at_k": 0.8,
           "multi_document_all_family_coverage_at_k": 0.4,
-          "mean_unique_documents": 2.067,
+          "mean_unique_documents": 2.0,
           "mean_unique_sections": 8.0
         }
       }
@@ -501,9 +504,9 @@
         "citation_ids": [
           "POL-SEC-01",
           "POL-RW-01",
-          "POL-SEC-01",
           "POL-RW-01",
-          "POL-RW-01"
+          "POL-RW-01",
+          "POL-SEC-01"
         ],
         "all_expected_families_cited": true,
         "status": "completed"
@@ -649,9 +652,9 @@
           "citation_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-SEC-01"
           ],
           "citation_accuracy_pass": true,
           "keyword_score": 0.5,
@@ -693,7 +696,7 @@
   "baseline_top5_order_mismatch_ids": [],
   "baseline_top10_candidate_set_mismatch_ids": [],
   "methodology": [
-    "Retrieval comparison and read-only route verification; MiniLM 384d and 120/20 chunks are fixed.",
+    "Retrieval comparison and read-only route verification; MiniLM 384d, onnxruntime-quint8-avx2, pinned revision 1110a243fdf4706b3f48f1d95db1a4f5529b4d41, and 120/20 chunks are fixed.",
     "Weight variants rescore every chunk using the production cosine, lexical overlap, title-hit, and exact-phrase components.",
     "MMR reranks the production-score top 10 using chunk-to-chunk embedding cosine; lambda controls relevance versus diversity.",
     "Actual orchestrator routing is exercised only on policy questions; execution aborts if any tool besides policy search is selected.",

@@ -152,6 +152,8 @@ def index_documents() -> dict[str, Any]:
                 "chunks",
                 "embedding_model",
                 "embedding_provider",
+                "embedding_backend",
+                "embedding_revision",
                 "dimensions",
                 "chunk_words",
                 "overlap_words",

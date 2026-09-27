@@ -9,7 +9,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-from rag.index import DEFAULT_LOCAL_MODEL, RagIndex
+from rag.index import (
+    DEFAULT_LOCAL_MODEL,
+    HF_EMBEDDING_BACKEND,
+    HF_EMBEDDING_REVISION,
+    RagIndex,
+)
 from rag.ingest import load_policy_sections
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -295,7 +300,7 @@ def to_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# MiniLM Retrieval Chunk Ablation",
         "",
-        "This retrieval-only comparison fixes the embedding model to sentence-transformers/all-MiniLM-L6-v2 (384 dimensions), keeps ranking weights unchanged, and compares chunk size and overlap over labeled policy-family queries.",
+        f"This retrieval-only comparison fixes sentence-transformers/all-MiniLM-L6-v2 (384 dimensions) to {report.get('embedding_backend', HF_EMBEDDING_BACKEND)} at HF revision {report.get('embedding_revision', HF_EMBEDDING_REVISION)}, keeps ranking weights unchanged, and compares chunk size and overlap over labeled policy-family queries.",
         "",
         f"Cases: {report['query_count']} total, including {report['multi_document_query_count']} multi-document queries. Query-time measurements use a warmed local model. No transaction workflows are included.",
         "",
@@ -345,6 +350,9 @@ def main() -> None:
     corpus_document_count = len({section.document_id for section in policy_sections})
     report = {
         "embedding_model": DEFAULT_LOCAL_MODEL,
+        "embedding_provider": "huggingface",
+        "embedding_backend": HF_EMBEDDING_BACKEND,
+        "embedding_revision": HF_EMBEDDING_REVISION,
         "embedding_dimensions": 384,
         "corpus_document_count": corpus_document_count,
         "corpus_word_count": corpus_word_count,
