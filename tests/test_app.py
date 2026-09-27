@@ -85,13 +85,19 @@ with TestClient(app) as client:
         assert response.status_code == 503
         assert "required OpenRouter configuration" in response.json()["detail"]
 
-    def test_readiness_checks_live_mcp_discovery(monkeypatch) -> None:
-        async def unavailable_discovery():
-            raise main_module.MCPGatewayError("MCP stdio connection failed")
+    def test_readiness_uses_cached_mcp_status_without_blocking_on_discovery(monkeypatch) -> None:
+        previous_mcp = app.state.mcp
 
-        monkeypatch.setattr(app.state.mcp_gateway, "discover", unavailable_discovery)
+        async def forbidden_discovery():
+            raise AssertionError("readiness must not wait on the serialized MCP session")
 
-        response = client.get("/health/ready")
+        monkeypatch.setattr(app.state.mcp_gateway, "discover", forbidden_discovery)
+        app.state.mcp = {"status": "unavailable", "transport": "stdio", "tools": []}
+
+        try:
+            response = client.get("/health/ready")
+        finally:
+            app.state.mcp = previous_mcp
 
         assert response.status_code == 503
         assert "must be ready" in response.json()["detail"]

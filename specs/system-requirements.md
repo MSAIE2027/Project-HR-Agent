@@ -42,7 +42,7 @@ Build, evaluate, and demonstrate an agentic HR support application that grounds 
 - **Safety:** No production actions, legal/medical/tax/immigration determinations, hidden reasoning disclosure, or unsupported policy claims.
 - **Reproducibility:** Pin or constrain dependencies, keep retrieval settings documented, and provide one-command checks.
 - **Free-tier fit:** Use a small corpus and local/lightweight storage; document index rebuild and cold-start implications.
-- **Service lifecycle:** In stdio mode, reuse one official MCP process for the FastAPI app lifetime, serialize tool sequences, close it on shutdown, and report a broken connection as unavailable. A new app lifecycle (service restart) restores a broken session. Verify hosted memory after the embedding model has loaded; process reuse alone does not prove fit within the service limit.
+- **Service lifecycle:** In stdio mode, reuse one official MCP process for the FastAPI app lifetime, serialize tool sequences, close it on shutdown, report failed operations as unavailable, and keep routine readiness probes independent of the session lock. Explicit deep health may rediscover MCP tools; a service restart restores a broken session. Verify hosted memory after the embedding model has loaded; process reuse alone does not prove fit within the service limit.
 - **Usability/accessibility:** Responsive layout, semantic controls, keyboard operation, visible focus, live status updates, and readable citations/traces.
 - **Observability:** Report active retrieval method, embedding model/dimensions, MCP transport/tool discovery, and answer-refinement status without exposing credentials.
 

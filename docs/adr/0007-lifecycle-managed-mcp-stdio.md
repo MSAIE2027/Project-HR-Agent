@@ -18,12 +18,12 @@ This keeps the real MCP protocol, tool schemas, retrieval model, chunking, ranki
 - The first policy search after startup can still pay the MiniLM model-load cost. Later searches reuse the loaded model and SQLite connections.
 - The MCP subprocess remains resident, so Render memory use must be checked after deployment; reusing a process does not by itself prove the service fits the free-tier limit.
 - Tool sequences are serialized. Model generation occurs outside the MCP lock, so a slow OpenRouter call does not hold the shared tool session.
-- If the persistent process exits, the affected request returns an MCP-unavailable result. `/health/ready` performs live discovery and reports the service unavailable; restarting the app creates a fresh session. The MCP SDK's stdio task group is owned by the lifespan task, so request handlers do not close or replace it.
+- If the persistent process exits, the affected request returns an MCP-unavailable result and updates the cached MCP health state. Routine `/health/ready` probes read that state without waiting for the MCP session lock. Explicit `/health?deep=true` performs live discovery; restarting the app creates a fresh session. The MCP SDK's stdio task group is owned by the lifespan task, so request handlers do not close or replace it.
 - Render memory and answer generation remain post-deploy acceptance checks. Reusing a process does not prove the service fits its free-tier memory limit.
 
 ## Verification
 
-The public `/chat` integration test sends two cited questions over stdio and asserts one subprocess start, then simulates a disconnected session and verifies the request fails safely and readiness turns unhealthy. A separate readiness test verifies live MCP discovery is part of `/health/ready`. Hosted memory and answer-generation acceptance remain separate release checks.
+The public `/chat` integration test sends two cited questions over stdio and asserts one subprocess start, then simulates a disconnected session and verifies the request fails safely and readiness turns unhealthy. A separate readiness test verifies probes do not wait on the MCP lock. Hosted memory and answer-generation acceptance remain separate release checks.
 
 ## Evidence
 

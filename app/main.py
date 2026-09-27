@@ -89,7 +89,7 @@ def _llm_failure_response(
 
 
 @app.get("/health")
-async def health(deep: bool = Query(True)) -> dict[str, Any]:
+async def health(deep: bool = Query(False)) -> dict[str, Any]:
     mcp_status = getattr(app.state, "mcp", {"status": "unknown", "tools": []})
     if deep:
         gateway = _mcp_gateway()
@@ -119,7 +119,7 @@ async def health(deep: bool = Query(True)) -> dict[str, Any]:
 
 @app.get("/health/ready")
 async def readiness() -> dict[str, Any]:
-    report = await health(deep=True)
+    report = await health(deep=False)
     if report["status"] != "ok":
         raise HTTPException(
             status_code=503,
@@ -179,6 +179,11 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
     reset_refinement_status()
     orchestrator = MSAIEOrchestrator(_mcp_gateway())
     result = await orchestrator.handle(request.message, request.confirm_action)
+    if result.mcp.get("status") in {"available", "unavailable"}:
+        current_mcp = getattr(app.state, "mcp", {})
+        app.state.mcp = {**current_mcp, **result.mcp}
+        if result.mcp.get("status") == "available":
+            app.state.mcp.pop("error", None)
 
     provider = get_provider()
     refinement = get_refinement_status()

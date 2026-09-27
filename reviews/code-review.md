@@ -16,12 +16,12 @@
 ## Spec review
 
 - **MCP protocol and workflow — pass locally:** The app reuses the official MCP SDK session over FastMCP stdio without changing tool schemas or user-facing response contracts.
-- **Operational status — pass locally:** A disconnected session produces an explicit MCP-unavailable result, and live readiness returns HTTP 503 until a fresh app lifecycle is available.
+- **Operational status — pass locally:** A disconnected session produces an explicit MCP-unavailable result and updates cached MCP health. Routine readiness returns HTTP 503 without waiting on the tool lock; explicit deep health performs discovery.
 - **Hosted acceptance — pending:** The change still needs hosted CI, a Render deploy, and post-deploy memory observation after MiniLM loads. A successful hosted OpenRouter-composed answer is also required before recording; prior hosted attempts failed closed after HTTP 429 responses.
 - **Submission-owned items:** Recording the course video and confirming `quantic-grader` repository access remain presenter actions and are not represented as complete.
 
 ## Verification
 
-- `./.venv/bin/python -m pytest -q tests/test_app.py tests/test_mcp.py` — **36 passed**, one third-party Starlette/AnyIO deprecation warning.
-- `git diff --check` — passed before commit.
+- `./.venv/bin/python -m pytest -q tests/test_app.py tests/test_mcp.py` — **36 passed** after the cached-readiness adjustment. One third-party Starlette/AnyIO deprecation warning.
+- `git diff --check` — passed for this change.
 - GitHub Actions and hosted Render acceptance are pending for this change.
