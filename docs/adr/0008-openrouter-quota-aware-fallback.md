@@ -11,14 +11,15 @@ The required response composer tries several OpenRouter free-model routes in ord
 
 On HTTP 429, inspect only a bounded set of error fields for explicit free-model daily-quota markers. An explicit model, provider, or route scope in a structured scope field or in unambiguous error wording takes precedence and means the throttle is not account-wide. Stop the model chain only when the fields identify the account-wide free-model daily cap. Continue through the configured fallback chain for model/provider-specific throttles and for unclassified 429 responses.
 
-Return only the normal fail-closed 503 and a sanitized `failure_scope=account_quota` trace field for the recognized account-cap case. Do not include the provider response body, arbitrary metadata, or credential-like values in the API response. Keep the current route-attempt metadata and status semantics for every other failure.
+For the recognized account-wide cap, stop further OpenRouter attempts and pass the same controlled draft, retrieved evidence, and structured facts to the configured OpenCode Zen free-model chain. Preserve `failure_scope=account_quota` in the final `llm_refinement` event whether OpenCode succeeds or fails. If OpenCode and the supported SQLite response-template fallback cannot produce a validated answer, return the normal fail-closed 503. Do not include provider response bodies, arbitrary metadata, or credential-like values in the API response. Keep the current route-attempt metadata and status semantics for model/provider-scoped or unclassified 429s.
 
 ## Consequences
 
 - The service avoids spending additional requests and latency on models that share a known exhausted account quota.
 - Recoverable model/provider throttles still use the ordered fallback chain.
 - The marker check is intentionally conservative; a new provider error shape may be treated as an ordinary 429 until covered by a regression test.
-- The application still withholds the controlled draft and returns HTTP 503 when the account cap is reached.
+- OpenRouter calls stop immediately on the identified account cap; a configured independent provider may still complete the final composition.
+- If all safe fallbacks fail, the application still withholds the controlled draft and returns HTTP 503.
 
 ## Evidence
 

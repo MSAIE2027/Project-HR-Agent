@@ -1,6 +1,6 @@
 # MSAIE HR Agent
 
-A fictional HR support assistant that combines policy retrieval, structured synthetic employee tools, and required LLM response composition. It cites policy evidence, reports its tool workflow, and gates mock actions on explicit confirmation. It does not access real employee data or production HR systems. The public demo has no employee authentication or role authorization; an ID selects a synthetic fixture and does not prove access rights.
+A fictional HR support assistant that combines policy retrieval and structured synthetic employee tools with OpenRouter-first LLM composition, OpenCode Zen failover, and bounded SQLite formatting for a small set of read-only outages. It cites policy evidence, reports its tool workflow, and gates mock actions on explicit confirmation. It does not access real employee data or production HR systems. The public demo has no employee authentication or role authorization; an ID selects a synthetic fixture and does not prove access rights.
 
 ## Architecture
 
@@ -34,9 +34,14 @@ flowchart LR
         Evidence --> Context[Controlled answer context<br/>draft · facts · evidence]
         Records --> Context
         Context --> OpenRouter
-        OpenRouter --> Validate{Application validation}
-        Validate -->|valid| Answer[Final answer<br/>citations · operational trace]
-        Validate -->|invalid or unavailable| Fail[HTTP 503<br/>draft withheld]
+        OpenRouter -->|validated completion| Answer[Final answer<br/>citations · operational trace]
+        OpenRouter -->|invalid result; another route| OpenRouter
+        OpenRouter -->|account quota or chain exhausted| OpenCode[OpenCode Zen free-model chain]
+        OpenCode -->|validated completion| Answer
+        OpenCode -->|invalid result; another route| OpenCode
+        OpenCode -->|chain exhausted| Template{Matching SQLite template?}
+        Template -->|supported facts + citations| Answer
+        Template -->|miss, unsafe, or action request| Fail[HTTP 503<br/>draft withheld]
         Evidence -. citations stay app-owned .-> Answer
         Answer -->|response| API
         Refusal --> API
@@ -56,11 +61,11 @@ flowchart LR
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
     class Presenter,Browser client
     class API,Guard,Client,Server,SearchTool,HRTool,Query,Search,Index,Evidence,Policies,Chunk,DocEmbed,Records,Context local
-    class HF,OpenRouter external
-    class Refusal,Validate,Answer,Fail output
+    class HF,OpenRouter,OpenCode external
+    class Refusal,Template,Answer,Fail output
 ```
 
-**Reading the diagram:** blue is the user interface, green is app-local processing and data, orange is an external model service, and purple marks response and safety boundaries. MCP retrieves policy evidence and synthetic HR facts; OpenRouter composes every successful evidence-backed answer. The model does not choose tools, set eligibility, authorize actions, or own citations. Requests refused before retrieval stop before OpenRouter. Local quick-start can use in-process MCP; CI and Render exercise the stdio path.
+**Reading the diagram:** blue is the user interface, green is app-local processing and data, orange is an external model service, and purple marks response and safety boundaries. MCP retrieves policy evidence and synthetic HR facts; OpenRouter composes answers first, OpenCode Zen is the configured model fallback, and build-seeded SQLite templates provide a fact-bound fallback for supported read-only workflows. Neither model provider chooses tools, sets eligibility, authorizes actions, or owns citations. Requests refused before retrieval stop before model generation. Local quick-start can use in-process MCP; CI and Render exercise the stdio path.
 
 ### Data and storage
 
@@ -70,6 +75,7 @@ flowchart LR
         DOCS[Policy files] --> CHUNK[Section-aware chunks]
         CHUNK --> EMBED[Local MiniLM document embeddings]
         EMBED --> DB[(SQLite vector index)]
+        TEMPLATES[Versioned response templates] --> DB
     end
 
     subgraph Request[Runtime evidence]
@@ -82,12 +88,17 @@ flowchart LR
 
     PASSAGES --> PROMPT[Controlled draft + evidence + structured facts]
     FACTS --> PROMPT
-    PROMPT --> COMPOSE[OpenRouter LLM response composition]
-    COMPOSE --> CHECK[Application validation]
-    CHECK -->|valid| RESPONSE[Answer + citations]
-    CHECK -->|invalid or unavailable| SAFE[HTTP 503; draft withheld]
+    PROMPT --> COMPOSE[OpenRouter model chain<br/>each route validated]
+    COMPOSE -->|valid answer| RESPONSE[Answer + citations]
+    COMPOSE -->|invalid or scoped throttle; try next route| COMPOSE
+    COMPOSE -->|account quota or chain exhausted| OPENCODE[OpenCode Zen free-model chain<br/>each route validated]
+    OPENCODE -->|valid answer| RESPONSE
+    OPENCODE -->|invalid result; try next route| OPENCODE
+    OPENCODE -->|chain exhausted| CACHE{Matching SQLite template?}
+    CACHE -->|supported workflow; fresh facts + citations| RESPONSE
+    CACHE -->|miss, unsafe, or action request| SAFE[HTTP 503; draft withheld]
     UI[Browser SQLite viewer] -->|read-only API request| API[FastAPI]
-    API -->|bounded document and chunk rows| DB
+    API -->|bounded document, chunk, and template metadata| DB
     DB --> API --> UI
     HF[Hugging Face model source] -. model weights downloaded to app .-> EMBED
     HF -. model weights downloaded to app .-> QUERY
@@ -95,12 +106,12 @@ flowchart LR
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
     classDef external fill:#fff7ed,stroke:#ea5800,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
-    class DOCS,CHUNK,EMBED,DB,QUESTION,QUERY,RETRIEVE,PASSAGES,HR,FACTS,PROMPT local
-    class HF,COMPOSE external
-    class CHECK,RESPONSE,SAFE output
+    class DOCS,CHUNK,EMBED,DB,TEMPLATES,QUESTION,QUERY,RETRIEVE,PASSAGES,HR,FACTS,PROMPT local
+    class HF,COMPOSE,OPENCODE external
+    class CACHE,RESPONSE,SAFE output
 ```
 
-Policy embeddings and the vector index run in the app service. OpenRouter is required for every successful citation-bearing answer: the chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. The model formats and enriches a controlled draft; it cannot select tools, change eligibility, or authorize actions. Validation fails closed on unavailable, truncated, unsupported, or unsafe output. Requests refused before retrieval return without an LLM call. The active hosted release and its acceptance status are maintained in [deployment status](deployed.md).
+Policy embeddings, the vector index, and versioned formatting templates ship in the app's SQLite database. OpenRouter is the primary answer composer: Qwen 3.8 27B, Nemotron 3.5 Lightning, Gemma 4 26B A4B, then `openrouter/free`. A detected account-wide free quota cap moves directly to the configured OpenCode Zen model chain; other OpenRouter errors exhaust that chain first. If both model routes fail, supported PTO balance/request and positive remote-work eligibility cases can use SQLite templates with freshly retrieved policy citations and current MCP facts. No employee answers are cached. Validation fails closed on unavailable, truncated, unsupported, or unsafe output when no safe template applies. Requests refused before retrieval return without model generation. The active hosted release and its acceptance status are maintained in [deployment status](deployed.md).
 
 The project uses fixed synthetic records so the same demo query produces a repeatable scenario. The workspace includes examples for several employee IDs and a read-only browser for the SQLite policy documents and chunks; vector payloads are not exposed.
 
@@ -113,11 +124,11 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
-# Set MSAIE_LLM_API_KEY (or OPENROUTER_API_KEY) in .env, then:
+# Set MSAIE_LLM_API_KEY in .env; optionally add OPENCODE_API_KEY for live fallback, then:
 ./scripts/start_local.sh
 ```
 
-The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads the pinned Hugging Face `sentence-transformers/all-MiniLM-L6-v2` INT8 ONNX export. Embeddings run locally through CPU ONNX Runtime and are stored in the SQLite vector index; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
+The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads the pinned Hugging Face `sentence-transformers/all-MiniLM-L6-v2` INT8 ONNX export. Embeddings run locally through CPU ONNX Runtime and are stored in the SQLite vector index; OpenRouter is the primary answer composer, followed by optional OpenCode Zen and bounded SQLite template fallbacks. Restart the service after changing `.env`.
 
 For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is available for quick local development, while the demo and CI exercise the official MCP SDK client and FastMCP server over stdio.
 
@@ -126,10 +137,11 @@ For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is 
 Keep provider credentials in the ignored `.env` file or shell environment. Never commit secrets.
 
 - OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY` (or legacy `OPENROUTER_API_KEY` for local runs), and `MSAIE_LLM_FALLBACK_MODEL`.
+- OpenCode Zen fallback: `OPENCODE_API_KEY`, `OPENCODE_ZEN_BASE_URL`, and `OPENCODE_ZEN_MODELS`. OpenCode currently lists Nemotron 3.5 Lightning Free, Big Pickle, and Space Bunny Free as zero-priced, limited-time routes; availability and access can change. See the [OpenCode Zen catalog](https://opencode.ai/docs/en/zen/).
 - Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions, pinned to Hugging Face revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` and run with the `onnx/model_quint8_avx2.onnx` CPU export. SQLite stores vectors; ONNX Runtime embeds queries locally.
 - `/`: synthetic HR workspace and evaluator lab.
 - `/health` and `/health/ready`: service, SQLite index, MCP, and provider status.
-- `/api/index/documents` and `/api/index/documents/{document_id}/chunks`: read-only SQLite index preview without stored vectors.
+- `/api/index/documents` and `/api/index/documents/{document_id}/chunks`: read-only SQLite index preview without stored vectors; the document endpoint also lists safe template metadata.
 - `/api/tools`: discover the available MCP tools.
 - `/docs`: API schema.
 

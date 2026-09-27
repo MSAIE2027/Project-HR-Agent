@@ -240,6 +240,10 @@
     .index-controls select { width: 100%; min-height: 40px; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 11px; }
     .index-summary { margin: 7px 0; color: var(--subtle); font-size: 10px; }
     .index-chunks { display: grid; gap: 7px; max-height: 390px; overflow: auto; }
+    .index-template-list { display: grid; gap: 6px; margin: 8px 0 12px; }
+    .index-template-row { padding: 8px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+    .index-template-row strong { display: block; margin-bottom: 3px; font-size: 10px; }
+    .index-template-row span { display: block; color: var(--muted); font-size: 9px; line-height: 1.45; }
     .index-chunk { padding: 8px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
     .index-chunk summary { cursor: pointer; color: var(--blue); font-size: 10px; font-weight: 800; overflow-wrap: anywhere; }
     .index-chunk p { margin: 7px 0 0; color: #4a5568; font-size: 10px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -415,6 +419,9 @@
       <div class="index-controls"><select id="index-document"><option value="">Loading indexed documents...</option></select></div>
       <div id="index-summary" class="index-summary" role="status" aria-live="polite">Index details load when this lab opens.</div>
       <div id="index-chunks" class="index-chunks"><p class="lab-empty">Choose a policy document to inspect its SQLite chunk rows.</p></div>
+      <h4>SQLite response templates</h4>
+      <p class="index-intro">These build-seeded rows store reusable wording only. Employee facts and policy passages are retrieved fresh for each question; live model answers are not persisted.</p>
+      <div id="index-templates" class="index-template-list" role="list"><p class="lab-empty">Template rows load when this lab opens.</p></div>
     </section>
 
     <section class="lab-section">
@@ -639,9 +646,11 @@
       const endpoint = refinement.endpoint_host || provider.endpoint_host;
       const temperature = refinement.temperature ?? provider.temperature;
       const temperatureLabel = temperature === undefined || temperature === null ? '' : ` · temp ${Number(temperature).toFixed(1)}`;
+      if (refinement.status === 'cached_template') return `Live model generation unavailable (${refinement.fallback_from_status || 'generation failed'}); SQLite template ${refinement.template_key || 'fallback'} formatted fresh facts`;
+      if (refinement.provider === 'opencode-zen' && refinement.status === 'completed') return `OpenCode Zen composed this answer · ${model || 'resolved model unknown'}${temperatureLabel}`;
       if (refinement.status === 'completed') return `OpenRouter refined this answer · ${model || 'resolved model unknown'}${temperatureLabel}`;
       if (refinement.status === 'rejected') return `OpenRouter did not produce a safe complete answer after ${refinement.attempts || 0} attempt(s); draft withheld`;
-      if (refinement.status === 'unavailable') return `OpenRouter unavailable after ${refinement.attempts || 0} attempt(s); draft withheld`;
+      if (refinement.status === 'unavailable') return `Configured model routes unavailable after ${refinement.attempts || 0} attempt(s); draft withheld`;
       if (refinement.status === 'fallback_to_controlled_draft') return 'OpenRouter response rejected; no unrefined answer delivered';
       if (refinement.status === 'not_configured') return 'OpenRouter required for evidence-backed answers';
       if (provider.status === 'configured') return 'OpenRouter not called for this response';
@@ -837,8 +846,12 @@
         document.getElementById('metric-chunking').textContent = `${rag.chunk_words || 0} / ${rag.overlap_words || 0}`;
         document.getElementById('metric-chunk-detail').textContent = `${rag.chunks || 0} chunks · ${rag.estimated_pages || 0} metadata-est. pages`;
         const temperature = provider.temperature === undefined || provider.temperature === null ? 'not called' : Number(provider.temperature).toFixed(1);
-        const chainNote = modelChain.length ? ` · route order ${modelChain.join(' → ')}` : '';
-        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${chainNote} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.embedding_backend || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces show the selected live route and any fallbacks.`;
+        const chainNote = modelChain.length ? ` · OpenRouter order ${modelChain.join(' → ')}` : '';
+        const fallback = provider.fallback_provider || {};
+        const fallbackNote = fallback.status === 'configured'
+          ? ` · OpenCode Zen order ${(fallback.model_chain || []).join(' → ')}`
+          : ' · OpenCode Zen fallback not configured';
+        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${chainNote}${fallbackNote} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.embedding_backend || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces identify live or SQLite-template formatting.`;
         setHealth(data.status === 'ok' ? 'online' : 'degraded', data.status === 'ok' ? 'Service online' : 'Service degraded');
       } catch (error) {
         document.getElementById('metric-service').textContent = 'Health check failed';
@@ -879,6 +892,7 @@
       if (indexDocumentsLoaded) return;
       const select = document.getElementById('index-document');
       const summary = document.getElementById('index-summary');
+      const templateTarget = document.getElementById('index-templates');
       try {
         const response = await fetch('/api/index/documents');
         const payload = await readJsonResponse(response);
@@ -892,6 +906,15 @@
         });
         const index = payload.index || {};
         summary.textContent = `${index.documents || 0} policy documents · ${index.chunks || 0} chunks · ${index.embedding_model || 'unknown'} · ${index.embedding_backend || index.embedding_provider || 'unknown'} (${index.dimensions || 0} dimensions)`;
+        templateTarget.replaceChildren();
+        (payload.response_templates || []).forEach((item) => {
+          const row = make('div', 'index-template-row');
+          row.setAttribute('role', 'listitem');
+          row.append(make('strong', '', `${item.template_key} · v${item.version}`));
+          row.append(make('span', '', `${item.description} · ${item.storage}`));
+          row.append(make('span', '', `Evidence family ${item.document_prefix} · required structured facts: ${(item.required_facts || []).join(', ')}`));
+          templateTarget.append(row);
+        });
         indexDocumentsLoaded = true;
         await loadIndexDocumentChunks(select.value);
       } catch (error) {

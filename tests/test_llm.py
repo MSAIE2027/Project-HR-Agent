@@ -73,6 +73,38 @@ def test_provider_status_requires_complete_configuration(monkeypatch) -> None:
     assert status["temperature"] == 0.0
 
 
+def test_provider_status_lists_opencode_zen_fallback_without_exposing_its_key(monkeypatch) -> None:
+    monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-openrouter-key")
+    monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
+    monkeypatch.setenv("OPENCODE_API_KEY", "test-opencode-secret")
+    monkeypatch.delenv("OPENCODE_ZEN_MODELS", raising=False)
+
+    status = provider_status()
+
+    assert status["fallback_provider"]["status"] == "configured"
+    assert status["fallback_provider"]["type"] == "opencode-zen"
+    assert status["fallback_provider"]["model_chain"] == [
+        "nemotron-3.5-lightning-free",
+        "big-pickle",
+        "space-bunny-free",
+    ]
+    assert "test-opencode-secret" not in repr(status)
+
+
+def test_opencode_config_rejects_non_free_model_ids(monkeypatch) -> None:
+    monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-openrouter-key")
+    monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
+    monkeypatch.setenv("OPENCODE_API_KEY", "test-opencode-secret")
+    monkeypatch.setenv("OPENCODE_ZEN_MODELS", "gpt-6-luna")
+
+    fallback = provider_status()["fallback_provider"]
+
+    assert fallback["status"] == "not_configured"
+    assert fallback["model_chain"] == []
+
+
 def test_provider_status_accepts_legacy_openrouter_key(monkeypatch) -> None:
     for name in (
         "MSAIE_LLM_BASE_URL",

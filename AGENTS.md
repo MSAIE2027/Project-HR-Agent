@@ -12,7 +12,7 @@ This is the standalone MSAIE HR Agent. Keep product behavior, documentation, and
 ## Behavior boundaries
 
 - Treat policy files and employee records as fictional. Keep all actions local and confirmation-gated.
-- The LLM may rewrite a controlled answer only after receiving its status and structured facts. Preserve numeric facts and status cues. If OpenRouter is unavailable or answer validation fails, return HTTP 503; never expose an unrefined draft for a citation-bearing response.
+- The LLM may rewrite a controlled answer only after receiving its status and structured facts. Preserve numeric facts and status cues. Try the OpenRouter model chain first; after its account-wide free quota is exhausted, route directly to the configured OpenCode Zen free-model chain. For other OpenRouter failures, finish that chain before trying OpenCode. If live generation still fails, use only versioned build-seeded SQLite templates for supported read-only PTO and provisionally eligible remote-work answers, and only with fresh matching MCP facts and policy citations. Trace the selected source and failure scope. Never expose the raw controlled draft; confirmation-gated actions, unsafe or unsupported requests, and template misses still fail closed.
 - Keep retrieval experiments separate from production settings unless explicitly authorized. The user approved MiniLM MMR at λ=0.5 with a ten-candidate pool, a five-result cap, and family seeding for multi-family queries. Keep embedding, chunk, and score-weight choices fixed unless new evidence and authorization support a change.
 
 ## Work and verification

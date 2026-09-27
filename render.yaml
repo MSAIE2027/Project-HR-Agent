@@ -23,6 +23,14 @@ services:
         value: openrouter/free
       - key: MSAIE_LLM_API_KEY
         sync: false
+      - key: OPENCODE_API_KEY
+        sync: false
+      - key: OPENCODE_ZEN_BASE_URL
+        value: https://opencode.ai/zen/v1
+      - key: OPENCODE_ZEN_MODELS
+        value: nemotron-3.5-lightning-free,big-pickle,space-bunny-free
+      - key: OPENCODE_ZEN_TIMEOUT_SECONDS
+        value: "8"
       - key: MSAIE_EMBEDDING_MODEL
         value: sentence-transformers/all-MiniLM-L6-v2
       - key: MSAIE_INDEX_PATH

@@ -17,6 +17,11 @@ from typing import Any
 import httpx
 import numpy as np
 
+from agent.response_cache import (
+    RESPONSE_TEMPLATE_SIGNATURE,
+    RESPONSE_TEMPLATE_VERSION,
+    RESPONSE_TEMPLATES,
+)
 from rag.ingest import chunk_sections, load_policy_sections
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -283,6 +288,8 @@ class RagIndex:
                         and metadata.get("overlap_words") == str(overlap_words)
                         and metadata.get("requested_embedding_model") == _requested_embedding_model()
                         and metadata.get("embedding_config_signature") == _embedding_config_signature()
+                        and metadata.get("response_template_version") == RESPONSE_TEMPLATE_VERSION
+                        and metadata.get("response_template_signature") == RESPONSE_TEMPLATE_SIGNATURE
                     ):
                         return self.stats()
                 except sqlite3.Error:
@@ -369,6 +376,14 @@ class RagIndex:
                         estimated_pages REAL NOT NULL
                     );
                     CREATE INDEX idx_chunks_document_id ON chunks(document_id);
+                    CREATE TABLE response_templates (
+                        template_key TEXT PRIMARY KEY,
+                        version TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        document_prefix TEXT NOT NULL,
+                        required_facts TEXT NOT NULL,
+                        answer_template TEXT NOT NULL
+                    );
                     """
                 )
                 connection.executemany(
@@ -386,6 +401,8 @@ class RagIndex:
                             str(HF_EMBEDDING_MAX_LENGTH) if not embedding_config else "",
                         ),
                         ("embedding_error", embedding_error),
+                        ("response_template_version", RESPONSE_TEMPLATE_VERSION),
+                        ("response_template_signature", RESPONSE_TEMPLATE_SIGNATURE),
                         ("vector_format", vector_format),
                         ("dimensions", str(dimensions)),
                         ("idf", json.dumps(idf, sort_keys=True)),
@@ -414,6 +431,22 @@ class RagIndex:
                         vector_json, word_count, estimated_pages
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     rows,
+                )
+                connection.executemany(
+                    """INSERT INTO response_templates(
+                        template_key, version, description, document_prefix, required_facts, answer_template
+                    ) VALUES (?, ?, ?, ?, ?, ?)""",
+                    [
+                        (
+                            template["template_key"],
+                            RESPONSE_TEMPLATE_VERSION,
+                            template["description"],
+                            template["document_prefix"],
+                            template["required_facts"],
+                            template["answer_template"],
+                        )
+                        for template in RESPONSE_TEMPLATES
+                    ],
                 )
                 connection.commit()
             return self.stats()
@@ -660,6 +693,41 @@ class RagIndex:
             for row in rows
         ]
 
+    def get_response_template(self, template_key: str) -> dict[str, Any] | None:
+        """Read one build-seeded response template without opening SQLite for writes."""
+        self.ensure()
+        database_uri = f"{self.path.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(database_uri, uri=True) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """SELECT template_key, version, description, document_prefix,
+                          required_facts, answer_template
+                   FROM response_templates WHERE template_key = ?""",
+                (template_key,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_response_templates(self) -> list[dict[str, Any]]:
+        """List safe cache-template metadata; no employee answers or facts are stored here."""
+        self.ensure()
+        database_uri = f"{self.path.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(database_uri, uri=True) as connection:
+            rows = connection.execute(
+                """SELECT template_key, version, description, document_prefix, required_facts
+                   FROM response_templates ORDER BY template_key"""
+            ).fetchall()
+        return [
+            {
+                "template_key": row[0],
+                "version": row[1],
+                "description": row[2],
+                "document_prefix": row[3],
+                "required_facts": row[4].split(","),
+                "storage": "SQLite build-seeded template",
+            }
+            for row in rows
+        ]
+
     def stats(self) -> dict[str, Any]:
         if not self.path.exists():
             return {"status": "missing", "path": str(self.path)}
@@ -670,6 +738,9 @@ class RagIndex:
                 "SELECT SUM(pages) FROM (SELECT document_id, MAX(estimated_pages) AS pages FROM chunks GROUP BY document_id)"
             ).fetchone()[0]
             metadata = self._metadata(connection)
+            response_template_count = connection.execute(
+                "SELECT COUNT(*) FROM response_templates"
+            ).fetchone()[0]
         return {
             "status": "ready",
             "path": str(self.path),
@@ -691,6 +762,7 @@ class RagIndex:
             "dimensions": int(metadata.get("dimensions", "0")),
             "chunk_words": int(metadata.get("chunk_words", "0")),
             "overlap_words": int(metadata.get("overlap_words", "0")),
+            "response_templates": int(response_template_count),
         }
 
 

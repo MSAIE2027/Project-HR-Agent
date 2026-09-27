@@ -22,12 +22,30 @@ def _tools(payload: dict) -> list[str]:
     return [item["tool"] for item in payload["trace"] if item.get("event") == "tool_call"]
 
 
-def _post_chat_after_first_429(monkeypatch, client, error: dict) -> tuple[object, list[str], AgentResult]:
-    result = AgentResult(
-        answer="Maya Chen has 14 synthetic PTO days available.",
+def _post_chat_after_first_429(
+    monkeypatch,
+    client,
+    error: dict,
+    *,
+    result_override: AgentResult | None = None,
+) -> tuple[object, list[str], AgentResult]:
+    result = result_override or AgentResult(
+        answer=(
+            "Maya Chen has 14 synthetic PTO days available. A request for 0 day(s) would leave 14 days "
+            "if approved. The policy notice expectation is 14 calendar days, and manager approval remains required."
+        ),
         citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
         status="completed",
-        structured_facts={"available_days": 14},
+        structured_facts={
+            "workflow": "pto",
+            "employee_id": "E1001",
+            "employee_name": "Maya Chen",
+            "available_days": 14,
+            "requested_days": 0,
+            "remaining_if_approved": 14,
+            "notice_days": 14,
+            "eligible": True,
+        },
     )
     calls: list[str] = []
 
@@ -63,6 +81,7 @@ def _post_chat_after_first_429(monkeypatch, client, error: dict) -> tuple[object
                 request=llm_module.httpx.Request("POST", url),
             )
 
+    monkeypatch.delenv("OPENCODE_API_KEY", raising=False)
     monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
     monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
     monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
@@ -205,6 +224,7 @@ with TestClient(app) as client:
         assert "metric-llm-model" in response.text
         assert "metric-chunking" in response.text
         assert "SQLite policy index" in response.text
+        assert "SQLite response templates" in response.text
         assert "renderAnswerMarkdown" in response.text
         assert "data-tooltip" in response.text
         assert "Why 120 words / 20 overlap?" in response.text
@@ -285,6 +305,11 @@ with TestClient(app) as client:
         assert documents["index"]["documents"] == 14
         assert documents["index"]["chunks"] == 182
         assert any(item["document_id"] == "POL-PTO-01" for item in documents["documents"])
+        assert {item["template_key"] for item in documents["response_templates"]} == {
+            "pto_balance",
+            "pto_request",
+            "remote_work_eligible",
+        }
         assert "path" not in documents["index"]
 
         chunks_response = client.get("/api/index/documents/POL-PTO-01/chunks?limit=2")
@@ -372,6 +397,9 @@ with TestClient(app) as client:
         assert captured == {
             "status": "confirmation_required",
             "structured_facts": {
+                "workflow": "pto",
+                "employee_id": "E1001",
+                "employee_name": "Maya Chen",
                 "eligible": True,
                 "requested_days": 5,
                 "available_days": 14,
@@ -645,7 +673,7 @@ with TestClient(app) as client:
         response = client.post("/chat", json={"message": "Ask about PTO"})
 
         assert response.status_code == 503
-        assert "Required OpenRouter answer generation failed" in response.json()["detail"]
+        assert "Required model answer generation failed" in response.json()["detail"]
         assert "Unrefined policy-derived text" not in response.text
         assert response.json()["llm"]["refinement"]["status"] == "rejected"
         assert response.json()["llm"]["refinement"]["attempted_models"] == [
@@ -660,7 +688,7 @@ with TestClient(app) as client:
         )
         assert response.json()["trace"][-1]["event"] == "llm_refinement"
 
-    def test_chat_stops_fallback_after_account_wide_free_quota_429(monkeypatch) -> None:
+    def test_chat_uses_sqlite_response_template_after_account_wide_free_quota_429(monkeypatch) -> None:
         provider_body_sentinel = "PROVIDER_BODY_MUST_NOT_LEAK"
         response, calls, _ = _post_chat_after_first_429(
             monkeypatch,
@@ -672,12 +700,17 @@ with TestClient(app) as client:
             },
         )
 
-        assert response.status_code == 503
+        assert response.status_code == 200, response.text
         assert calls == ["qwen/qwen3.8-27b:free"]
-        assert "Maya Chen has 14 synthetic PTO days" not in response.text
         assert provider_body_sentinel not in response.text
+        payload = response.json()
+        assert "Maya Chen (E1001) has 14 synthetic PTO days available." in payload["answer"]
+        assert payload["citations"][0]["document_id"] == "POL-PTO-01"
         refinement = response.json()["llm"]["refinement"]
-        assert refinement["status"] == "unavailable"
+        assert refinement["status"] == "cached_template"
+        assert refinement["response_mode"] == "sqlite_template"
+        assert refinement["template_key"] == "pto_balance"
+        assert refinement["cache_hit"] is True
         assert refinement["failure_scope"] == "account_quota"
         assert refinement["attempted_models"] == calls
         assert refinement["attempts"] == 1
@@ -690,7 +723,42 @@ with TestClient(app) as client:
                 "failure_scope": "account_quota",
             }
         ]
-        assert response.json()["trace"][-1]["failure_scope"] == "account_quota"
+        assert payload["trace"][-1]["event"] == "llm_refinement"
+        assert payload["trace"][-1]["status"] == "cached_template"
+        assert payload["trace"][-1]["cache_hit"] is True
+        assert payload["trace"][-1]["failure_scope"] == "account_quota"
+
+    def test_sqlite_template_does_not_bypass_confirmation_gate_after_quota_failure(monkeypatch) -> None:
+        action_result = AgentResult(
+            answer="CONFIRMATION_GATED_DRAFT_MUST_NOT_BE_RETURNED",
+            citations=[{"document_id": "POL-PTO-01", "snippet": "Manager approval is required."}],
+            status="confirmation_required",
+            requires_confirmation=True,
+            structured_facts={
+                "workflow": "pto",
+                "employee_id": "E1001",
+                "employee_name": "Maya Chen",
+                "available_days": 14,
+                "requested_days": 5,
+                "remaining_if_approved": 9,
+                "notice_days": 14,
+                "eligible": True,
+            },
+        )
+        response, calls, _ = _post_chat_after_first_429(
+            monkeypatch,
+            client,
+            {
+                "code": 429,
+                "message": "Free models per day quota exhausted.",
+            },
+            result_override=action_result,
+        )
+
+        assert response.status_code == 503
+        assert calls == ["qwen/qwen3.8-27b:free"]
+        assert "CONFIRMATION_GATED_DRAFT_MUST_NOT_BE_RETURNED" not in response.text
+        assert "sqlite_template" not in response.text
 
     @pytest.mark.parametrize(
         "error",
@@ -736,6 +804,92 @@ with TestClient(app) as client:
             "error_type": "HTTPStatusError",
             "http_status": "429",
         }
+
+    def test_chat_routes_openrouter_account_quota_to_opencode_zen(monkeypatch) -> None:
+        result = AgentResult(
+            answer="Maya Chen has 14 synthetic PTO days available.",
+            citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
+            status="completed",
+            structured_facts={
+                "workflow": "pto",
+                "employee_id": "E1001",
+                "employee_name": "Maya Chen",
+                "available_days": 14,
+                "requested_days": 0,
+                "remaining_if_approved": 14,
+                "notice_days": 14,
+                "eligible": True,
+            },
+        )
+        requests: list[tuple[str, str, str]] = []
+
+        class FakeOrchestrator:
+            def __init__(self, gateway=None) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, *, headers: dict[str, str], json: dict[str, Any]):
+                requests.append((url, headers.get("Authorization", ""), json["model"]))
+                if "openrouter.ai" in url:
+                    return llm_module.httpx.Response(
+                        429,
+                        json={"error": {"code": 429, "message": "Free models per day quota exhausted."}},
+                        request=llm_module.httpx.Request("POST", url),
+                    )
+                return llm_module.httpx.Response(
+                    200,
+                    json={
+                        "model": json["model"],
+                        "choices": [{
+                            "message": {
+                                "content": (
+                                    "Maya Chen has 14 synthetic PTO days available. A request for 0 day(s) "
+                                    "would leave 14 days if approved. The policy notice expectation is 14 "
+                                    "calendar days, and manager approval remains required."
+                                )
+                            }
+                        }],
+                    },
+                    request=llm_module.httpx.Request("POST", url),
+                )
+
+        monkeypatch.setenv("OPENCODE_API_KEY", "test-opencode-key")
+        monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+
+        assert response.status_code == 200
+        assert [request[0] for request in requests] == [
+            "https://openrouter.ai/api/v1/chat/completions",
+            "https://opencode.ai/zen/v1/chat/completions",
+        ]
+        assert requests[0][2] == "qwen/qwen3.8-27b:free"
+        assert requests[1][2] == "nemotron-3.5-lightning-free"
+        assert requests[1][1] == "Bearer test-opencode-key"
+        refinement = response.json()["llm"]["refinement"]
+        assert refinement["status"] == "completed"
+        assert refinement["provider"] == "opencode-zen"
+        assert refinement["model"] == "nemotron-3.5-lightning-free"
+        assert refinement["failure_scope"] == "account_quota"
+        assert refinement["attempted_models"] == [
+            "qwen/qwen3.8-27b:free",
+            "opencode/nemotron-3.5-lightning-free",
+        ]
 
     def test_chat_rejects_internal_reasoning_from_openrouter(monkeypatch) -> None:
         result = AgentResult(

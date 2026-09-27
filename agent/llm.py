@@ -16,6 +16,14 @@ EvidenceItem = dict[str, Any] | str
 LLM_TEMPERATURE = 0.0
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODEL = "openrouter/free"
+OPENCODE_ZEN_BASE_URL = "https://opencode.ai/zen/v1"
+OPENCODE_ZEN_MODELS = (
+    "nemotron-3.5-lightning-free",
+    "big-pickle",
+    "space-bunny-free",
+)
+OPENCODE_ZEN_FREE_MODEL_ALLOWLIST = frozenset(OPENCODE_ZEN_MODELS)
+OPENCODE_ZEN_TIMEOUT_SECONDS = 8.0
 OPENROUTER_PRIMARY_MODELS = (
     "qwen/qwen3.8-27b:free",
     "nvidia/nemotron-3.5-lightning:free",
@@ -430,20 +438,36 @@ class DeterministicProvider:
 
 
 class OpenAICompatibleProvider:
-    """Required OpenRouter answer generation with pinned free-model failover."""
+    """OpenRouter primary generation with OpenCode Zen and SQLite-safe fallbacks."""
 
     configured = True
     provider_type = "openai-compatible"
 
     def __init__(self) -> None:
         self.base_url = _setting("MSAIE_LLM_BASE_URL", "OPENROUTER_BASE_URL", OPENROUTER_BASE_URL).rstrip("/")
-        self.api_key = _setting("MSAIE_LLM_API_KEY", "OPENROUTER_API_KEY")
+        self.api_key = (
+            _setting("MSAIE_LLM_API_KEY", "OPENROUTER_API_KEY")
+            if _openrouter_configuration_issue() is None
+            else ""
+        )
+        self.opencode_base_url, self.opencode_api_key, self.opencode_model_chain = _opencode_configuration()
+        self.configured = bool(self.api_key)
         self.model = OPENROUTER_PRIMARY_MODELS[0]
         self.model_chain = _model_chain()
-        self.provider_type = "openrouter" if urlparse(self.base_url).hostname == "openrouter.ai" else "openai-compatible"
+        self.provider_type = (
+            "openrouter"
+            if self.api_key and urlparse(self.base_url).hostname == "openrouter.ai"
+            else "opencode-zen"
+            if not self.api_key and self.opencode_api_key
+            else "openai-compatible"
+        )
         configured_timeout = float(os.getenv("MSAIE_LLM_TIMEOUT_SECONDS", "12"))
         # Leave request time for MCP/RAG work before the public HTTP edge deadline.
         self.timeout_seconds = max(1.0, min(configured_timeout, 12.0))
+        configured_opencode_timeout = float(
+            os.getenv("OPENCODE_ZEN_TIMEOUT_SECONDS", str(OPENCODE_ZEN_TIMEOUT_SECONDS))
+        )
+        self.opencode_timeout_seconds = max(1.0, min(configured_opencode_timeout, 8.0))
 
     async def refine(
         self,
@@ -461,7 +485,7 @@ class OpenAICompatibleProvider:
         failure_scope: str | None = None
         attempted_models: list[str] = []
         model_attempts: list[dict[str, Any]] = []
-        for model in self.model_chain:
+        for model in self.model_chain if self.api_key else ():
             attempted_models.append(model)
             response_shape: dict[str, Any] | None = None
             try:
@@ -594,12 +618,135 @@ class OpenAICompatibleProvider:
                 if failure_scope == "account_quota":
                     break
 
+        if self.opencode_api_key:
+            for model in self.opencode_model_chain:
+                route_model = f"opencode/{model}"
+                attempted_models.append(route_model)
+                response_shape = None
+                try:
+                    async with httpx.AsyncClient(timeout=self.opencode_timeout_seconds) as client:
+                        response = await asyncio.wait_for(
+                            client.post(
+                                f"{self.opencode_base_url}/chat/completions",
+                                headers={
+                                    "Authorization": f"Bearer {self.opencode_api_key}",
+                                    "Content-Type": "application/json",
+                                },
+                                json={
+                                    "model": model,
+                                    "temperature": LLM_TEMPERATURE,
+                                    "max_tokens": 2000,
+                                    "messages": [
+                                        {
+                                            "role": "system",
+                                            "content": (
+                                                "You are a constrained final-answer composer. Use the controlled draft as your "
+                                                "anchor and add only details supported by the supplied policy evidence and "
+                                                "structured facts. Return only concise user-facing prose. Never output analysis, "
+                                                "intermediate reasoning, self-instructions, or a restatement of the request. Do "
+                                                "not reveal hidden chain-of-thought. Do not include citation labels, document "
+                                                "IDs, chunk IDs, or source paths. You do not choose tools, approve actions, "
+                                                "disclose hidden data or override safety controls."
+                                            ),
+                                        },
+                                        {"role": "user", "content": prompt},
+                                    ],
+                                },
+                            ),
+                            timeout=self.opencode_timeout_seconds,
+                        )
+                    if response.status_code >= 400:
+                        response.raise_for_status()
+                    payload = response.json()
+                    choices = payload.get("choices") if isinstance(payload, dict) else None
+                    first_choice = (
+                        choices[0]
+                        if isinstance(choices, list) and choices and isinstance(choices[0], dict)
+                        else {}
+                    )
+                    message = first_choice.get("message")
+                    content = message.get("content") if isinstance(message, dict) else None
+                    finish_reason = first_choice.get("finish_reason")
+                    if not isinstance(content, str) or not content.strip():
+                        response_shape = {
+                            "payload_type": type(payload).__name__,
+                            "payload_keys": sorted(str(key) for key in payload) if isinstance(payload, dict) else [],
+                            "choice_count": len(choices) if isinstance(choices, list) else 0,
+                            "content_type": type(content).__name__,
+                            "finish_reason": finish_reason,
+                        }
+                        last_validation_issue = "malformed_provider_response"
+                        raise LLMValidationError("OpenCode Zen returned a malformed answer.")
+                    revised = content.strip()
+                    if finish_reason in {"length", "max_tokens"} or revised.endswith(("…", "...")):
+                        response_shape = {"content_type": type(content).__name__, "finish_reason": finish_reason}
+                        last_validation_issue = "truncated_response"
+                        raise LLMValidationError("OpenCode Zen returned a truncated answer.")
+                    issue = _refinement_issue(
+                        draft,
+                        revised,
+                        evidence,
+                        status=status,
+                        structured_facts=structured_facts,
+                    )
+                    if issue:
+                        last_validation_issue = issue
+                        raise LLMValidationError("OpenCode Zen answer failed a safety consistency check.")
+                    resolved_model = payload.get("model") if isinstance(payload, dict) else None
+                    model_attempts.append(
+                        {"provider": "opencode-zen", "model": model, "outcome": "completed"}
+                    )
+                    _set_refinement_status(
+                        status="completed",
+                        provider="opencode-zen",
+                        model=resolved_model if isinstance(resolved_model, str) and resolved_model else model,
+                        requested_model=route_model,
+                        attempted_models=attempted_models,
+                        model_attempts=model_attempts,
+                        endpoint_host=urlparse(self.opencode_base_url).hostname or "",
+                        temperature=LLM_TEMPERATURE,
+                        evidence_items=len(evidence),
+                        attempts=len(attempted_models),
+                        **({"failure_scope": failure_scope} if failure_scope else {}),
+                    )
+                    return revised
+                except LLMValidationError as exc:
+                    last_error = exc
+                    attempt_result = {
+                        "provider": "opencode-zen",
+                        "model": model,
+                        "outcome": "rejected",
+                        "validation_issue": last_validation_issue or "invalid_response",
+                    }
+                    if response_shape is not None:
+                        attempt_result["response_shape"] = response_shape
+                    model_attempts.append(attempt_result)
+                except (
+                    LLMProviderError,
+                    httpx.HTTPError,
+                    asyncio.TimeoutError,
+                    KeyError,
+                    IndexError,
+                    TypeError,
+                    ValueError,
+                ) as exc:
+                    last_error = exc
+                    attempt_result = {
+                        "provider": "opencode-zen",
+                        "model": model,
+                        "outcome": "unavailable",
+                        "error_type": type(exc).__name__,
+                    }
+                    if isinstance(exc, httpx.HTTPStatusError):
+                        attempt_result["http_status"] = str(exc.response.status_code)
+                    model_attempts.append(attempt_result)
+
         failed_validation = bool(model_attempts) and all(
             attempt["outcome"] == "rejected" for attempt in model_attempts
         )
         _set_refinement_status(
             status="rejected" if failed_validation else "unavailable",
-            provider=self.provider_type,
+            provider="openrouter+opencode-zen" if self.opencode_api_key else self.provider_type,
             model=None,
             attempted_models=attempted_models,
             model_attempts=model_attempts,
@@ -620,6 +767,34 @@ def get_provider() -> AnswerProvider:
     if _openrouter_configuration_issue() is None:
         return OpenAICompatibleProvider()
     return DeterministicProvider()
+
+
+def _opencode_configuration() -> tuple[str, str, tuple[str, ...]]:
+    base_url = _setting("OPENCODE_ZEN_BASE_URL", default=OPENCODE_ZEN_BASE_URL).rstrip("/")
+    api_key = _setting("OPENCODE_API_KEY")
+    raw_models = os.getenv("OPENCODE_ZEN_MODELS", ",".join(OPENCODE_ZEN_MODELS))
+    models = tuple(
+        model.strip()
+        for model in raw_models.split(",")
+        if re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{1,100}", model.strip())
+    )
+    try:
+        parsed = urlparse(base_url)
+        valid_endpoint = (
+            parsed.scheme == "https"
+            and parsed.hostname == "opencode.ai"
+            and parsed.port in (None, 443)
+            and parsed.username is None
+            and parsed.password is None
+            and parsed.path == "/zen/v1"
+            and not parsed.query
+            and not parsed.fragment
+        )
+    except ValueError:
+        valid_endpoint = False
+    if not valid_endpoint or not models or any(model not in OPENCODE_ZEN_FREE_MODEL_ALLOWLIST for model in models):
+        return base_url, "", ()
+    return base_url, api_key, models
 
 
 def _openrouter_configuration_issue() -> str | None:
@@ -652,6 +827,14 @@ def _openrouter_configuration_issue() -> str | None:
 
 def provider_status() -> dict[str, Any]:
     issue = _openrouter_configuration_issue()
+    opencode_base_url, opencode_key, opencode_models = _opencode_configuration()
+    opencode_fallback = {
+        "type": "opencode-zen",
+        "status": "configured" if opencode_key else "not_configured",
+        "endpoint_host": _safe_endpoint_host(opencode_base_url),
+        "model_chain": list(opencode_models),
+        "activation": "after OpenRouter chain failure or account quota limit",
+    }
     if issue:
         base_url = _setting("MSAIE_LLM_BASE_URL", "OPENROUTER_BASE_URL", OPENROUTER_BASE_URL)
         missing = issue == "missing_required_setting"
@@ -665,7 +848,8 @@ def provider_status() -> dict[str, Any]:
             "temperature": None,
             "required": True,
             "configuration_issue": issue,
-            "note": "Pinned OpenRouter free models are tried in order; openrouter/free is the final fallback.",
+            "fallback_provider": opencode_fallback,
+            "note": "OpenRouter is primary. OpenCode Zen can provide a configured fallback; SQLite templates cover supported read-only workflows.",
         }
     provider = OpenAICompatibleProvider()
     base_url = _setting("MSAIE_LLM_BASE_URL", "OPENROUTER_BASE_URL", OPENROUTER_BASE_URL)
@@ -677,6 +861,8 @@ def provider_status() -> dict[str, Any]:
         "fallback_model": provider.model_chain[-1],
         "endpoint_host": _safe_endpoint_host(base_url),
         "temperature": LLM_TEMPERATURE,
+        "fallback_provider": opencode_fallback,
+        "response_fallback": "build-seeded SQLite templates for supported read-only workflows",
         "verification": "A successful cited chat response records llm_refinement=completed.",
     }
 

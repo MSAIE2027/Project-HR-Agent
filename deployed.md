@@ -6,19 +6,19 @@
 
 **Render service:** `Project-HR-Agent` in workspace `MSAIE2027`
 
-**Runtime commit:** `071dfb8a8f590057f446684bc76ccc06b264435e`
+**Runtime commit:** `ead8c3395436959704c39503e3c72e965f91585e`
 
-**Render deployment:** `dep-dasm8l8473hc738v0dkg`
+**Render deployment:** `dep-dasmt9npn0mc73947ko0`
 
 ## Current status
 
-The Render runtime is live on 2026-09-27 at commit `071dfb8`; it passed [GitHub Actions run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) and deployed as `dep-dasm8l8473hc738v0dkg`. The live build command matches `render.yaml`, including the shared pinned ONNX index assertion. Render service metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The service built the semantic SQLite index and started successfully.
+The live Render runtime is commit `ead8c33`, deployed as `dep-dasmt9npn0mc73947ko0`. That exact commit passed [GitHub Actions run 36344335941](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36344335941), including the pinned SQLite build gate, test suite, MCP stdio smoke, and both golden evaluations. Render metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The live build command matches `render.yaml` and the service started successfully.
 
-The deployed `071dfb8` runtime passed [GitHub Actions run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520), including the full test suite, MCP stdio smoke, both golden evaluations, and artifact upload. The manual deploy used that exact tested SHA. Render auto-deploy remains off.
+The current working changes add an OpenCode Zen provider fallback and bounded SQLite response templates. They passed **105 local tests** under Python 3.12, the pinned-index verifier, MCP stdio smoke, and both 30-case evaluations. They have not yet passed hosted CI or been deployed; the live Render runtime above predates these changes.
 
-**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight passed both privacy refusals and reached OpenRouter after policy retrieval and MCP tool calls. Qwen returned HTTP 429; the API returned HTTP 503 with no resolved model or unrefined draft. This smoke output does not expose the sanitized failure-scope field, and the Render key's quota state is not independently visible. A separate read-only check of the local `.env` key showed its free-model daily allowance exhausted; this does not prove the Render key is the same. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
+**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight on the live release passed both privacy refusals and reached OpenRouter after policy retrieval and MCP tool calls. Qwen returned HTTP 429; the API returned HTTP 503 with no resolved model or unrefined draft. The deployed release predates the OpenCode and SQLite response fallbacks. The Render service now has an empty `OPENCODE_API_KEY` field for the owner to populate. Locally, the OpenCode model catalog returned HTTP 200, but a simulated OpenRouter quota handoff got HTTP 403 for two OpenCode routes and timed out on the third; no OpenCode model resolved. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md) and [fallback implementation record](docs/adr/0010-provider-and-sqlite-response-fallbacks.md).
 
-At 18:50 UTC, a read-only OpenRouter key-status request using the local `.env` key reported the free-model daily counter at 51 used / 50 limit / 0 remaining. No model-generation retry was made after the 429. This is local-key metadata only; the Render key is not exposed by the available read-only service APIs, so its quota state is not independently confirmed. OpenRouter documents the [current-key counter](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key) and [free-tier request limit](https://openrouter.ai/pricing/).
+At 18:50 UTC, a read-only OpenRouter key-status request using the local `.env` key reported the free-model daily counter at 51 used / 50 limit / 0 remaining. No extra OpenRouter generation retry was made after the 429. This is local-key metadata only; the Render key's quota is not independently confirmed. OpenRouter documents the [current-key counter](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key) and [free-tier request limit](https://openrouter.ai/pricing/).
 
 The live `071dfb8` service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, 256-token limit, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness and document inspection returned HTTP 200. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached OpenRouter after MCP retrieval and checks, then failed on Qwen HTTP 429; the current CLI output does not identify the quota scope.
 
@@ -36,7 +36,7 @@ Before recording, wait until OpenRouter's account-wide free quota is available a
 - Responses show no internal reasoning and preserve the required safety language.
 - The first model-backed request completes without a service restart; the current observed ONNX sample is 274,866,180 bytes, but it is not a concurrency benchmark.
 - Show the course quality, behavior, and system evidence: the 30-case proxy results and limits, local latency with priming separated from p50/p95, retrieval ablation, hosted memory observations, and hosted cold-start status. Cold-start duration is currently unmeasured; do not substitute local priming, readiness, or memory samples.
-- A citation-bearing answer reaches OpenRouter and reports its actual resolved model; the 429 classifier stops only on an identifiable account-wide free daily cap.
+- A citation-bearing answer reports its actual resolved provider/model; test the OpenRouter account-quota handoff to OpenCode and the bounded SQLite template route on the deployed revision. The 429 classifier stops only on an identifiable account-wide free daily cap.
 
 The sanitized automated preflight is `python scripts/smoke_hosted_demo.py`. It sends synthetic requests through the configured OpenRouter chain and uses free-model quota; by default it does not confirm the mock email action. See the [demo runbook](demo/README.md) for the optional explicit confirmation flag.
 

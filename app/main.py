@@ -17,6 +17,7 @@ from agent.llm import (
     reset_refinement_status,
 )
 from agent.orchestrator import MSAIEOrchestrator
+from agent.response_cache import cached_response
 from mcp_client.client import MCPGateway, MCPGatewayError
 from rag.index import (
     DEFAULT_LOCAL_MODEL,
@@ -109,6 +110,37 @@ def _llm_failure_response(
     )
 
 
+def _cached_refinement(result: AgentResult, failure: dict[str, Any]) -> dict[str, Any] | None:
+    """Use only a current-facts SQLite template when live answer generation failed."""
+    try:
+        rendered = cached_response(get_index(), result)
+    except Exception:
+        return None
+    if rendered is None:
+        return None
+
+    answer, cache_metadata = rendered
+    result.answer = answer
+    refinement: dict[str, Any] = {
+        "status": "cached_template",
+        "provider": "sqlite",
+        "upstream_provider": failure.get("provider", "openrouter"),
+        "model": None,
+        "attempted_models": failure.get("attempted_models", []),
+        "model_attempts": failure.get("model_attempts", []),
+        "attempts": failure.get("attempts", 0),
+        "fallback_from_status": failure.get("status", "unavailable"),
+        **cache_metadata,
+    }
+    for field in ("failure_scope", "http_status", "error_type", "validation_issue"):
+        if field in failure:
+            refinement[field] = failure[field]
+    result.trace.append(
+        {"step": len(result.trace) + 1, "event": "llm_refinement", **refinement}
+    )
+    return refinement
+
+
 @app.get("/health")
 async def health(deep: bool = Query(False)) -> dict[str, Any]:
     mcp_status = getattr(app.state, "mcp", {"status": "unknown", "tools": []})
@@ -181,6 +213,7 @@ def index_documents() -> dict[str, Any]:
             )
         },
         "documents": index.list_documents(),
+        "response_templates": index.list_response_templates(),
     }
 
 
@@ -219,35 +252,45 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
                 "attempted_models": [],
                 "attempts": 0,
             }
-            return _llm_failure_response(
-                "OpenRouter is required to generate evidence-backed answers, but it is not configured.",
-                result=result,
-                refinement=refinement,
-            )
-        structured_facts = dict(result.structured_facts)
-        if result.requires_confirmation:
-            structured_facts["requires_confirmation"] = True
-        try:
-            result.answer = await provider.refine(
-                result.answer,
-                result.citations,
-                status=result.status,
-                structured_facts=structured_facts,
-            )
-        except LLMProviderError:
-            refinement = get_refinement_status()
-            return _llm_failure_response(
-                "Required OpenRouter answer generation failed; no unrefined policy response was returned.",
-                result=result,
-                refinement=refinement,
-            )
-        refinement = get_refinement_status()
-        if refinement.get("status") != "completed":
-            return _llm_failure_response(
-                "Required OpenRouter answer generation did not pass response validation.",
-                result=result,
-                refinement=refinement,
-            )
+            refinement = _cached_refinement(result, refinement) or refinement
+            if refinement.get("status") != "cached_template":
+                return _llm_failure_response(
+                    "OpenRouter is required to generate evidence-backed answers, but it is not configured.",
+                    result=result,
+                    refinement=refinement,
+                )
+        else:
+            structured_facts = dict(result.structured_facts)
+            if result.requires_confirmation:
+                structured_facts["requires_confirmation"] = True
+            try:
+                result.answer = await provider.refine(
+                    result.answer,
+                    result.citations,
+                    status=result.status,
+                    structured_facts=structured_facts,
+                )
+            except LLMProviderError:
+                refinement = get_refinement_status()
+                cached = _cached_refinement(result, refinement)
+                if cached is None:
+                    return _llm_failure_response(
+                        "Required model answer generation failed; no unrefined policy response was returned.",
+                        result=result,
+                        refinement=refinement,
+                    )
+                refinement = cached
+            else:
+                refinement = get_refinement_status()
+                if refinement.get("status") != "completed":
+                    cached = _cached_refinement(result, refinement)
+                    if cached is None:
+                        return _llm_failure_response(
+                            "Required model answer generation did not pass response validation.",
+                            result=result,
+                            refinement=refinement,
+                        )
+                    refinement = cached
 
     if result.citations and refinement.get("status") == "completed":
         trace_entry = {

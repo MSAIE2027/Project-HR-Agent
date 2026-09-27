@@ -263,10 +263,15 @@ class MSAIEOrchestrator:
                     employee = profile["data"]
                     check = compliance["data"]
                     structured_facts = {
+                        "workflow": "remote_work",
+                        "employee_id": employee_id,
+                        "employee_name": employee["name"],
                         "eligible": bool(check["eligible"]),
                         "requested_days": requested_days,
                         "days_after_request": check["days_after_request"],
                         "limit_days": check["limit_days"],
+                        "required_approvals": check["required_approvals"],
+                        "destination_review_required": bool(check["destination_review_required"]),
                     }
                     if check["eligible"]:
                         answer = (
@@ -340,6 +345,9 @@ class MSAIEOrchestrator:
                             confidence="high",
                             mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
                             structured_facts={
+                                "workflow": "pto",
+                                "employee_id": employee_id,
+                                "employee_name": employee["name"],
                                 "eligible": bool(check["eligible"]),
                                 "requested_days": requested_days,
                                 "available_days": pto["available_days"],
@@ -378,6 +386,9 @@ class MSAIEOrchestrator:
                         confidence="high",
                         mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
                         structured_facts={
+                            "workflow": "pto",
+                            "employee_id": employee_id,
+                            "employee_name": employee["name"],
                             "eligible": bool(check["eligible"]),
                             "requested_days": requested_days,
                             "available_days": pto["available_days"],

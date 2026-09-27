@@ -9,7 +9,7 @@ The course project needs multi-step tool use and inspectable traces, but the HR 
 
 ## Decision
 
-Use an explicit Python orchestrator for request classification, tool discovery, workflow sequencing, evidence thresholds, safety refusals, and confirmation gates. Every citation-bearing response must pass through OpenRouter's pinned free model chain: Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, followed by `openrouter/free`. The selected model composes the final answer from the controlled draft, retrieved policy evidence, and structured facts. The LLM cannot select tools, alter eligibility, or authorize actions. If no route is configured or no route in the chain can return a valid answer, the API returns a safe service error instead of presenting an unrefined retrieval draft.
+Use an explicit Python orchestrator for request classification, tool discovery, workflow sequencing, evidence thresholds, safety refusals, and confirmation gates. Citation-bearing responses first pass through OpenRouter's pinned free model chain: Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, followed by `openrouter/free`. OpenCode Zen free models are the configured secondary composer after the OpenRouter quota cap or exhausted chain. The selected live model composes the final answer from the controlled draft, retrieved policy evidence, and structured facts. If both live routes fail, a versioned SQLite template may format fresh facts and citations for a small set of read-only workflows. The LLM cannot select tools, alter eligibility, or authorize actions; SQLite never stores personalized answers. Unsafe, unsupported, confirmation-gated, and template-miss requests remain fail-closed.
 
 ## Consequences
 

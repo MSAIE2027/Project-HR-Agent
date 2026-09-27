@@ -4,21 +4,22 @@
 
 The browser calls the FastAPI app in app/main.py. The application starts the SQLite policy index and discovers the configured tool set. In the required demo and Render stdio configuration, the FastAPI lifespan also starts one managed MCP process and reuses it for requests. The local quick-start defaults to in-process MCP. Each chat request is routed through agent/orchestrator.py, which chooses tools, checks structured results, retrieves policy evidence, applies safety and confirmation rules, and produces a controlled draft.
 
-Every successful citation-bearing answer passes through the required OpenRouter response-generation step. The chain tries `qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, and `google/gemma-4-26b-a4b-it:free`, followed by `openrouter/free`. OpenRouter receives the controlled draft, retrieved policy text, and structured facts; citation metadata stays on the application response. The model formats and enriches the draft, but cannot select tools, change eligibility, or authorize an action. Deterministic checks preserve workflow status, supported numbers, and required safety language. They reject detectable process narration and truncated output; these checks are not semantic entailment judgments. A recognized account-wide free-model daily-quota HTTP 429 stops the remaining model attempts because switching models cannot clear that account cap. Model/provider-specific 429s and unclassified 429s continue to the next route. The provider body is not copied to the response or trace. If the chain stops or every route fails or returns invalid output, `/chat` returns HTTP 503 without exposing the draft. Requests refused before retrieval stop before the LLM.
+Every citation-bearing answer first uses the OpenRouter response-generation step. The chain tries `qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, and `google/gemma-4-26b-a4b-it:free`, followed by `openrouter/free`. OpenRouter receives the controlled draft, retrieved policy text, and structured facts; citation metadata stays on the application response. A recognized account-wide daily-quota HTTP 429 moves directly to the OpenCode Zen chain instead of spending more OpenRouter requests. Model/provider-specific and unclassified 429s continue through the remaining OpenRouter routes; OpenCode Zen is tried after that chain is exhausted. Its configured free-model chain currently defaults to Nemotron 3.5 Lightning Free, Big Pickle, and Space Bunny Free. The OpenCode Zen model list is configurable because its model availability and free status can change.
+
+Either live model provider may only format and enrich the controlled draft; neither can select tools, change eligibility, or authorize an action. Both use the same deterministic validation for workflow status, supported numbers, safety language, process narration, and truncation. Those checks are not semantic entailment judgments. Provider bodies never enter the response or trace. If both live routes fail, a build-seeded SQLite template may format current MCP facts and policy citations for a supported read-only PTO or provisionally eligible remote-work workflow. The SQLite stores template strings and their required facts, not employee answers; each request still runs fresh guards, MCP lookups, and retrieval. A template miss, insufficient evidence, or confirmation-gated action remains fail-closed with HTTP 503. Requests refused before retrieval stop before the LLM.
 
 ```mermaid
 flowchart LR
-    ATTEMPT[Try next configured model] --> RESULT{Provider result}
-    RESULT -->|Valid completion| VALIDATE[Validate facts and safety cues]
-    RESULT -->|Other error or invalid output| NEXT[Continue fallback chain]
-    RESULT -->|HTTP 429| SCOPE{Explicit account-wide free daily cap?}
-    SCOPE -->|Yes| STOP[Stop model retries]
-    SCOPE -->|No, model/provider scoped, or unknown| NEXT
-    VALIDATE -->|Pass| ANSWER[Return enriched cited answer]
-    VALIDATE -->|Reject| NEXT
-    NEXT --> ATTEMPT
-    STOP --> FAIL[HTTP 503; withhold controlled draft]
-    NEXT -->|Chain exhausted| FAIL
+    OR[OpenRouter model chain<br/>validate each completion] --> OR_RESULT{Route result}
+    OR_RESULT -->|Valid completion| ANSWER[Return enriched cited answer]
+    OR_RESULT -->|Invalid output or scoped throttle; more routes| OR
+    OR_RESULT -->|Account quota or chain exhausted| OC[OpenCode Zen model chain<br/>validate each completion]
+    OC --> OC_RESULT{Route result}
+    OC_RESULT -->|Valid completion| ANSWER
+    OC_RESULT -->|Invalid output; more routes| OC
+    OC_RESULT -->|All routes exhausted| CACHE{Supported SQLite template match?}
+    CACHE -->|Yes; current facts + citations| CACHED[Return formatted answer; trace cache hit]
+    CACHE -->|No; unsafe/action/template miss| FAIL[HTTP 503; withhold controlled draft]
 ```
 
 An explicit model/provider/route scope overrides matching quota wording in other provider fields. The classifier returns only the sanitized scope label; raw error text and metadata stay private.
@@ -36,6 +37,8 @@ sequenceDiagram
     participant MiniLM as Pinned HF MiniLM ONNX Runtime
     participant DB as Service-local SQLite vector index
     participant OR as OpenRouter free-model chain
+    participant OC as OpenCode Zen free-model chain
+    participant Templates as Build-seeded SQLite response templates
     Employee->>Browser: HR question
     Browser->>API: POST /chat
     API->>Agent: Validate and route request
@@ -48,18 +51,28 @@ sequenceDiagram
     Server-->>Client: Evidence and structured tool results
     Client-->>Agent: Tool results
     Agent->>API: Controlled draft + status + structured facts
-    API->>OR: Required response composition
+    API->>OR: Primary response composition
     Note over API,OR: Draft + retrieved evidence + structured facts
-    OR-->>API: Formatted and evidence-enriched answer
-    API->>API: Validate status, numbers, and safety disclaimers
-    API-->>Browser: Final answer + citations + operational trace
-    Browser-->>Employee: Display validated response
+    alt OpenRouter route returns a validated answer
+        OR-->>API: Answer + resolved model and sanitized attempts
+    else OpenRouter account quota or chain exhausted
+        API->>OC: Retry composition with same evidence and facts
+        alt OpenCode route returns a validated answer
+            OC-->>API: Answer + resolved model and sanitized attempts
+        else Both live model chains fail
+            API->>Templates: Match workflow, structured facts, and citation family
+            Templates-->>API: Seeded text template; no stored employee answer
+            API->>API: Format current facts and trace SQLite template key
+        end
+    end
+    API-->>Browser: Validated answer or fail-closed HTTP 503 + trace
+    Browser-->>Employee: Display actual response path
 ```
 
 ## Modules
 
 - app/: FastAPI endpoints and static employee workspace.
-- agent/: request orchestration, response models, and required OpenRouter response composer.
+- agent/: request orchestration, response models, OpenRouter/OpenCode Zen composers, and the fact-bound SQLite template fallback.
 - mcp_client/: transport selection and official MCP client calls.
 - mcp_server/: FastMCP server and synthetic HR tools.
 - rag/: Markdown/HTML ingestion, chunking, vector generation, SQLite storage, and ranking.
@@ -82,12 +95,12 @@ rag/ingest.py extracts Markdown and HTML sections with document IDs, titles, hea
 
 Hugging Face is the model-weight source; MiniLM document and query embeddings run locally in the app's managed MCP process. At startup, policy files are chunked and their embeddings are stored in the service's SQLite vector index. At request time, the policy tool embeds the query locally, applies hybrid lexical and dense ranking, and uses family routing with MMR to select citations. Current chunking, ranking settings, experiments, results, and limitations are recorded in [`evaluation/ablation-results.md`](../evaluation/ablation-results.md) and [`evaluation/retrieval-comparison.md`](../evaluation/retrieval-comparison.md); the chart is [`visuals/retrieval-comparison.svg`](../visuals/retrieval-comparison.svg).
 
-`RagIndex.search(query, limit=k)` returns score-ranked candidates; `RagIndex.rerank_mmr` applies MMR using stored MiniLM vectors without exposing vectors to MCP callers. The orchestrator uses the same index to return at most five citations.
+`RagIndex.search(query, limit=k)` returns score-ranked candidates; `RagIndex.rerank_mmr` applies MMR using stored MiniLM vectors without exposing vectors to MCP callers. The orchestrator uses the same index to return at most five citations. The build seeds versioned response templates into that SQLite database; the API exposes their safe metadata, while runtime lookup is read-only.
 
-The evaluator lab reads document and chunk rows through `/api/index/documents` and `/api/index/documents/{document_id}/chunks`. These endpoints show citation metadata and complete text for a bounded preview, not vector payloads or the database filesystem path. The browser is a read-only view of the active SQLite index.
+The evaluator lab reads document and chunk rows through `/api/index/documents` and `/api/index/documents/{document_id}/chunks`, and lists template keys through the same read-only index API. These endpoints show citation metadata and complete text for a bounded preview, not vector payloads or the database filesystem path. The browser is a read-only view of the active SQLite index.
 
 ## Safety and generation
 
 All records and actions are fictional. Prompt-injection checks, missing-data handling, policy evidence checks, and action confirmation remain deterministic. Requests referring to multiple synthetic employees are refused before MCP access; the guard recognizes roster names as well as explicit employee IDs. Requests to retrieve an individual's medical records or files are refused before employee lookup and point to the confidential HR channel. Mock email and ticket tools never send a message or create a production record.
 
-The response composer checks eligibility, escalation, clarification, confirmation, and mock-action status cues; preserves supported numeric tokens and known no-action disclaimers; and rejects unsupported numbers or omitted numbers. Validation failure or provider outage fails closed with HTTP 503; the service never presents the unrefined policy draft as the final response. These string-level checks cannot prove semantic entailment; the full design is documented in design-and-evaluation.md.
+The live response composers check eligibility, escalation, clarification, confirmation, and mock-action status cues; preserve supported numeric tokens and known no-action disclaimers; and reject unsupported numbers or omitted numbers. On a live-provider outage, only the explicitly supported fact-and-citation template matches can answer. Other validation failures, confirmation-gated actions, unsafe or unsupported cases, and cache misses return HTTP 503; the service never presents the unrefined policy draft as the final response. These string-level checks cannot prove semantic entailment; the full design is documented in design-and-evaluation.md.
