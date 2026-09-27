@@ -26,9 +26,9 @@ flowchart LR
         TOOLS -->|MCP result| SERVER
     end
 
-    subgraph RETRIEVAL[Local policy retrieval]
+    subgraph RETRIEVAL[Service-local policy retrieval]
         SEARCH[Policy search] --> EMBED[Hugging Face MiniLM]
-        EMBED --> SQLITE[(SQLite vector index)]
+        EMBED --> SQLITE[(Service-local SQLite vector index)]
         SQLITE --> CITED[Evidence chunks + citations]
     end
 
@@ -76,11 +76,11 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
-# Set MSAIE_LLM_API_KEY in .env, then:
+# Set MSAIE_LLM_API_KEY (or OPENROUTER_API_KEY) in .env, then:
 ./scripts/start_local.sh
 ```
 
-The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads `sentence-transformers/all-MiniLM-L6-v2` from Hugging Face. Embeddings run locally; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
+The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads `sentence-transformers/all-MiniLM-L6-v2` from Hugging Face. Embeddings run inside the app service and are stored in its SQLite vector index; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
 
 For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is available for quick local development, while the demo and CI exercise the official MCP SDK client and FastMCP server over stdio.
 
@@ -88,7 +88,7 @@ For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is 
 
 Keep provider credentials in the ignored `.env` file or shell environment. Never commit secrets.
 
-- OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY`, and `MSAIE_LLM_FALLBACK_MODEL`.
+- OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY` (or legacy `OPENROUTER_API_KEY` for local runs), and `MSAIE_LLM_FALLBACK_MODEL`.
 - Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions.
 - `/`: synthetic HR workspace and evaluator lab.
 - `/health` and `/health/ready`: service, SQLite index, MCP, and provider status.
