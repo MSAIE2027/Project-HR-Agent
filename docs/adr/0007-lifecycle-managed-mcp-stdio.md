@@ -19,7 +19,7 @@ This keeps the real MCP protocol, tool schemas, retrieval model, chunking, ranki
 - The deployed first MiniLM query kept the Render instance live and readiness probes continued to pass. Thirty-second samples peaked at 536,264,700 bytes against the 536,870,900-byte service limit, then settled at 493,432,830 bytes. The peak leaves little margin and does not establish concurrent capacity.
 - Tool sequences are serialized. Model generation occurs outside the MCP lock, so a slow OpenRouter call does not hold the shared tool session.
 - If the persistent process exits, the affected request returns an MCP-unavailable result and updates the cached MCP health state. Routine `/health/ready` probes read that state without waiting for the MCP session lock. Explicit `/health?deep=true` performs live discovery; restarting the app creates a fresh session. The MCP SDK's stdio task group is owned by the lifespan task, so request handlers do not close or replace it.
-- Hosted OpenRouter answer acceptance remains pending because all four configured routes returned HTTP 429; the refreshed local key's direct error identifies the free-model daily limit.
+- Hosted OpenRouter answer acceptance remains pending because all four configured routes returned HTTP 429. The rotated local key is accepted by read-only key metadata, but that response does not expose a free-model request counter or reset time, so the source of the route failures is not confirmed.
 
 ## Verification
 
