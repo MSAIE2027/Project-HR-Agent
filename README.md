@@ -5,45 +5,72 @@ A fictional HR support assistant that combines policy retrieval, structured synt
 ## Architecture
 
 ```mermaid
-flowchart LR
-    User[Employee] --> UI[Browser chat and SQLite viewer]
-    UI --> API[FastAPI]
-
-    subgraph Service["Python app service · required stdio path"]
-        API --> Agent[Deterministic orchestrator<br/>privacy, routing, confirmation]
-        Agent --> Client[Official MCP client]
-        Client <-->|stdio tools/list and tools/call| Server[FastMCP server<br/>one process per app lifetime]
-        Server --> Tools[Typed HR and policy tools]
-        Tools --> Records[(Synthetic employee<br/>PTO and benefits records)]
-        Tools --> Query[Local MiniLM query embedding]
-        Query --> Rank[Hybrid retrieval<br/>family routing and MMR]
-        Rank --> SQLite[(SQLite policy vector index)]
-        SQLite --> Evidence[Policy passages and citations]
-        Evidence --> Prompt[Controlled draft<br/>status and structured facts]
-        Records --> Prompt
-        Prompt --> OpenRouter[Required OpenRouter<br/>model chain]
-        OpenRouter --> Validate[Response and safety validation]
-        Validate -->|valid| Answer[Answer, citations<br/>and operational trace]
-        Validate -->|provider or validation failure| Fail[HTTP 503<br/>draft withheld]
-        Answer --> API
-        Fail --> API
-        SQLite -. bounded, read-only rows .-> UI
+flowchart TB
+    subgraph Experience["User experience"]
+        direction LR
+        Employee([Employee]) --> Browser[Browser chat and evaluator lab]
     end
 
-    Policies[Policy Markdown and HTML] --> Ingest[Section-aware chunking<br/>and local embeddings]
-    Ingest --> SQLite
-    HF[Hugging Face<br/>MiniLM weights source] -. weights downloaded<br/>for local inference .-> Query
-    HF -. weights downloaded<br/>for local inference .-> Ingest
+    subgraph Providers["External model services"]
+        direction LR
+        HF[Hugging Face<br/>MiniLM weights source]
+        Compose[OpenRouter<br/>required free-model chain]
+    end
 
+    subgraph Service["Render application service · Python 3.12"]
+        direction TB
+        Browser -->|POST /chat| API[FastAPI]
+        API --> Agent[Deterministic orchestrator<br/>routing · privacy · confirmation]
+
+        subgraph MCP["Official MCP tool path · reused stdio process"]
+            direction LR
+            Client[MCP client] <-->|tools/list · tools/call| Server[FastMCP server]
+            Server --> Tools[Typed policy and HR tools]
+        end
+        Agent --> Client
+
+        subgraph Local["Local data and retrieval"]
+            direction LR
+            Query[MiniLM query embedding] --> Rank[Hybrid search<br/>family routing · MMR]
+            Rank -->|read policy vectors| SQLite[(SQLite policy index)]
+            SQLite --> Evidence[Policy passages<br/>and citation metadata]
+            Records[(Synthetic employee<br/>PTO and benefits records)]
+            Policies[Packaged policy files] --> Ingest[Section-aware chunking]
+            Ingest --> DocEmbeddings[Local MiniLM document embeddings]
+            DocEmbeddings --> SQLite
+        end
+        Tools -->|policy search| Query
+        Tools -->|HR lookups| Records
+
+        Records --> Draft[Controlled context<br/>status · facts · evidence]
+        Evidence --> Draft
+        Draft --> Compose
+        Compose --> Validate{Validate answer}
+        Validate -->|valid| Answer[Final answer<br/>citations · operational trace]
+        Validate -->|provider or validation failure| Fail[HTTP 503<br/>draft withheld]
+        Evidence -.->|citations remain app-owned| Answer
+        Answer -->|HTTP response| API
+        Fail -->|HTTP response| API
+
+        Browser -->|GET /api/index/...| API
+        API -->|bounded, read-only preview| SQLite
+    end
+
+    HF -.->|weights only| Query
+    HF -.->|weights only| DocEmbeddings
+    Compose --> Validate
+
+    classDef client fill:#eff6ff,stroke:#2563eb,color:#1e3a8a
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
     classDef external fill:#fff7ed,stroke:#ea5800,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
-    class UI,API,Agent,Client,Server,Tools,Records,Query,Rank,SQLite,Evidence,Prompt,Policies,Ingest local
-    class HF,OpenRouter external
+    class Employee,Browser client
+    class API,Agent,Client,Server,Tools,Query,Rank,SQLite,Evidence,Records,Draft,Policies,Ingest,DocEmbeddings local
+    class HF,Compose external
     class Validate,Answer,Fail output
 ```
 
-**At a glance:** retrieval and embeddings are local; SQLite stores policy vectors and citation metadata; in the required stdio path, synthetic HR tools run in one reused official MCP process; OpenRouter is the required final answer composer. The local quick-start defaults to in-process MCP, while CI and Render use stdio. Refusals that stop before evidence retrieval do not call the LLM. The composer cannot authorize actions, and invalid or unavailable generation fails closed.
+**Reading the diagram:** blue is the user interface, green is app-local processing and data, orange is the external model services, and purple marks the answer-validation boundary. The MCP client and FastMCP server communicate over stdio in the demo and hosted configuration; local quick-start can use in-process MCP. Refusals that stop before evidence retrieval do not call OpenRouter.
 
 ### Data and storage
 
@@ -69,7 +96,9 @@ flowchart LR
     COMPOSE --> CHECK[Application validation]
     CHECK -->|valid| RESPONSE[Answer + citations]
     CHECK -->|invalid or unavailable| SAFE[HTTP 503; draft withheld]
-    UI[Browser SQLite viewer] -. read-only document and chunk rows .-> DB
+    UI[Browser SQLite viewer] -->|read-only API request| API[FastAPI]
+    API -->|bounded document and chunk rows| DB
+    DB --> API --> UI
     HF[Hugging Face model source] -. model weights downloaded to app .-> EMBED
     HF -. model weights downloaded to app .-> QUERY
 

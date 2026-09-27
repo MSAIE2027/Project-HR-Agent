@@ -11,25 +11,32 @@ Every successful citation-bearing answer passes through the required OpenRouter 
 ```mermaid
 sequenceDiagram
     actor Employee
+    participant Browser as Browser workspace
     participant API as FastAPI
     participant Agent as Deterministic orchestrator
-    participant MCP as MCP client/server
-    participant HF as Hugging Face MiniLM
+    participant Client as Official MCP client
+    participant Server as FastMCP stdio process
+    participant MiniLM as Local MiniLM inference
     participant DB as Service-local SQLite vector index
-    participant OR as OpenRouter pinned free model chain
-    Employee->>API: HR question
+    participant OR as OpenRouter free-model chain
+    Employee->>Browser: HR question
+    Browser->>API: POST /chat
     API->>Agent: Validate and route request
-    Agent->>MCP: Discover and call policy / HR tools
-    MCP->>HF: Embed policy query
-    HF-->>DB: Query vector
-    MCP->>DB: Dense cosine + lexical retrieval
-    DB-->>MCP: Policy snippets and citation metadata
-    MCP-->>Agent: Evidence and structured tool results
+    Agent->>Client: Discover and call policy / HR tools
+    Client->>Server: tools/list and tools/call over stdio
+    Server->>MiniLM: Embed policy query locally
+    MiniLM-->>Server: Query vector
+    Server->>DB: Hybrid retrieval + family routing + MMR
+    DB-->>Server: Policy passages and citation metadata
+    Server-->>Client: Evidence and structured tool results
+    Client-->>Agent: Tool results
     Agent->>API: Controlled draft + status + structured facts
-    API->>OR: Draft + retrieved evidence + facts
+    API->>OR: Required response composition
+    Note over API,OR: Draft + retrieved evidence + structured facts
     OR-->>API: Formatted and evidence-enriched answer
     API->>API: Validate status, numbers, and safety disclaimers
-    API-->>Employee: Final answer + citations + operational trace
+    API-->>Browser: Final answer + citations + operational trace
+    Browser-->>Employee: Display validated response
 ```
 
 ## Modules
@@ -56,7 +63,7 @@ If the persistent MCP connection fails, the current request returns an explicit 
 
 rag/ingest.py extracts Markdown and HTML sections with document IDs, titles, headings, source paths, and page estimates. The selected chunk settings are 120 words with 20-word overlap. MiniLM is the only intended dense embedding model: sentence-transformers/all-MiniLM-L6-v2 at 384 dimensions. Embedding provider, base URL, key, and model use MSAIE_EMBEDDING_*; MSAIE_LLM_* configures the separate, required OpenRouter final-answer step.
 
-At startup, policy files are chunked and their MiniLM embeddings are stored in the service's SQLite vector index. At request time, the policy tool embeds the query, applies hybrid lexical and dense ranking, and uses family routing with MMR to select citations. Current chunking, ranking settings, experiments, results, and limitations are recorded in [`evaluation/ablation-results.md`](../evaluation/ablation-results.md) and [`evaluation/retrieval-comparison.md`](../evaluation/retrieval-comparison.md); the chart is [`visuals/retrieval-comparison.svg`](../visuals/retrieval-comparison.svg).
+Hugging Face is the model-weight source; MiniLM document and query embeddings run locally in the app's managed MCP process. At startup, policy files are chunked and their embeddings are stored in the service's SQLite vector index. At request time, the policy tool embeds the query locally, applies hybrid lexical and dense ranking, and uses family routing with MMR to select citations. Current chunking, ranking settings, experiments, results, and limitations are recorded in [`evaluation/ablation-results.md`](../evaluation/ablation-results.md) and [`evaluation/retrieval-comparison.md`](../evaluation/retrieval-comparison.md); the chart is [`visuals/retrieval-comparison.svg`](../visuals/retrieval-comparison.svg).
 
 `RagIndex.search(query, limit=k)` returns score-ranked candidates; `RagIndex.rerank_mmr` applies MMR using stored MiniLM vectors without exposing vectors to MCP callers. The orchestrator uses the same index to return at most five citations.
 
