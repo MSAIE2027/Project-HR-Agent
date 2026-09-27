@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on commit `6ce0da8`; GitHub Actions passed for that exact SHA and readiness passes. Do not record the hosted workflow yet: after the OpenRouter configuration refresh, the latest preflight returned HTTP 503 after all four model routes returned HTTP 429, with no resolved model. The recording gate is a hosted HTTP 200 with the expected tool trace, citations, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on commit `400dad4`; GitHub Actions passed for that exact SHA and readiness passes. Do not record the hosted workflow yet: the latest preflight returned HTTP 503 after all four model routes returned HTTP 429. A direct request with the refreshed local key identifies OpenRouter's free-model daily limit. The recording gate is a hosted HTTP 200 with the expected tool trace, citations, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
 
 ## Start and verify
 
