@@ -6,31 +6,31 @@
 
 **Render service:** `Project-HR-Agent` in workspace `MSAIE2027`
 
-**Runtime commit:** `a24154dceff033a5c2baabf7899b873e82765610`
+**Runtime commit:** `eeceda7132bf64545f51a0a61f00fc0c332eaed2`
 
-**Render deployment:** `dep-dasjuau0tbcc73fol7ig`
+**Render deployment:** `dep-dasl2lh7lnhs739ltkb0`
 
 ## Current status
 
-The Render runtime is live on 2026-09-27 at commit `a24154d`; that code passed [GitHub Actions run 36331652047](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36331652047). The ONNX working-tree change is not yet in CI or deployed. Render service metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. Its live build command still explicitly installs and checks PyTorch, while the current repository `render.yaml` uses ONNX Runtime. Update the service build command to match `render.yaml` before deploying the ONNX candidate. Readiness and SQLite previews were previously verified; health does not establish that generation succeeds.
+The Render runtime is live on 2026-09-27 at commit `eeceda7`; it passed [GitHub Actions run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) and deployed as `dep-dasl2lh7lnhs739ltkb0`. The live build command now matches `render.yaml`, including the pinned ONNX index assertion. Render service metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The service built the semantic SQLite index and started successfully.
 
-The deployed `a24154d` runtime passed [GitHub Actions run 36331652047](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36331652047), including the full test suite and evaluations. The ONNX candidate requires its own clean CI run before deployment. Render auto-deploy is off; after CI passes, deploy the exact tested SHA manually.
+The deployed `eeceda7` runtime passed [GitHub Actions run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726), including the full test suite, MCP stdio smoke, both golden evaluations, and artifact upload. The manual deploy used that exact tested SHA. Render auto-deploy remains off.
 
-**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight passed both privacy refusals, then returned HTTP 502 on the first remote-work query while the deployed PyTorch MiniLM model was loading. Render logs showed a process restart shortly afterward, without a Python exception or explicit OOM record. This suggests a low-memory risk but does not prove the cause; the request did not reach OpenRouter, did not resolve a model, and did not reach PTO. An earlier run reached all four OpenRouter routes and received 429s. The local `.env` key has since been rotated, but Render's stored key identity/quota is not exposed. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
+**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight passed both privacy refusals and reached OpenRouter after policy retrieval and structured checks. Qwen returned HTTP 429; the safe trace identified `failure_scope=account_quota`, and the fallback chain correctly stopped after one attempt. The API returned HTTP 503 with no resolved model or unrefined draft. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
 
-The live home page currently displays **Service online**. Read-only SQLite endpoints return 14 document rows and 13 chunks for `POL-PTO-01`, with vector payloads excluded. Two hosted privacy probes—medical details for two IDs and comparing PTO for two IDs—returned `refused` with a guardrail trace and no MCP tool calls or LLM event. These checks do not establish successful answer generation.
+The live service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness remained HTTP 200 after the first query. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached three MCP tool calls and then the LLM refinement event before the account quota failure.
 
-The prior PyTorch runtime's first MiniLM load completed, but memory samples peaked at 536,264,700 bytes against the 536,870,900-byte service limit and later settled at 493,432,830 bytes. A later first-query attempt restarted after a sample near 409 MB. These separate observations do not prove an OOM event or concurrent capacity; reducing inference overhead with pinned ONNX Runtime is the current mitigation. Hosted memory must be sampled again after the candidate deploy.
+After ONNX deployment, Render sampled memory at 71,155,710 bytes after startup and 274,866,180 bytes one minute later after the first policy request, against the 536,870,900-byte service limit. The service stayed live. This small sample does not establish peak or concurrent capacity. Historical PyTorch observations reached 536,264,700 bytes and later restarted during model loading, without an explicit OOM record.
 
 ## Verification and demo gate
 
-Before recording, align the live Render build command with `render.yaml`, push the candidate, wait for its full CI run, then deploy that tested SHA manually. Repeat synthetic requests and confirm:
+Before recording, wait until OpenRouter's account-wide free quota is available and rerun the hosted smoke. Confirm:
 
 - PTO balance and policy response returns HTTP 200, citations, and `llm_refinement.status=completed` with the actual resolved model.
 - International remote-work guidance returns cited policy evidence and the structured compliance result.
 - The confirmation-gated email or ticket workflow stops before the mock action until the user confirms.
 - Responses show no internal reasoning and preserve the required safety language.
-- The first model-backed request completes without a service restart and ONNX cold-load memory leaves reasonable headroom.
+- The first model-backed request completes without a service restart; the current observed ONNX sample is 274,866,180 bytes, but it is not a concurrency benchmark.
 - A citation-bearing answer reaches OpenRouter and reports its actual resolved model; the 429 classifier stops only on an identifiable account-wide free daily cap.
 
 The sanitized automated preflight is `python scripts/smoke_hosted_demo.py`. It sends synthetic requests through the configured OpenRouter chain and uses free-model quota; by default it does not confirm the mock email action. See the [demo runbook](demo/README.md) for the optional explicit confirmation flag.

@@ -16,7 +16,7 @@
 
 - **MCP protocol and workflow:** The app reuses the official MCP SDK session over FastMCP stdio without changing tool schemas or response contracts. The full protocol smoke and both golden evaluations pass in CI.
 - **Operational behavior:** A disconnected session produces an explicit MCP-unavailable result and updates cached MCP health. Routine readiness returns HTTP 503 without waiting on the tool lock; deep health performs discovery.
-- **Hosted answer acceptance — open:** The latest synthetic preflight passed both privacy refusals, then returned HTTP 503 after all four OpenRouter routes returned HTTP 429. The app withheld the unrefined draft; no model resolved and PTO was not reached. See [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+- **Hosted answer acceptance — open:** At the time of this review, the latest synthetic preflight passed both privacy refusals, then returned HTTP 503 after all four OpenRouter routes returned HTTP 429. The app withheld the unrefined draft; no model resolved and PTO was not reached. The later ONNX deployment reached OpenRouter and confirmed an account-quota 429 on Qwen; current evidence is in [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
 - **Course access — open:** The private repository permission check reports `quantic-grader=none`; grader read access remains unverified. See [`../deployed.md`](../deployed.md).
 
 ## Verification
@@ -73,12 +73,13 @@
 
 - The SRS requires a pinned 384-dimensional MiniLM index with 120/20 chunks. Review found that CI and Render only asserted that some semantic embedding revision existed. Both build gates now require the exact model revision, backend, 384 dimensions, and 120/20 settings.
 - No remaining implementation mismatch or unrelated scope change was found in this review. OpenRouter composition remains required for citation-bearing answers, and the ONNX change leaves that path unchanged.
-- Clean CI and hosted verification remain open release gates; local results do not prove Render memory behavior or successful live OpenRouter generation.
+- The release-gate and hosted runtime checks have since passed on the deployed commit. Live answer acceptance remains blocked by an identified OpenRouter account-wide free-tier quota 429, not an embedding or routing regression.
 
 ### Verification
 
 - Full local suite: **99 passed**, one third-party Starlette/AnyIO deprecation warning.
 - Pinned SQLite build assertion, FastMCP stdio discovery/tool-call smoke, compile check, both 30-case evaluation transports with thresholds, YAML parsing, and `git diff --check` passed.
-- Candidate changes have not yet passed GitHub Actions or been deployed to Render.
+- GitHub Actions run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed on `eeceda7`; Render deployment `dep-dasl2lh7lnhs739ltkb0` serves that exact SHA. The first ONNX-backed query stayed live at 274,866,180/536,870,900 sampled bytes; this is not a concurrency benchmark.
+- The hosted preflight completed privacy refusals and retrieval, then returned HTTP 503 after Qwen received HTTP 429 with sanitized `failure_scope=account_quota`. No model resolved; retry when quota is available.
 
-**Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed. Hosted answer acceptance is still an external release gate.
+**Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed and deployed. Hosted answer acceptance remains open only because the provider account's free-tier daily quota is exhausted.

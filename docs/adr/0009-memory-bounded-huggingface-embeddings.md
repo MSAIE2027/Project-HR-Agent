@@ -1,6 +1,6 @@
 # ADR 0009: Run pinned MiniLM with quantized ONNX Runtime
 
-**Status:** Accepted; local implementation verified, hosted resource effect pending deployment
+**Status:** Accepted; local and hosted first-query checks passed, hosted OpenRouter completion remains blocked by account quota
 **Date:** 2026-09-27
 
 ## Context
@@ -23,15 +23,17 @@ Persist the embedding backend and revision in SQLite metadata. Include them in t
 - Full local pytest completed with 99 passed and one third-party deprecation warning. MCP stdio smoke and both 30-case orchestrator evaluations completed on the ONNX index. The golden evaluations still exclude live LLM generation (`llm_generation_included=false`).
 - The clean-build release gate verifies the exact MiniLM repository and revision, ONNX backend, 384 dimensions, and 120/20 chunk configuration. The same assertion is configured in GitHub Actions and `render.yaml`.
 - Local process peak RSS was 121.6 MB during the ONNX experiment. That local result is not directly comparable to Render's prior memory sample and does not establish hosted capacity.
+- CI run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed the build gate, tests, MCP smoke, and both threshold-gated evaluations. Render deployment `dep-dasl2lh7lnhs739ltkb0` is live on the same tested commit `eeceda7`; the first policy request completed without a process restart. Render sampled 71,155,710 bytes after startup and 274,866,180 bytes after the first policy request against a 536,870,900-byte service limit. These two samples are not a peak or concurrency benchmark.
+- The first hosted citation-bearing request reached OpenRouter after retrieval and three MCP tool calls. Qwen returned an account-wide free-tier quota 429; the trace reports `failure_scope=account_quota`, and the app stopped the chain after one attempt and returned HTTP 503 without the unrefined draft. No answer model resolved; successful hosted LLM generation remains pending quota availability.
 
 ## Consequences
 
 - Fresh installs no longer need PyTorch or Sentence Transformers for the production embedding path, reducing runtime dependencies and avoiding loading the full PyTorch stack.
 - New indexes use a pinned quantized model export and record which backend/revision produced their vectors. Old indexes rebuild because the configuration signature changes.
 - The selected `quint8_avx2` export requires a compatible CPU instruction set. The index build check fails if the backend cannot load or produce the required semantic index.
-- GitHub Actions and the Render build must install the same pinned dependencies and build/assert the same index before release. The candidate's local gate passes; clean hosted CI and Render deployment remain pending.
+- GitHub Actions and the Render build install the same pinned dependencies and assert the same exact index. The CI-passing SHA is deployed manually; Render auto-deploy remains off.
 - This change does not mitigate OpenRouter rate limits. Every citation-bearing response still requires the configured OpenRouter chain and fails closed if no model returns a valid answer.
-- Hosted memory and the live answer path remain unverified until a CI-passing commit is manually deployed and the hosted acceptance smoke is rerun.
+- The CI-passing ONNX commit is deployed. The first hosted policy query completed and the service stayed ready at the recorded memory samples; those few points do not establish peak or concurrent capacity. Hosted answer acceptance remains open because OpenRouter returned an identifiable account-wide free-tier quota 429 before any model resolved.
 
 ## Alternatives considered
 
