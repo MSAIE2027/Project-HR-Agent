@@ -131,6 +131,7 @@
       margin: 0 max(24px, calc((100% - 920px) / 2)) 14px; padding: 14px 16px;
       border: 1px solid #cfe0fb; border-radius: 8px; background: var(--blue-soft);
     }
+    .example-strip[hidden] { display: none; }
     .example-strip h2 { margin: 0; color: #1e3a8a; font-size: 12px; }
     .example-strip p { margin: 3px 0 0; color: #52627a; font-size: 11px; }
     .example-actions { display: grid; grid-template-columns: repeat(3, minmax(112px, 1fr)); gap: 7px; width: min(100%, 480px); }
@@ -155,7 +156,7 @@
     .status-badge.completed, .status-badge.provisionally_eligible, .status-badge.mock_action_completed { color: #06735e; background: var(--teal-soft); }
     .status-badge.not_eligible, .status-badge.insufficient_evidence, .status-badge.escalated, .status-badge.refused { color: var(--rose); background: var(--rose-soft); }
     .status-badge.confirmation_required, .status-badge.clarification_required { color: var(--amber); background: var(--amber-soft); }
-    .status-badge.not_found, .status-badge.mcp_unavailable, .status-badge.tool_error { color: #92400e; background: #fff7ed; }
+    .status-badge.not_found, .status-badge.mcp_unavailable, .status-badge.llm_unavailable, .status-badge.tool_error { color: #92400e; background: #fff7ed; }
     .confidence { color: var(--subtle); font-size: 11px; }
     .action-card { margin-top: 14px; padding: 12px; border: 1px solid #f2d58a; border-radius: 8px; background: var(--amber-soft); }
     .action-card strong { display: block; color: #805b00; font-size: 12px; }
@@ -306,7 +307,7 @@
           <p class="side-label">Suggested questions</p>
           <div class="prompt-list">
             <button class="prompt-chip" type="button" data-fill="What controls apply when working internationally with confidential data?">International work and confidential data</button>
-            <button class="prompt-chip" type="button" data-fill="Can I work remotely from another state for six weeks? My employee ID is E001.">Remote-work eligibility for E001</button>
+            <button class="prompt-chip" type="button" data-fill="Can E1001 work remotely overseas for 10 days?">Remote-work eligibility for E1001</button>
             <button class="prompt-chip" type="button" data-fill="How much PTO does E1001 have and draft an email for 5 days?">PTO balance and draft request</button>
             <button class="prompt-chip" type="button" data-fill="What is the benefits status for E1002?">Benefits status for E1002</button>
             <button class="prompt-chip" type="button" data-fill="How should medical leave documents be handled and retained privately?">Medical leave document privacy</button>
@@ -337,7 +338,7 @@
           </div>
           <div class="example-actions">
             <button class="example-button" type="button" data-fill="What controls apply when working internationally with confidential data?">International + security</button>
-            <button class="example-button" type="button" data-fill="Can I work remotely from another state for six weeks? My employee ID is E001.">Remote work</button>
+            <button class="example-button" type="button" data-fill="Can E1001 work remotely overseas for 10 days?">Remote work</button>
             <button class="example-button" type="button" data-fill="How much PTO does E1001 have and draft an email for 5 days?">PTO balance + draft</button>
             <button class="example-button" type="button" data-fill="What is the benefits status for E1002?">Benefits status</button>
             <button class="example-button" type="button" data-fill="How should medical leave documents be handled and retained privately?">Leave records</button>
@@ -359,7 +360,7 @@
           <form id="composer" class="composer">
             <label class="sr-only" for="message">Ask MSAIE a question</label>
             <textarea id="message" rows="2" maxlength="4000" aria-describedby="message-help" placeholder="Ask a question about policy, PTO, benefits, or remote work..."></textarea>
-            <span id="message-help" class="sr-only">Use synthetic employee IDs such as E001 or E1001. Do not enter real employee information or secrets.</span>
+            <span id="message-help" class="sr-only">Use synthetic employee IDs such as E1001 or E1002. Do not enter real employee information or secrets.</span>
             <div class="composer-footer">
               <span class="composer-hint">Ctrl + Enter to send</span>
               <button id="send" class="send" type="submit">Send</button>
@@ -395,8 +396,8 @@
       <details class="telemetry-details">
         <summary>Why 120 words / 20 overlap?</summary>
         <p>Each heading section is split into 120-word evidence windows. The 20-word overlap repeats the boundary context so a rule that starts near the end of one window can still be retrieved with the condition that follows in the next window.</p>
-        <p>The MiniLM comparison covered 60/10, 90/15, 120/20, 160/24, and 220/30. The 120/20, 160/24, and 220/30 settings produced identical 126 chunks and retrieval metrics on this corpus, so 120/20 is the smallest cap in that tied group.</p>
-        <p>Global top-five results covered every expected family in 2 of 5 multi-family queries; MMR at λ=0.5 raised that to 3 of 5. The production route now recognizes multiple policy families, seeds one result per family, then returns five diverse citations. It covered all expected families in the five labeled multi-family route probes. These small, hand-labeled results are retrieval evidence, not a general answer-quality guarantee.</p>
+        <p>The MiniLM comparison covered 60/10, 90/15, 120/20, 160/24, and 220/30. The 120/20, 160/24, and 220/30 settings each produced 182 chunks and tied on the reported retrieval-quality metrics, so 120/20 is the smallest cap in that tied group.</p>
+        <p>On the expanded corpus, global top-five results covered every expected family in 1 of 5 multi-family queries; MMR at λ=0.5 raised that to 2 of 5 and family recall from 0.76 to 0.81. The production route also recognizes multiple policy families, seeds one result per family, then returns five diverse citations. It covered all expected families in the five labeled multi-family route probes. These small, hand-labeled results are retrieval evidence, not a general answer-quality guarantee.</p>
         <p>Active values below come from index health.</p>
       </details>
     </section>
@@ -405,9 +406,9 @@
       <div class="section-head"><h3>Workflow benchmarks</h3></div>
       <div class="lab-list">
         <article class="lab-card">
-          <h4>Task A: remote-work boundary</h4>
-          <p>E001 requests six weeks from another state. Validates ID parsing, duration conversion, policy limit, and structured profile lookup.</p>
-          <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Can I work remotely from another state for six weeks? My employee ID is E001.">Load</button><button type="button" data-lab-run data-lab-query="Can I work remotely from another state for six weeks? My employee ID is E001.">Run now</button></div>
+          <h4>Task A: remote-work eligibility</h4>
+          <p>E1001 requests ten overseas remote-work days. Shows policy evidence, employee lookup, compliance checks, and required approvals.</p>
+          <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Can E1001 work remotely overseas for 10 days?">Load</button><button type="button" data-lab-run data-lab-query="Can E1001 work remotely overseas for 10 days?">Run now</button></div>
         </article>
         <article class="lab-card">
           <h4>Task B: PTO action gate</h4>
@@ -416,8 +417,8 @@
         </article>
         <article class="lab-card">
           <h4>Task C: mock ticket confirmation</h4>
-          <p>Exercises the explicit confirmation boundary for a fictional PTO ticket.</p>
-          <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Please create the mock ticket for my PTO request. My employee ID is E001.">Load</button><button type="button" data-lab-run data-lab-query="Please create the mock ticket for my PTO request. My employee ID is E001.">Run now</button></div>
+          <p>Exercises the explicit confirmation boundary for a fictional sensitive-case ticket.</p>
+          <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Create a case for E1001 about a harassment complaint.">Load</button><button type="button" data-lab-run data-lab-query="Create a case for E1001 about a harassment complaint.">Run now</button></div>
         </article>
       </div>
     </section>
@@ -459,6 +460,7 @@
     const messageInput = document.getElementById('message');
     const chatFeed = document.getElementById('chat-feed');
     const chatScroll = document.getElementById('chat-scroll');
+    const exampleStrip = document.querySelector('.example-strip');
     const sendButton = document.getElementById('send');
     const appShell = document.getElementById('app-shell');
     const lab = document.getElementById('evaluator-lab');
@@ -487,6 +489,7 @@
     }
 
     function appendUserMessage(text) {
+      exampleStrip.hidden = true;
       const article = make('article', 'message user');
       const avatar = make('div', 'avatar user', 'You');
       avatar.setAttribute('aria-hidden', 'true');
@@ -557,8 +560,10 @@
       const temperature = refinement.temperature ?? provider.temperature;
       const temperatureLabel = temperature === undefined || temperature === null ? '' : ` · temp ${Number(temperature).toFixed(1)}`;
       if (refinement.status === 'completed') return `LLM: ${endpoint || provider.type || 'provider'} / ${model || 'unknown model'}${temperatureLabel}`;
-      if (refinement.status === 'fallback_to_controlled_draft') return `LLM fallback: ${endpoint || provider.type || 'provider'} / ${model || 'unknown model'}${temperatureLabel}`;
-      if (refinement.status === 'not_configured') return 'LLM: controlled deterministic draft';
+      if (refinement.status === 'rejected') return `LLM: no safe answer after ${refinement.attempts || 0} model attempt(s); retrieval draft withheld`;
+      if (refinement.status === 'unavailable') return `LLM: provider unavailable after ${refinement.attempts || 0} model attempt(s); retrieval draft withheld`;
+      if (refinement.status === 'fallback_to_controlled_draft') return 'OpenRouter response rejected; no unrefined answer delivered';
+      if (refinement.status === 'not_configured') return 'OpenRouter required for evidence-backed answers';
       if (provider.status === 'configured') return `LLM: ${endpoint || provider.type || 'configured'} / ${model || 'not called'} (not called)`;
       return '';
     }
@@ -626,7 +631,7 @@
         const data = await response.json();
         loading.remove();
         if (!response.ok) {
-          appendAgentMessage({ answer: data.detail || `Service returned HTTP ${response.status}.`, status: 'mcp_unavailable', confidence: 'low', trace: [] });
+          appendAgentMessage({ answer: data.detail || `Service returned HTTP ${response.status}.`, status: response.status === 503 ? 'llm_unavailable' : 'mcp_unavailable', confidence: 'low', trace: data.trace || [], llm: data.llm || {} });
         } else {
           if (data.requires_confirmation) state.pendingQuery = text;
           appendAgentMessage(data);
@@ -732,11 +737,15 @@
         document.getElementById('metric-embedding').textContent = rag.embedding_model || 'unknown';
         document.getElementById('metric-dimensions').textContent = `${rag.dimensions || 0} dimensions · ${rag.semantic_embeddings ? 'semantic' : 'fallback'}`;
         document.getElementById('metric-llm').textContent = provider.endpoint_host || provider.type || provider.status || 'unknown';
-        document.getElementById('metric-llm-model').textContent = `${provider.model || 'controlled draft'}${provider.temperature === 0 ? ' · temp 0.0' : ''}`;
+        const modelChain = Array.isArray(provider.model_chain) ? provider.model_chain : [];
+        document.getElementById('metric-llm-model').textContent = modelChain.length
+          ? `Pinned free chain → ${provider.fallback_model || modelChain[modelChain.length - 1]}`
+          : (provider.model || 'controlled draft');
         document.getElementById('metric-chunking').textContent = `${rag.chunk_words || 0} / ${rag.overlap_words || 0}`;
         document.getElementById('metric-chunk-detail').textContent = `${rag.chunks || 0} chunks · ${rag.estimated_pages || 0} metadata-est. pages`;
         const temperature = provider.temperature === undefined || provider.temperature === null ? 'not called' : Number(provider.temperature).toFixed(1);
-        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${provider.model ? ` · ${provider.model}` : ''} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces show the live request path.`;
+        const chainNote = modelChain.length ? ` · route order ${modelChain.join(' → ')}` : '';
+        document.getElementById('runtime-note').textContent = `LLM: ${provider.status || 'unknown'}${chainNote} · temperature ${temperature}. Embedding: ${rag.embedding_provider || 'unknown'} · ${rag.embedding_model || 'unknown'} · ${rag.dimensions || 0} dimensions. Synthetic records only; traces show the selected live route and any fallbacks.`;
         setHealth(data.status === 'ok' ? 'online' : 'degraded', data.status === 'ok' ? 'Service online' : 'Service degraded');
       } catch (error) {
         document.getElementById('metric-service').textContent = 'Offline';
@@ -783,6 +792,7 @@
       threadTag.textContent = `Thread: ${state.sessionId.slice(0, 8)}...`;
       state.pendingQuery = null;
       chatFeed.innerHTML = '';
+      exampleStrip.hidden = false;
       appendAgentMessage({ answer: 'Fresh session started. What can I help you with?', status: 'completed', confidence: 'high', trace: [] });
     });
     document.addEventListener('keydown', (event) => {

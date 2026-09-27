@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from rag.index import DEFAULT_LOCAL_MODEL, RagIndex
+from rag.ingest import load_policy_sections
 
 ROOT = Path(__file__).resolve().parents[1]
 MINIMUM_EVIDENCE_SCORE = 0.12
@@ -267,12 +268,38 @@ def select_configuration(configurations: list[dict[str, Any]]) -> dict[str, Any]
 
 
 def to_markdown(report: dict[str, Any]) -> str:
+    best = report["selected_configuration"]
+    best_metrics = best["metrics"]
+    quality_fields = (
+        "multi_document_all_family_coverage_at_5",
+        "filtered_family_score_coverage",
+        "all_family_coverage_at_5",
+        "family_recall_at_5",
+        "family_mrr",
+    )
+    best_quality = tuple(round(best_metrics[field], 4) for field in quality_fields)
+    tied_configurations = [
+        item
+        for item in report["configurations"]
+        if tuple(round(item["metrics"][field], 4) for field in quality_fields) == best_quality
+    ]
+    tied_labels = ", ".join(
+        f"{item['chunk_words']}/{item['overlap_words']}" for item in tied_configurations
+    )
+    multi_document_cases = report["multi_document_query_count"]
+    multi_document_hits = round(
+        best_metrics["multi_document_all_family_coverage_at_5"] * multi_document_cases
+    )
+    corpus_word_count = report["corpus_word_count"]
+    corpus_page_equivalents = report["corpus_page_equivalents_400_words"]
     lines = [
         "# MiniLM Retrieval Chunk Ablation",
         "",
         "This retrieval-only comparison fixes the embedding model to sentence-transformers/all-MiniLM-L6-v2 (384 dimensions), keeps ranking weights unchanged, and compares chunk size and overlap over labeled policy-family queries.",
         "",
         f"Cases: {report['query_count']} total, including {report['multi_document_query_count']} multi-document queries. Query-time measurements use a warmed local model. No transaction workflows are included.",
+        "",
+        f"Corpus: {report['corpus_document_count']} policy files and {corpus_word_count:,} parsed policy-text words, or about {corpus_page_equivalents:.1f} page-equivalents at 400 words per page. The index metadata sums per-file estimates; neither figure is a rendered page count.",
         "",
         "Hit@k means at least one expected policy family appears in the global top k; family recall@5 is the fraction of expected families present in the global top five. Filtered metrics are simulated family-specific searches, not measured route selection.",
         "",
@@ -293,15 +320,13 @@ def to_markdown(report: dict[str, Any]) -> str:
             f"{metrics['index_bytes'] / 1024:.1f} | {metrics['search_ms_p50']:.3f} | "
             f"{metrics['search_ms_p95']:.3f} | {metrics['build_seconds_warm']:.3f} |"
         )
-    best = report["selected_configuration"]
-    best_metrics = best["metrics"]
     lines += [
         "",
         f"Selected: {best['chunk_words']} words / {best['overlap_words']} overlap. It shares the best quality metrics. Among tied configurations, selection uses index size, chunk count, the smallest chunk cap, then measured build and search time.",
         "",
         f"Average result diversity at global top 5 before reranking: {best_metrics['mean_unique_documents_top5']:.2f} distinct documents and {best_metrics['mean_unique_sections_top5']:.2f} distinct sections. See retrieval-comparison.md for the MMR comparison and current production reranker.",
         "",
-        "On this corpus, 120/20, 160/24, and 220/30 produced identical chunk content (126 chunks) and identical retrieval metrics. The 120-word cap is selected as the smallest cap in that tied group, a corpus-specific efficiency choice rather than a universal optimum. The 90/15 index was larger with lower family coverage; 60/10 had lower all-family coverage. Family-filtered columns simulate one top-3 search per expected family, merge those results, and keep the best 5. Only the international remote-work plus security route currently exists in the orchestrator; other pairings are retrieval probes, and the simulation does not measure route classification. Limitations: this is a small hand-authored retrieval benchmark, not an independent semantic judgment. It measures expected document-family retrieval and score coverage, not answer correctness, workflow status, or transaction behavior. The five multi-document probes achieved 2/5 global top-5 all-family coverage. Rerun after policy corpus or embedding changes.",
+        f"The best quality metrics tie across {tied_labels}. The selected {best['chunk_words']}/{best['overlap_words']} setting is the smallest cap in that tied group; the selected index contains {best['index']['chunks']} chunks. Raw global top-five all-family coverage is {multi_document_hits}/{multi_document_cases} ({best_metrics['multi_document_all_family_coverage_at_5']:.2f}) for multi-document probes. Family-filtered figures are simulated; the separate retrieval comparison measures actual application routing and MMR. These results are a small hand-authored retrieval benchmark, not an independent semantic judgment. They measure expected document-family coverage, not final answer correctness, workflow status, or transaction behavior. Re-run after policy corpus or embedding changes.",
         "",
     ]
     return "\n".join(lines)
@@ -315,9 +340,15 @@ def main() -> None:
     _use_minilm()
     warm_local_model()
     configurations = [evaluate(item) for item in CONFIGURATIONS]
+    policy_sections = load_policy_sections(ROOT / "policies")
+    corpus_word_count = sum(len(section.text.split()) for section in policy_sections)
+    corpus_document_count = len({section.document_id for section in policy_sections})
     report = {
         "embedding_model": DEFAULT_LOCAL_MODEL,
         "embedding_dimensions": 384,
+        "corpus_document_count": corpus_document_count,
+        "corpus_word_count": corpus_word_count,
+        "corpus_page_equivalents_400_words": round(corpus_word_count / 400, 1),
         "query_count": len(QUERIES),
         "multi_document_query_count": sum(len(item["expected_prefixes"]) > 1 for item in QUERIES),
         "minimum_evidence_score": MINIMUM_EVIDENCE_SCORE,

@@ -1,6 +1,6 @@
-# Reported Evaluation Failures: Current Diagnosis
+# Historical Evaluation Failure Report: Reconciliation
 
-The earlier combined-folder report described legacy status mismatches, a full-evaluation score of 0.84 against a 0.90 threshold, and a missing POL-RW citation on a multi-document case.
+An earlier combined-folder report described legacy status mismatches, a full-evaluation score of 0.84 against a 0.90 threshold, and a missing POL-RW citation on a multi-document case. That report is historical and has been superseded by current local test/evaluation runs.
 
 ## What this checkout confirms
 
@@ -9,11 +9,13 @@ The earlier combined-folder report described legacy status mismatches, a full-ev
 - The six-item read-only policy golden slice scored 100% on status, citation-prefix, and groundedness-proxy checks.
 - Runtime retrieval reported `huggingface_dense_cosine`, confirming the MiniLM dense cosine path during this run.
 - Global top-five MMR λ=0.5 improved all-family coverage from 2/5 to 3/5 and family recall from 0.81 to 0.86.
+- The current full local pytest suite and 25-case golden set have been run. The saved report is `results.md`; all recorded deterministic proxy metrics pass. The first UI test run also exposed stale demo fixture assumptions and embedding environment variables; those were corrected and are documented in `docs/implementation-slices.md`.
 
 ## What remains unverified
 
-The full 0.84 result was not reproduced because the full golden set includes workflow and confirmed mock-action cases, which remain outside the authorized verification scope. Therefore the failing IDs and exact numerator/denominator cannot be stated from current evidence. Pytest and transaction/action scenarios were not run.
+The old 0.84 score is not the current result for this checkout. The suite now exercises workflow and confirmed local mock-action cases. The current evaluation and test report establish fixture alignment and deterministic behavior only; they do not prove independent semantic groundedness or hosted behavior. The local run is documented in `../evidence/index.md`.
 
-The legacy status disagreements described in the prior report are not a reason to change current status behavior. The current golden set encodes the MSAIE status contract; reconcile any old fixture only after identifying its exact test and product requirement. Do not change the 0.90 threshold or rewrite statuses to make an obsolete suite pass.
+The legacy status disagreements described in the prior report were stale relative to the current MSAIE golden-set contract. Do not change the rubric threshold or rewrite status behavior just to match obsolete fixtures.
 
-For query-level coverage, MMR and route filters, see evaluation/retrieval-comparison.md. The read-only comparison is retrieval evidence, not a replacement for the unrun full evaluation.
+For query-level coverage, MMR and route filters, see `retrieval-comparison.md`. Keep the historical diagnosis separate from the current full evaluation report.
+# Historical retrieval figures in this report predate the 2026-09-26 corpus expansion. See `retrieval-comparison.md` and `ablation-results.md` for current results.

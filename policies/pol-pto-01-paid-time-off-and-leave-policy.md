@@ -1,7 +1,7 @@
 ---
 document_id: POL-PTO-01
 title: "Paid Time Off and Leave Policy"
-estimated_pages: 3.0
+estimated_pages: 2.9
 ---
 
 # Paid Time Off and Leave Policy
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Request information and scheduling
+
+A complete PTO request identifies intended dates, working days requested, employee ID and scheduling detail needed for the manager to review coverage. The assistant should retrieve the structured balance and notice rule before explaining the likely effect. It distinguishes calendar days from working days when a request spans weekends or holidays and must not calculate a balance from an unsupported assumption about accrual or carry-over. The manager considers planned work, coverage and overlapping requests, then records a decision in the authorised workflow. A draft message is not approval, and silence does not grant leave.
+
+## Balance questions and corrections
+
+The PTO dataset is authoritative for the displayed available balance. If an employee disputes it, the assistant reports the retrieved value and directs the employee to HR for a review of accrual, adjustments or prior leave entries. Do not subtract a request from the balance as if the manager had approved it; label any calculation conditional on approval. A negative balance, missing employee record, conflicting classification or unclear carry-over requires clarification or HR review. Corrections preserve the original entry, reason, effective date and authorised owner. The assistant cannot edit balances or make payroll adjustments.
+
+## Changes, cancellations and coverage
+
+An employee should update dates or duration as soon as plans change. The manager checks whether an approved period can be moved and records the new decision. A cancellation should not erase the earlier request or its disposition; it remains visible as a status change so the audit trail explains what happened. Managers should explore workable alternatives where coverage is constrained and consult HR before materially reversing an approved period. If illness or another protected circumstance affects planned PTO, the separate leave process applies. The assistant must not request diagnosis details or decide that one leave type can be converted into another.
+
+## Extended leave and return to work
+
+An unusually long absence, negative balance, exceptional carry-over, disputed classification or another protected leave category should be referred to HR. The employee may use a separate confidential process and provide supporting information directly to the authorised team. An exception record states the rule being varied, reason, owner, duration, conditions and approvals; it does not change the policy for other employees and must not be reused after expiry. After leave, the employee and manager agree on the return date, current priorities and handover needed for open work. A local mock ticket or evaluation fixture does not amend a real schedule, balance or payroll record.

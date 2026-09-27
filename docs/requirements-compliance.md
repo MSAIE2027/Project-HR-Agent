@@ -1,16 +1,18 @@
-# Implementation Status
+# Requirements Compliance Snapshot
 
-| Area | Current implementation | Current-copy evidence |
+The complete source-to-evidence map is [`traceability-matrix.md`](traceability-matrix.md); its SRS source is [`../specs/system-requirements.md`](../specs/system-requirements.md).
+
+| Area | Implementation | Current status |
 |---|---|---|
-| Web application | FastAPI API and static employee workspace | Startup and /health were verified in the earlier local setup pass; no new browser review in this pass |
-| Orchestration | Explicit routing, evidence checks, and confirmation gates | Read-only policy route exercised across 15 retrieval queries |
-| MCP | SDK FastMCP server; official client in stdio mode | In-process policy calls exercised; stdio protocol path not exercised in this pass |
-| RAG | Markdown/HTML ingestion, SQLite vectors, cosine ranking | MiniLM 384d at 120/20; production MMR λ=0.5, top ten to five results |
-| Embeddings | Local sentence-transformers MiniLM default and hashing fallback | Runtime trace reported huggingface_dense_cosine; remote embedding configuration is separate and disabled in the comparison |
-| LLM | Optional constrained OpenAI-compatible refinement | Structured-status/numeric validator and fallback were implemented; pytest cases not run |
-| Safety | Synthetic data, prompt-injection refusal, confirmation-gated mock actions | No action or transaction scenario run in this pass |
-| Evaluation | Golden set plus chunk and ranking ablations | 15-query route comparison reached 100% expected-family coverage (5/5 multi-family); six-case read-only golden policy slice scored 100% on its three proxies; full evaluation remains unrun |
-| Visuals | Retrieval comparison chart in visuals | SVG includes an accessible title and description; no browser UI review in this pass |
-| Deployment | Optional Render service definition | Not deployed or verified from this checkout |
+| Web/API and local operation | FastAPI chat/workspace/health, Python 3.12 venv, local SQLite | Automated API tests and local setup commands pass. |
+| Orchestration and workflows | Explicit tool routing, international remote-work and PTO flows, safety boundaries | Covered by the 25-case evaluation and API tests. |
+| MCP | FastMCP SDK with eight typed tools; in-process local and stdio protocol path | stdio discovery/calls pass locally. |
+| RAG and citations | Markdown/HTML ingestion, MiniLM 384d, 120/20 chunks, SQLite, MMR and family seeding | Measured comparison/ablation; local evaluation reports 100% citation-family proxy. |
+| OpenRouter response generation | Required composition of every citation-bearing response from controlled draft, retrieved evidence, and structured facts; fail-closed provider and validation errors | Public API tests verify invocation on cited responses and HTTP 503 on missing provider or provider failure. One current-index local public `/chat` call passed with five citations and `llm_refinement=completed`; the golden set excludes OpenRouter calls. String-level checks do not prove semantic entailment, and hosted behavior remains unverified. |
+| Safety | Synthetic records, injection refusal, escalation, confirmation gates, mock-only actions | Golden set action-safety proxy is 100%; no real HR system is connected. |
+| Evaluation | 25-item golden set over in-process and stdio; 15-task latency sample | Workflow completion covers five workflow cases. In-process priming 6,369.82 ms; warm p50/p95 20.28/62.54 ms. Stdio priming 9,659.28 ms; p50/p95 8,645.27/11,180.99 ms include a fresh subprocess/model initialization per task. Fixture proxies, not human semantic judging; OpenRouter generation is excluded. |
+| CI/CD and deploy configuration | GitHub Actions compile, tests, MCP smoke, threshold-gated golden evaluations and artifacts; optional tested-SHA Render deploy job | Configured locally and disabled until the GitHub variable/secret are set; the existing Render service must be synchronized with the Blueprint. No hosted workflow or deploy is observed yet. |
+| Deployment | Render service linked to `MSAIE2027/Project-HR-Agent`; assigned URL `https://project-hr-agent.onrender.com` | No deploy history; the existing service settings differ from the checked-in Blueprint, and no public response/cold-start is verified. |
+| Demo | Current prompts and runbook for two full workflows plus safety examples | Local demo package and browser rehearsal are ready; recording and course submission remain presenter-owned. |
 
-The retrieval measures are small, hand-labeled proxies. They are not a full answer-quality score or a production release claim.
+These values describe this checkout and this run only. Do not claim a score, a hosted URL, or deployed embedding settings without new evidence.

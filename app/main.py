@@ -4,11 +4,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from agent.llm import (
+    LLMProviderError,
     get_provider,
     get_refinement_status,
     provider_status,
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="MSAIE HR Agent",
     version="2.1.0",
-    description="A synthetic agentic HR assistant with persistent policy RAG, genuine MCP tool calls and constrained LLM refinement.",
+    description="A synthetic agentic HR assistant with policy RAG, MCP workflows, and required OpenRouter answer generation.",
     lifespan=lifespan,
 )
 
@@ -55,6 +56,28 @@ class ChatResponse(BaseModel):
     llm: dict[str, Any]
 
 
+def _llm_failure_response(
+    detail: str,
+    *,
+    result: AgentResult,
+    refinement: dict[str, Any],
+) -> JSONResponse:
+    trace = list(result.trace)
+    trace.append({"step": len(trace) + 1, "event": "llm_refinement", **refinement})
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": detail,
+            "answer": detail,
+            "status": "llm_unavailable",
+            "requires_confirmation": result.requires_confirmation,
+            "confidence": "low",
+            "trace": trace,
+            "llm": {"provider": provider_status(), "refinement": refinement},
+        },
+    )
+
+
 @app.get("/health")
 async def health(deep: bool = Query(False)) -> dict[str, Any]:
     mcp_status = getattr(app.state, "mcp", {"status": "unknown", "tools": []})
@@ -66,16 +89,33 @@ async def health(deep: bool = Query(False)) -> dict[str, Any]:
         except MCPGatewayError as exc:
             mcp_status = {"status": "unavailable", "transport": gateway.transport, "error": str(exc), "tools": []}
     index_status = get_index().stats()
+    llm_status = provider_status()
+    ready = (
+        index_status.get("status") == "ready"
+        and llm_status.get("status") == "configured"
+        and mcp_status.get("status") == "available"
+    )
     return {
-        "status": "ok" if index_status.get("status") == "ready" else "degraded",
+        "status": "ok" if ready else "degraded",
         "service": "msaie-hr-agent",
         "version": app.version,
         "mode": "agentic-rag-mcp-llm",
         "mcp": mcp_status,
         "rag_index": index_status,
-        "llm_provider": provider_status(),
+        "llm_provider": llm_status,
         "synthetic_data_only": True,
     }
+
+
+@app.get("/health/ready")
+async def readiness() -> dict[str, Any]:
+    report = await health(deep=False)
+    if report["status"] != "ok":
+        raise HTTPException(
+            status_code=503,
+            detail="The policy index and required OpenRouter configuration must be ready before serving traffic.",
+        )
+    return report
 
 
 @app.get("/api/tools")
@@ -95,31 +135,46 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
 
     provider = get_provider()
     refinement = get_refinement_status()
-    refinable_statuses = {
-        "completed",
-        "provisionally_eligible",
-        "not_eligible",
-        "mock_action_completed",
-        "escalated",
-    }
-    if (
-        provider.configured
-        and result.citations
-        and result.status in refinable_statuses
-        and refinement.get("status") == "not_called"
-    ):
-        result.answer = await provider.refine(
-            result.answer,
-            result.citations,
-            status=result.status,
-            structured_facts=result.structured_facts,
-        )
+    if result.citations:
+        if not provider.configured:
+            refinement = {
+                "status": "not_configured",
+                "provider": provider.provider_type,
+                "model": None,
+                "attempted_models": [],
+                "attempts": 0,
+            }
+            return _llm_failure_response(
+                "OpenRouter is required to generate evidence-backed answers, but it is not configured.",
+                result=result,
+                refinement=refinement,
+            )
+        structured_facts = dict(result.structured_facts)
+        if result.requires_confirmation:
+            structured_facts["requires_confirmation"] = True
+        try:
+            result.answer = await provider.refine(
+                result.answer,
+                result.citations,
+                status=result.status,
+                structured_facts=structured_facts,
+            )
+        except LLMProviderError:
+            refinement = get_refinement_status()
+            return _llm_failure_response(
+                "Required OpenRouter answer generation failed; no unrefined policy response was returned.",
+                result=result,
+                refinement=refinement,
+            )
         refinement = get_refinement_status()
+        if refinement.get("status") != "completed":
+            return _llm_failure_response(
+                "Required OpenRouter answer generation did not pass response validation.",
+                result=result,
+                refinement=refinement,
+            )
 
-    if provider.configured and refinement.get("status") in {
-        "completed",
-        "fallback_to_controlled_draft",
-    }:
+    if result.citations and refinement.get("status") == "completed":
         trace_entry = {
             "step": len(result.trace) + 1,
             "event": "llm_refinement",
@@ -128,13 +183,6 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
         result.trace.append(trace_entry)
 
     llm_status = dict(refinement)
-    if not provider.configured and llm_status.get("status") == "not_called":
-        llm_status = {
-            "status": "not_configured",
-            "provider": provider.provider_type,
-            "model": provider.model,
-            "temperature": None,
-        }
     return {
         **result.as_dict(),
         "llm": {

@@ -99,6 +99,18 @@ def _embedding_config_signature() -> str:
     return hashlib.sha256(json.dumps(signature, sort_keys=True).encode("utf-8")).hexdigest()
 
 
+def _policy_source_fingerprint() -> str:
+    digest = hashlib.sha256()
+    for path in sorted(POLICY_DIR.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in {".md", ".markdown", ".html", ".htm"}:
+            continue
+        digest.update(path.relative_to(POLICY_DIR).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 @lru_cache(maxsize=2)
 def _local_embedding_model(model_name: str) -> Any:
     from sentence_transformers import SentenceTransformer
@@ -169,8 +181,21 @@ class RagIndex:
 
     def build(self, *, chunk_words: int = 120, overlap_words: int = 20, force: bool = False) -> dict[str, Any]:
         with _LOCK:
+            source_fingerprint = _policy_source_fingerprint()
             if self.path.exists() and not force:
-                return self.stats()
+                try:
+                    with sqlite3.connect(self.path) as connection:
+                        metadata = self._metadata(connection)
+                    if (
+                        metadata.get("source_fingerprint") == source_fingerprint
+                        and metadata.get("chunk_words") == str(chunk_words)
+                        and metadata.get("overlap_words") == str(overlap_words)
+                        and metadata.get("requested_embedding_model") == _requested_embedding_model()
+                        and metadata.get("embedding_config_signature") == _embedding_config_signature()
+                    ):
+                        return self.stats()
+                except sqlite3.Error:
+                    pass
             self.path.parent.mkdir(parents=True, exist_ok=True)
             if self.path.exists():
                 self.path.unlink()
@@ -256,6 +281,7 @@ class RagIndex:
                         ("embedding_model", actual_model),
                         ("requested_embedding_model", requested_model),
                         ("embedding_config_signature", _embedding_config_signature()),
+                        ("source_fingerprint", source_fingerprint),
                         ("embedding_provider", provider),
                         ("embedding_error", embedding_error),
                         ("vector_format", vector_format),
@@ -291,19 +317,7 @@ class RagIndex:
             return self.stats()
 
     def ensure(self) -> dict[str, Any]:
-        if not self.path.exists():
-            return self.build()
-        try:
-            with sqlite3.connect(self.path) as connection:
-                metadata = self._metadata(connection)
-            if (
-                metadata.get("requested_embedding_model") != _requested_embedding_model()
-                or metadata.get("embedding_config_signature") != _embedding_config_signature()
-            ):
-                return self.build(force=True)
-        except (sqlite3.Error, KeyError):
-            return self.build(force=True)
-        return self.stats()
+        return self.build()
 
     def _metadata(self, connection: sqlite3.Connection) -> dict[str, str]:
         return {row[0]: row[1] for row in connection.execute("SELECT key, value FROM metadata")}

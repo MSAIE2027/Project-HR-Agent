@@ -4,22 +4,22 @@ This retrieval-only comparison fixes the embedding model to sentence-transformer
 
 Cases: 15 total, including 5 multi-document queries. Query-time measurements use a warmed local model. No transaction workflows are included.
 
+Corpus: 14 policy files and 15,034 parsed policy-text words, or about 37.6 page-equivalents at 400 words per page. The index metadata sums per-file estimates; neither figure is a rendered page count.
+
 Hit@k means at least one expected policy family appears in the global top k; family recall@5 is the fraction of expected families present in the global top five. Filtered metrics are simulated family-specific searches, not measured route selection.
 
 Selection order: global multi-document all-family coverage at 5, family-filtered score coverage, global all-family coverage at 5, family recall at 5, then family MRR. If quality ties, choose the smallest index, then fewer chunks, then the smallest chunk cap, followed by warm build time and median search latency.
 
 | Chunk / overlap | Chunks | Hit@1 | Hit@3 | Hit@5 | Family recall@5 | All families@5 | Multi-doc all families@5 | Filtered families@5 (sim.) | Filtered score coverage (sim.) | Index KiB | Search p50 ms | Search p95 ms | Warm build s |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 60 / 10 | 212 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 1951.4 | 16.776 | 78.561 | 2.064 |
-| 90 / 15 | 168 | 1.00 | 1.00 | 1.00 | 0.81 | 0.80 | 0.40 | 1.00 | 1.00 | 1581.2 | 18.679 | 66.561 | 2.600 |
-| 120 / 20 | 126 | 1.00 | 1.00 | 1.00 | 0.81 | 0.80 | 0.40 | 1.00 | 1.00 | 1219.1 | 11.854 | 43.228 | 1.980 |
-| 160 / 24 | 126 | 1.00 | 1.00 | 1.00 | 0.81 | 0.80 | 0.40 | 1.00 | 1.00 | 1219.1 | 13.628 | 46.988 | 2.021 |
-| 220 / 30 | 126 | 1.00 | 1.00 | 1.00 | 0.81 | 0.80 | 0.40 | 1.00 | 1.00 | 1219.1 | 13.269 | 44.561 | 2.019 |
+| 60 / 10 | 326 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 2993.4 | 20.733 | 112.157 | 3.928 |
+| 90 / 15 | 279 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 2603.2 | 18.821 | 100.919 | 3.894 |
+| 120 / 20 | 182 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 1750.2 | 17.024 | 77.013 | 3.449 |
+| 160 / 24 | 182 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 1750.2 | 16.491 | 75.559 | 3.366 |
+| 220 / 30 | 182 | 1.00 | 1.00 | 1.00 | 0.76 | 0.73 | 0.20 | 1.00 | 1.00 | 1750.2 | 15.322 | 69.268 | 3.386 |
 
 Selected: 120 words / 20 overlap. It shares the best quality metrics. Among tied configurations, selection uses index size, chunk count, the smallest chunk cap, then measured build and search time.
 
-Before reranking, global top 5 averaged 1.60 distinct documents and 5.00 distinct sections. The follow-up comparison found MMR λ=0.5 increased multi-family coverage; production now uses MMR over a top-ten pool and returns five results. The separate actual route also seeds a result for each explicitly selected family.
+Average result diversity at global top 5 before reranking: 1.27 distinct documents and 5.00 distinct sections. See retrieval-comparison.md for the MMR comparison and current production reranker.
 
-On this corpus, 120/20, 160/24, and 220/30 produced identical chunk content (126 chunks) and retrieval metrics. The 120-word cap is selected as the smallest cap in that tied group, a corpus-specific efficiency choice rather than a universal optimum. The 90/15 index was larger with lower family coverage; 60/10 had lower all-family coverage. Family-filtered columns simulate one top-3 search per expected family, merge those results, and keep five. The actual orchestrator route now evaluates that family intent and cites all expected families in 5/5 probes; MMR λ=0.5 also raises global top-five coverage to 3/5. Limitations: this is a small hand-authored retrieval benchmark, not an independent semantic judgment. It measures expected document-family retrieval and score coverage, not answer correctness, workflow status, or transaction behavior. Rerun after policy corpus or embedding changes.
-
-The follow-up top-k, routing, MMR, and ranking-weight comparison is documented in [retrieval-comparison.md](retrieval-comparison.md) with a chart in [visuals/retrieval-comparison.svg](../visuals/retrieval-comparison.svg).
+The best quality metrics tie across 120/20, 160/24, 220/30. The selected 120/20 setting is the smallest cap in that tied group; the selected index contains 182 chunks. Raw global top-five all-family coverage is 1/5 (0.20) for multi-document probes. Family-filtered figures are simulated; the separate retrieval comparison measures actual application routing and MMR. These results are a small hand-authored retrieval benchmark, not an independent semantic judgment. They measure expected document-family coverage, not final answer correctness, workflow status, or transaction behavior. Re-run after policy corpus or embedding changes.

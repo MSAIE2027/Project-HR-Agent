@@ -1,13 +1,13 @@
 services:
   - type: web
-    name: msaie-hr-agent
+    name: Project-HR-Agent
     runtime: python
     plan: free
     branch: main
     buildCommand: pip install -r requirements.txt && python -m compileall app agent rag mcp_server mcp_client evaluation scripts
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
-    autoDeployTrigger: commit
+    healthCheckPath: /health/ready
+    autoDeployTrigger: off
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.14
@@ -15,9 +15,9 @@ services:
         value: stdio
       - key: MSAIE_LLM_BASE_URL
         value: https://openrouter.ai/api/v1
-      - key: MSAIE_LLM_MODEL
+      - key: MSAIE_LLM_FALLBACK_MODEL
         value: openrouter/free
-      - key: OPENROUTER_API_KEY
+      - key: MSAIE_LLM_API_KEY
         sync: false
       - key: MSAIE_EMBEDDING_MODEL
         value: sentence-transformers/all-MiniLM-L6-v2

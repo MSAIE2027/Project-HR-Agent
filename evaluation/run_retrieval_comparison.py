@@ -37,6 +37,7 @@ def _configure(index_path: Path) -> None:
         "MSAIE_EMBEDDING_API_KEY",
         "MSAIE_LLM_BASE_URL",
         "MSAIE_LLM_API_KEY",
+        "MSAIE_LLM_FALLBACK_MODEL",
         "MSAIE_LLM_MODEL",
     ):
         os.environ.pop(name, None)

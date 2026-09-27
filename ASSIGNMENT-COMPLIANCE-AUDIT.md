@@ -1,24 +1,33 @@
-# MSAIE HR Agent Baseline Audit
+# MSAIE HR Agent — Completion Audit
 
-This note describes the standalone working copy and separates source inspection from current retrieval evidence.
+This audit uses the official course project prompt and rubric PDF supplied with the project. It distinguishes locally verified behavior from hosted or presenter deliverables.
 
-## What is present
+## Current local baseline
 
-- FastAPI application and responsive employee workspace.
-- Explicit request orchestrator with safety checks and confirmation-gated synthetic actions.
-- Eight HR tools registered on the MCP SDK FastMCP server, with an official MCP client for stdio mode.
-- Local in-process tool calls for development.
-- Markdown/HTML policy ingestion, SQLite vector storage, MiniLM dense cosine ranking, and a hashing fallback.
-- Optional OpenAI-compatible answer refinement with a structured status/numeric consistency guard.
-- Synthetic employee, PTO, benefits, office, and ticket data.
+- 14 fictional policy documents in Markdown and HTML; 15,034 indexed policy-text words, 37.5 summed per-file page estimates, and 182 section-aware chunks in the current index.
+- FastAPI workspace and API; explicit orchestrator; eight typed MCP tools; local in-process transport plus stdio MCP client/server path.
+- Synthetic employee, PTO, benefits, office, and ticket data. Email and ticket actions are mock-only and confirmation-gated.
+- MiniLM 384d, 120/20 chunks, current ranking weights, MMR λ=0.5, ten-candidate pool and five citation cap remain the approved retrieval baseline.
+- Current full local run: 62 tests passed with one third-party deprecation warning; all 25 golden cases pass over both in-process and stdio transports. Reports are in `evaluation/results*.json` and `evaluation/results*.md`.
 
-## Current engineering baseline
+## Delivery status
 
-- Python 3.12 local environment; see README.md for setup and startup.
-- MiniLM 384d embeddings with 120/20 word/overlap chunks.
-- Production uses MMR λ=0.5 on the score-ranked top ten, returns five results, and seeds one candidate per explicitly routed family for multi-family requests. Embedding, chunk size, and score weights remain fixed.
-- Latest comparison covers top-k, actual read-only route selection, MMR, and score weights. See evaluation/retrieval-comparison.md and visuals/retrieval-comparison.svg.
+| Area | Status | Evidence / remaining work |
+|---|---|---|
+| Requirements, SRS, and traceability | Complete in repository | `specs/system-requirements.md`, `docs/traceability-matrix.md` |
+| Supplied source-document review | Complete in repository | `docs/source-materials-review.md` |
+| Architecture decisions | Complete in repository | `docs/adr/` |
+| Tickets and implementation slices | Complete for local scope | `tickets/README.md`, `docs/implementation-slices.md` |
+| Local app, workflows, RAG, MCP, confirmation boundary | Verified locally | `tests/`, `scripts/smoke_mcp.py`, `evaluation/results.md` |
+| Retrieval comparison and ablation | Measured; evidence scoped | `evaluation/retrieval-comparison.md`, `evaluation/ablation-results.md` |
+| CI and Render deployment gate | Configured in source | `.github/workflows/ci.yml`, `render.yaml`; hosted CI still needs GitHub connection |
+| Public deployment and URL | Pending external setup | No Git remote or verified service URL in this checkout |
+| GitHub grader access | Pending user/repository setup | No remote repository link or `quantic-grader` access can be verified here |
+| Hands-on browser/accessibility review | Local browser review complete | `evidence/ui-review.md`; limited to visual/basic keyboard inspection, not screen-reader or automated contrast validation |
+| Demo package | Prepared for local rehearsal | `demo/README.md`, `docs/demo-script.md` |
+| Recorded 7–10 minute course presentation | Presenter deliverable | Must be recorded and submitted by the student/group |
+| Course dashboard submission | Presenter deliverable | Repository/video links and a group agreement when applicable must be submitted through the course workflow |
 
-## Verification boundary
+The 25-case metrics are deterministic rubric proxies, not independent semantic judgments. The hand-labeled retrieval sample is small and corpus-specific. Do not describe the local embedding trace as a hosted configuration or present the Render Blueprint as an already deployed service.
 
-The 15-query read-only route comparison cited all expected families, including all five multi-family cases. The six-case read-only golden policy slice scored 100% on status, citation-prefix, and groundedness proxies; runtime reported huggingface_dense_cosine. The full 0.84 evaluation was not reproduced because the full golden set includes workflow/action cases. Pytest, action/transaction scenarios, and deployment remain unrun.
+See [`docs/traceability-matrix.md`](docs/traceability-matrix.md) for requirement-by-requirement mapping and [`evidence/index.md`](evidence/index.md) for commands and evidence limits.

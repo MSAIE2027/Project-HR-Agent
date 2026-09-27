@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from agent.llm import get_provider
 from agent.models import AgentResult
 from mcp_client.client import MCPGateway, MCPGatewayError, ToolCall
 from rag.index import get_index
@@ -80,7 +79,6 @@ def _topic_prefix(message: str) -> str | None:
 class MSAIEOrchestrator:
     def __init__(self, gateway: MCPGateway | None = None) -> None:
         self.gateway = gateway or MCPGateway()
-        self.provider = get_provider()
 
     async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
         message = message.strip()
@@ -218,12 +216,6 @@ class MSAIEOrchestrator:
                     else:
                         answer = "The request is not currently eligible because " + "; ".join(check["reasons"]) + "."
                         status = "not_eligible"
-                    answer = await self.provider.refine(
-                        answer,
-                        citations,
-                        status=status,
-                        structured_facts=structured_facts,
-                    )
                     return AgentResult(
                         answer=answer,
                         citations=citations,

@@ -1,7 +1,7 @@
 ---
 document_id: POL-EQP-01
 title: "Equipment and Acceptable Use Policy"
-estimated_pages: 2.0
+estimated_pages: 2.7
 ---
 
 # Equipment and Acceptable Use Policy
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Requesting and assigning equipment
+
+An equipment request should identify the work task, required capability, expected duration, work location and any accessibility need relevant to the device. The manager confirms business need and budget ownership; IT selects a supported configuration and checks inventory before a purchase is proposed. A request is not a purchase approval, and an assistant response does not reserve stock. When an item is issued, the custodian record should include the asset identifier, assigned employee, issue date, condition and accessories. Shared equipment should have a named accountable custodian and a sign-in and return process. Personal preference alone does not justify a higher-cost model or an exception to the approved catalogue.
+
+## Software and configuration changes
+
+Employees should use the managed software catalogue and must not install tools that bypass endpoint protection, collect credentials, record another person's activity or expose company information. A business need for an unlisted application goes to IT for security, privacy, licensing and compatibility review before installation. Local administrator access is limited to authorised support. Employees should not disable updates, encryption, screen locking or endpoint controls to make an application work. Configuration changes affecting access to restricted data require the relevant information-security approval. If the request is outside the assistant's documented tools, the assistant should provide the correct support route instead of suggesting a workaround.
+
+## Loss, damage and repair
+
+Report a missing, stolen or damaged device promptly through the security incident channel and the equipment support route. Include the asset identifier, last known location, time discovered and whether the device was powered on or connected, but do not place passwords, recovery codes or sensitive file contents in the report. Information Security decides whether accounts or sessions need to be revoked; IT coordinates repair, replacement or secure wipe. A support ticket records the service request and does not itself prove that the device was recovered or data was protected. Employees should preserve relevant notices and follow instructions while the incident is assessed. Urgent safety concerns should use the emergency channel.
+
+## Travel and return controls
+
+Before taking equipment to a new country or high-risk location, the employee must check the international remote-work and information-security requirements. Some data classes or destinations require written review, restricted access, a loaner device or a prohibition on travel. A manager's travel approval does not also grant technical clearance. Use approved networks, protect the display from public view and keep the device under personal control. When equipment changes hands, return it through IT so the custodian, condition, access and sanitisation steps can be recorded. Employees must not factory-reset a managed device, remove asset labels, sell it, donate it or discard it. The local mock-ticket workflow does not change inventory or revoke access.

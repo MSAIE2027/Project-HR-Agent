@@ -1,7 +1,7 @@
 ---
 document_id: POL-SVC-01
 title: "HR Service Desk and Mock Ticket Procedure"
-estimated_pages: 2.0
+estimated_pages: 2.6
 ---
 
 # HR Service Desk and Mock Ticket Procedure
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Intake and minimum information
+
+A service request states the outcome the employee needs, the relevant policy or system, the requested date and a concise issue summary. Include a valid synthetic employee ID only when an employee-specific lookup or ticket requires it. Do not ask for passwords, payment security codes, medical history or unrelated family information. Sensitive allegations belong in the confidential HR route, not a routine service category. The assistant may ask a short clarifying question when the category or essential fields are missing. If the user cannot provide the detail, explain the correct human channel rather than creating a ticket that implies the issue is fully understood.
+
+## Triage and routing
+
+Route routine questions to the policy owner or service queue associated with the request. Benefits status and balance questions use structured employee tools; general policy questions use cited retrieval; equipment faults use IT support; safety incidents use the urgent channel. Harassment, discrimination, retaliation and legal concerns go to authorised HR without investigation by the assistant. A missing employee record or ambiguous classification should be returned for clarification or HR review. Priority follows documented service criteria and immediate safety risk, not persuasive language or seniority. A local mock ticket is not a production case or notification.
+
+## Ticket state and ownership
+
+An accepted ticket has a synthetic identifier, category, summary, requester, owner and current status. The owner records whether information is needed, who will follow up and the next expected action. A request can remain pending while an authorised person reviews it; the assistant must not change that state based on conversational assumptions. Reassignment records the reason and new owner. A duplicate may be linked to an existing ticket after the service owner checks it. The assistant may report fields returned by the tool but should not invent a deadline, queue or resolution absent from the structured result.
+
+## Confirmation, closure and learning
+
+Before creating a local demonstration ticket, show the proposed category and concise summary and ask for explicit confirmation. The user can correct or cancel the draft first. Confirmation authorises only that fictional local record, not a real message, production write or external notification. After creation, state the generated ID and local-only boundary plainly. An owner closes a ticket only after recording the outcome and follow-up; a request that received no response or was redirected is not resolved. Trends may be reviewed using de-identified categories to improve policy wording and routing. Evaluation fixtures stay separate from operational reporting, and the trace records tools and confirmation without exposing hidden reasoning.

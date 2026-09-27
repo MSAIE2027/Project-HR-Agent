@@ -30,6 +30,38 @@ def test_persistent_index_and_citation_metadata(tmp_path: Path) -> None:
     assert results[0]["snippet"]
 
 
+def test_existing_sqlite_index_refreshes_when_policy_source_changes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import rag.index as index_module
+
+    policy_dir = tmp_path / "policies"
+    policy_dir.mkdir()
+    policy_path = policy_dir / "policy.md"
+    source_prefix = (
+        "---\ndocument_id: POL-TST-01\ntitle: Test policy\nestimated_pages: 1\n---\n"
+        "# Test policy\n## Scope\n"
+    )
+    policy_path.write_text(source_prefix + "remote " * 100, encoding="utf-8")
+    monkeypatch.setattr(index_module, "POLICY_DIR", policy_dir)
+    monkeypatch.setattr(
+        index_module,
+        "_local_embeddings",
+        lambda texts, model: [[1.0, 0.0] for _ in texts],
+    )
+
+    index = RagIndex(tmp_path / "rag.sqlite3")
+    initial = index.ensure()
+    assert initial["chunks"] == 1
+
+    policy_path.write_text(source_prefix + "remote " * 150, encoding="utf-8")
+
+    refreshed = index.ensure()
+
+    assert refreshed["chunks"] == 2
+    assert refreshed["documents"] == 1
+
+
 def test_mmr_reranking_preserves_relevance_and_reduces_redundancy(tmp_path: Path) -> None:
     index_path = tmp_path / "rerank.sqlite3"
     with sqlite3.connect(index_path) as connection:

@@ -1,7 +1,7 @@
 ---
 document_id: POL-RW-01
 title: "International Remote Work Policy"
-estimated_pages: 3.0
+estimated_pages: 2.8
 ---
 
 # International Remote Work Policy
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Request intake and provisional assessment
+
+Before a provisional review, collect the synthetic employee ID, destination country, intended dates, work activities, requested calendar days and current rolling usage from the employee profile. If the destination or duration is missing, ask for it instead of implying that all locations are treated alike. The assistant may calculate the rolling total from returned usage and requested days, then compare it with the policy limit. That calculation is an eligibility screen only. It does not reserve an allowance, verify border requirements or authorise travel. The response states the total, relevant limit and missing information without claiming that required reviews have already occurred.
+
+## Specialist review sequence
+
+The manager first checks duties, coverage and timing. HR checks classification and policy consistency. Tax reviews payroll and permanent-establishment exposure; Information Security reviews destination, data and access; Immigration reviews whether the intended activity is permitted. Each specialist records a decision and any conditions in the authorised system. One person's approval does not stand in for another role's review. If a specialist identifies a restriction or requests more information, the request remains pending until its owner resolves it. The assistant can enumerate required reviews and summarize recorded statuses only when a structured source provides them.
+
+## Destination, data and day counting
+
+The approved destination and dates define the scope of an international-work decision. The period is counted in calendar days, including weekends and public holidays that fall within the approved overseas period. Splitting one continuous stay into separate requests does not reset the rolling window. Personal travel outside the work period is not covered by work approval. A change of country, work activity, duration, device, data class or travel date may change tax, immigration, security or coverage risk and requires reassessment. The assistant must not characterize the request as finally approved if a required review is incomplete.
+
+## Safe setup, extensions and return
+
+Before departure, the employee confirms an appropriate workspace, reliable connectivity, work-hour expectations, emergency contacts and access to approved collaboration tools. Company information is handled under the security policy, including restrictions on sensitive data and public environments. An extension or date change is submitted before the approved period ends and reviewed against remaining rolling usage and destination requirements. A previous decision is not automatically renewed, and unused days do not guarantee future approval. If an incident occurs abroad, use the applicable security, safety or emergency route. The assistant may list follow-up items but cannot record specialist approval, travel booking or immigration outcome without a structured source.

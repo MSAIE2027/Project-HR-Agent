@@ -11,8 +11,10 @@ flowchart LR
   G -->|valid scope| D[Discover MCP tools]
   D --> W[Execute expected workflow]
   W --> C[Check citations and structured results]
-  C --> S[Check status and confirmation]
-  S --> O[Emit answer plus trace]
+  C --> L[OpenRouter composes every citation-backed answer]
+  L --> V[Validate status facts and safety disclaimers]
+  V -->|valid| O[Emit final answer plus citations and trace]
+  V -->|provider unavailable or invalid| X[Return HTTP 503; do not expose unrefined draft]
 ```
 
 The validator should assert:
@@ -22,9 +24,10 @@ The validator should assert:
 - Required workflows use the expected tool sequence.
 - Citation IDs match the evidence returned by policy search.
 - Confirmation is required for write-like mock actions.
-- Injection and out-of-scope requests do not call tools or the LLM.
-- Unknown records produce clarification or escalation.
-- Provider fallback is visible rather than silently represented as success.
+- Injection refusals that stop before retrieval do not call tools or the LLM.
+- Every citation-bearing response calls OpenRouter, including clarification and confirmation responses grounded in retrieved policy.
+- Missing inputs request clarification, unknown records return an explicit `not_found` result, and sensitive cases escalate; the agent does not invent records.
+- Missing provider configuration, provider errors, or invalid generated text fail closed with HTTP 503 instead of returning the controlled retrieval draft.
 
 ## Nielsen heuristic review
 
@@ -43,4 +46,4 @@ The validator should assert:
 
 ## Accessibility checks
 
-Use keyboard navigation, visible focus, semantic labels, live status announcements, sufficient contrast, responsive reflow, and controls large enough for touch. Validate the actual deployed interface with browser inspection; documentation alone is not evidence.
+Use keyboard navigation, visible focus, semantic labels, live status announcements, sufficient contrast, responsive reflow, and controls large enough for touch. A local browser review was performed against the updated checkout; its scope and limitations are recorded in [`evidence/ui-review.md`](../evidence/ui-review.md). It does not substitute for screen-reader or automated contrast testing, nor does it claim validation of a deployed interface.

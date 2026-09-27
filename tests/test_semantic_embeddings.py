@@ -10,7 +10,7 @@ def _semantic_vectors(texts: list[str], config: dict[str, str]) -> list[list[flo
     vectors: list[list[float]] = []
     for text in texts:
         lowered = text.lower()
-        if "remote" in lowered or "overseas" in lowered or "immigration" in lowered:
+        if "can i work overseas" in lowered or "rolling twelve-month period" in lowered:
             vectors.append([1.0, 0.0, 0.0])
         elif "benefit" in lowered or "medical" in lowered:
             vectors.append([0.0, 1.0, 0.0])
@@ -20,8 +20,9 @@ def _semantic_vectors(texts: list[str], config: dict[str, str]) -> list[list[flo
 
 
 def test_remote_embedding_provider_builds_dense_index(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://openrouter.ai/api/v1")
-    monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("MSAIE_EMBEDDING_PROVIDER", "openrouter")
+    monkeypatch.setenv("MSAIE_EMBEDDING_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setenv("MSAIE_EMBEDDING_API_KEY", "test-key-not-real")
     monkeypatch.setenv("MSAIE_EMBEDDING_MODEL", "test/semantic-embedding-model")
     monkeypatch.setattr(index_module, "_remote_embeddings", _semantic_vectors)
 
@@ -38,8 +39,9 @@ def test_remote_embedding_provider_builds_dense_index(monkeypatch, tmp_path: Pat
 
 
 def test_embedding_failure_falls_back_without_rebuild_loop(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://openrouter.ai/api/v1")
-    monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("MSAIE_EMBEDDING_PROVIDER", "openrouter")
+    monkeypatch.setenv("MSAIE_EMBEDDING_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setenv("MSAIE_EMBEDDING_API_KEY", "test-key-not-real")
     monkeypatch.setenv("MSAIE_EMBEDDING_MODEL", "test/unavailable-model")
 
     def fail(texts: list[str], config: dict[str, str]) -> list[list[float]]:

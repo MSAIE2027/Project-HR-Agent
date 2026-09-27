@@ -178,14 +178,16 @@ def draft_hr_email(
         return _error("confirmation_required", "Explicit confirmation is required before creating a mock email draft")
     action_id = f"EMAIL-{uuid.uuid4().hex[:10].upper()}"
     requested_text = f" for {requested_days} day(s)" if requested_days else ""
+    purpose_text = purpose.strip()
+    request_label = purpose_text if purpose_text.lower().endswith(" request") else f"{purpose_text} request"
     draft = {
         "action_id": action_id,
         "action_type": "mock_email_draft",
         "sent": False,
         "to": employee["manager_email"],
-        "subject": f"{purpose.title()}{requested_text} — {employee['name']}",
+        "subject": f"{purpose_text[:1].upper()}{purpose_text[1:]}{requested_text} — {employee['name']}",
         "body": (
-            f"Please review {employee['name']}'s synthetic {purpose} request{requested_text}. "
+            f"Please review {employee['name']}'s synthetic {request_label}{requested_text}. "
             "Confirm policy eligibility, operational coverage, and any required approvals. "
             "This is a demonstration draft; no email was sent."
         ),

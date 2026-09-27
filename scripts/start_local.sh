@@ -3,12 +3,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+MCP_TRANSPORT_OVERRIDE="${MSAIE_MCP_TRANSPORT:-}"
 
 if [[ -f "$ROOT_DIR/.env" ]]; then
   set -a
   # shellcheck disable=SC1091
   source "$ROOT_DIR/.env"
   set +a
+fi
+if [[ -n "$MCP_TRANSPORT_OVERRIDE" ]]; then
+  export MSAIE_MCP_TRANSPORT="$MCP_TRANSPORT_OVERRIDE"
 fi
 
 HOST="${MSAIE_HOST:-127.0.0.1}"
@@ -24,13 +28,17 @@ usage() {
   cat <<'EOF'
 Usage: scripts/start_local.sh [--detach] [--no-browser]
 
-Starts the local FastAPI app, waits for /health, opens the browser, and streams
+Starts the local FastAPI app, waits for /health/ready, opens the browser, and streams
 backend logs. The default local MCP transport is in-process; set
 MSAIE_MCP_TRANSPORT=stdio when you explicitly want the MCP subprocess boundary.
 
 Environment overrides: MSAIE_HOST, MSAIE_PORT, MSAIE_BROWSER_HOST,
 MSAIE_LOG_DIR, MSAIE_PYTHON, MSAIE_MCP_TRANSPORT,
-MSAIE_STARTUP_TIMEOUT_SECONDS.
+MSAIE_STARTUP_TIMEOUT_SECONDS. OpenRouter defaults are
+MSAIE_LLM_BASE_URL=https://openrouter.ai/api/v1 and
+MSAIE_LLM_FALLBACK_MODEL=openrouter/free, after the pinned Qwen, Nemotron Lightning,
+and Gemma models. Set MSAIE_LLM_API_KEY (or legacy
+OPENROUTER_API_KEY) in .env.
 EOF
 }
 
@@ -43,6 +51,11 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+if [[ -z "${MSAIE_LLM_API_KEY:-${OPENROUTER_API_KEY:-}}" ]]; then
+  echo "OpenRouter response generation is required. Set MSAIE_LLM_API_KEY (or legacy OPENROUTER_API_KEY) in .env." >&2
+  exit 1
+fi
 
 if [[ -n "${MSAIE_PYTHON:-}" ]]; then
   PYTHON_BIN="$MSAIE_PYTHON"
@@ -64,7 +77,7 @@ fi
 mkdir -p "$LOG_DIR"
 
 URL="http://${BROWSER_HOST}:${PORT}/"
-HEALTH_URL="http://${BROWSER_HOST}:${PORT}/health"
+HEALTH_URL="http://${BROWSER_HOST}:${PORT}/health/ready"
 APP_MARKER="MSAIE HR Agent"
 
 if command -v curl >/dev/null 2>&1 && curl --fail --silent --show-error "$HEALTH_URL" >/dev/null 2>&1; then

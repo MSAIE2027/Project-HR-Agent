@@ -21,33 +21,33 @@
 <text x="300.0" y="468" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#536474">k=3</text>
 <text x="520.0" y="468" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#536474">k=5</text>
 <text x="740.0" y="468" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" fill="#536474">k=8</text>
-<polyline fill="none" stroke="#166b63" stroke-width="3" points="80.0,445.0 300.0,385.0 520.0,325.0 740.0,265.0"/>
+<polyline fill="none" stroke="#166b63" stroke-width="3" points="80.0,445.0 300.0,385.0 520.0,385.0 740.0,325.0"/>
 <circle cx="80.0" cy="445.0" r="5" fill="#166b63"/>
 <text x="80.0" y="435.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">0%</text>
 <circle cx="300.0" cy="385.0" r="5" fill="#166b63"/>
 <text x="300.0" y="375.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">20%</text>
-<circle cx="520.0" cy="325.0" r="5" fill="#166b63"/>
-<text x="520.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">40%</text>
-<circle cx="740.0" cy="265.0" r="5" fill="#166b63"/>
-<text x="740.0" y="255.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">60%</text>
-<polyline fill="none" stroke="#4260a8" stroke-width="3" points="80.0,445.0 300.0,385.0 520.0,325.0 740.0,265.0"/>
+<circle cx="520.0" cy="385.0" r="5" fill="#166b63"/>
+<text x="520.0" y="375.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">20%</text>
+<circle cx="740.0" cy="325.0" r="5" fill="#166b63"/>
+<text x="740.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#166b63">40%</text>
+<polyline fill="none" stroke="#4260a8" stroke-width="3" points="80.0,445.0 300.0,385.0 520.0,385.0 740.0,385.0"/>
 <circle cx="80.0" cy="445.0" r="5" fill="#4260a8"/>
 <text x="80.0" y="435.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">0%</text>
 <circle cx="300.0" cy="385.0" r="5" fill="#4260a8"/>
 <text x="300.0" y="375.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">20%</text>
-<circle cx="520.0" cy="325.0" r="5" fill="#4260a8"/>
-<text x="520.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">40%</text>
-<circle cx="740.0" cy="265.0" r="5" fill="#4260a8"/>
-<text x="740.0" y="255.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">60%</text>
-<polyline fill="none" stroke="#a4511b" stroke-width="3" points="80.0,445.0 300.0,325.0 520.0,265.0 740.0,265.0"/>
+<circle cx="520.0" cy="385.0" r="5" fill="#4260a8"/>
+<text x="520.0" y="375.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">20%</text>
+<circle cx="740.0" cy="385.0" r="5" fill="#4260a8"/>
+<text x="740.0" y="375.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#4260a8">20%</text>
+<polyline fill="none" stroke="#a4511b" stroke-width="3" points="80.0,445.0 300.0,325.0 520.0,325.0 740.0,325.0"/>
 <circle cx="80.0" cy="445.0" r="5" fill="#a4511b"/>
 <text x="80.0" y="435.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">0%</text>
 <circle cx="300.0" cy="325.0" r="5" fill="#a4511b"/>
 <text x="300.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">40%</text>
-<circle cx="520.0" cy="265.0" r="5" fill="#a4511b"/>
-<text x="520.0" y="255.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">60%</text>
-<circle cx="740.0" cy="265.0" r="5" fill="#a4511b"/>
-<text x="740.0" y="255.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">60%</text>
+<circle cx="520.0" cy="325.0" r="5" fill="#a4511b"/>
+<text x="520.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">40%</text>
+<circle cx="740.0" cy="325.0" r="5" fill="#a4511b"/>
+<text x="740.0" y="315.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#a4511b">40%</text>
 <line x1="85" y1="490" x2="112" y2="490" stroke="#166b63" stroke-width="3"/>
 <text x="122" y="494" font-family="Arial,sans-serif" font-size="13" fill="#263746">Current</text>
 <line x1="85" y1="513" x2="112" y2="513" stroke="#4260a8" stroke-width="3"/>

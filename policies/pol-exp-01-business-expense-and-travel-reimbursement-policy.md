@@ -1,7 +1,7 @@
 ---
 document_id: POL-EXP-01
 title: "Business Expense and Travel Reimbursement Policy"
-estimated_pages: 2.5
+estimated_pages: 2.7
 ---
 
 # Business Expense and Travel Reimbursement Policy
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Before booking business travel
+
+The employee submits the business purpose, destination, travel dates, expected cost, funding code and any operational constraint before making a non-refundable booking. The manager checks business need, coverage and budget; Finance reviews an exception or unusual cost; specialist reviews are added when the itinerary involves overseas work, restricted data or a potential tax concern. A provisional itinerary is not travel authorisation. Employees should compare reasonable options using the approved booking route and explain a higher-cost choice, such as a schedule limitation or accessibility requirement, in the request. The assistant can list required approvals but cannot reserve travel, approve spend or represent a specialist review as complete.
+
+## Claim preparation and evidence
+
+Each claim should connect the expense to an approved business activity and identify the transaction date, currency, merchant, amount, project or cost code and payment method. Itemised receipts should show what was purchased; a card slip alone may not distinguish a business item from a personal one. For a group meal, record the business purpose and attendees where appropriate without adding sensitive employee detail. If a receipt is unavailable, explain why and submit the exception for manager review. Do not reconstruct a receipt, alter a date or divide one purchase into smaller claims to avoid a control. Finance may return incomplete claims for correction.
+
+## Changes, cancellations and exceptions
+
+When dates, destination, traveller or work purpose changes after approval, notify the manager before incurring additional cost. Material changes may require the request and specialist reviews to be reassessed. A cancelled booking should be documented with the supplier credit or refund outcome so it is not claimed as a new expense. Personal extensions, companion costs and upgrades remain outside the business claim unless the applicable policy and a written exception say otherwise. An itinerary change does not silently amend an international-work approval. If the new destination changes security, tax or immigration risk, pause and obtain the relevant review before travelling.
+
+## Review, payment and privacy
+
+The manager checks that the claim matches the stated business purpose and approved travel; Finance checks evidence, arithmetic, currency conversion and duplicate reimbursement. A reviewer should return a claim with a clear reason and the missing evidence rather than editing the employee's statement without notice. An employee who disputes a decision may request a documented review through Finance. A submitted claim, local mock ticket or draft email does not prove that money was paid. Do not paste full card numbers, security codes, medical information or unrelated details into HR notes. Cross-border work, relocation and tax questions go to the appropriate specialist rather than being answered as personal tax advice.

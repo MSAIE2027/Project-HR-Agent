@@ -1,0 +1,33 @@
+# Project Tickets
+
+These local tickets make the completion sequence auditable. `REQ-*` tickets define requirements; `BUILD-*` capture implementation slices; `VERIFY-*` record evidence; `SHIP-*` identify work that needs an externally connected service or presenter.
+
+| ID | Status | Outcome / acceptance | Evidence |
+|---|---|---|---|
+| REQ-01 | Done | Derive the system requirements and acceptance conditions from the official course prompt and project scope. | [`specs/system-requirements.md`](../specs/system-requirements.md) |
+| REQ-02 | Done | Map every course requirement to implementation and verifiable evidence; flag external deliverables honestly. | [`docs/traceability-matrix.md`](../docs/traceability-matrix.md) |
+| REQ-03 | Done | Inventory all supplied course/source materials and connect them to requirements and design artifacts without treating supplemental material as the grading authority. | [`docs/source-materials-review.md`](../docs/source-materials-review.md) |
+| BUILD-01 | Done | Record accepted orchestration, retrieval, MCP, action-boundary, and hosting decisions. | [`docs/adr/`](../docs/adr/) |
+| BUILD-02 | Done | Replace invalid `E001` and unsupported domestic-remote demo prompts with supported synthetic scenarios. | `app/static/index.html`, `tests/test_app.py` |
+| BUILD-03 | Done | Align embedding tests with `MSAIE_EMBEDDING_*` configuration, separate from `MSAIE_LLM_*`. | `tests/test_semantic_embeddings.py`, `.env.example` |
+| BUILD-04 | Done | Make documented direct CLI invocation of the index and stdio smoke scripts resolve project imports. | `scripts/build_index.py`, `scripts/smoke_mcp.py` |
+| BUILD-05 | Done | Add push/PR CI and an optional tested-SHA Render deploy job that runs only after the complete test job; disable independent Render auto-deploy. | `.github/workflows/ci.yml`, `render.yaml`, `docs/adr/0006-ci-gated-render-deploy-hook.md` |
+| BUILD-06 | Done | Fix duplicate PTO request wording and normalize the mock email subject after browser rehearsal; keep the action confirmation-gated and local. | `mcp_server/tools.py`, `tests/test_app.py`, [`evidence/ui-review.md`](../evidence/ui-review.md) |
+| BUILD-07 | Done | Use protocol-backed stdio in the grader demo, preserve explicit transport overrides, and keep active responses visible by hiding examples after send. | `scripts/start_local.sh`, `demo/README.md`, `app/static/index.html`, [`evidence/ui-review.md`](../evidence/ui-review.md) |
+| BUILD-08 | Done | Separate latency priming from measured samples, use nearest-rank percentiles, and label results by transport lifecycle. | `evaluation/run_evaluation.py`, `evaluation/results.md`, `evaluation/results-stdio.md`, [`evidence/index.md`](../evidence/index.md) |
+| BUILD-09 | Done | Send every citation-bearing orchestrator result through required OpenRouter composition; validate output and return HTTP 503 rather than an unrefined draft on configuration/provider/validation failure. | `agent/llm.py`, `app/main.py`, `tests/test_llm.py`, `tests/test_app.py`, [`docs/adr/0001-controlled-orchestration.md`](../docs/adr/0001-controlled-orchestration.md) |
+| BUILD-10 | Done | Restrict runtime configuration to OpenRouter and retain `openrouter/free` as the final fallback; avoid exposing credential-like URL data in health metadata. | `agent/llm.py`, `tests/test_llm.py`, `.env.example`, `scripts/start_local.sh` |
+| BUILD-11 | Done | Pin three free response models in order, fall through after transport or validation failure, report the actual accepted route and attempts, and retain `openrouter/free` as final fallback. | `agent/llm.py`, `app/static/index.html`, `tests/test_llm.py`, [`docs/operator-sop.md`](../docs/operator-sop.md), [`docs/adr/0001-controlled-orchestration.md`](../docs/adr/0001-controlled-orchestration.md) |
+| VERIFY-01 | Done | Run the full local test suite and the 25-item golden set; preserve the report and limitations. | [`evidence/index.md`](../evidence/index.md), `evaluation/results.md` |
+| VERIFY-02 | Done | Discover/call all MCP tools over stdio with read-only policy and synthetic-profile calls. | [`evidence/index.md`](../evidence/index.md), `scripts/smoke_mcp.py` |
+| VERIFY-03 | Done | Review actual desktop/narrow layout, keyboard use, focus, and confirmation workflow in a browser. | [`evidence/ui-review.md`](../evidence/ui-review.md) |
+| VERIFY-04 | Done | Complete separate Standards and Spec reviews of the local completion changes and record closure status. | [`reviews/code-review.md`](../reviews/code-review.md) |
+| VERIFY-05 | Done: local provider preflight | Start the active app with its local `.env` without displaying credentials; verify `/health/ready` and a synthetic cited `/chat` response ends with `llm_refinement=completed`. | [`evidence/openrouter-chain-smoke.md`](../evidence/openrouter-chain-smoke.md) records two initial 503 responses followed by one successful response on the current 182-chunk index; verify again against the hosted service before recording. The legacy key alias remains supported. |
+| SHIP-01 | Pending external setup | Push the reviewed source to the existing private GitHub repo, synchronize its Render service to the checked-in Blueprint, configure host-managed secrets and the tested-SHA hook, then deploy and verify the assigned URL/cold start. | GitHub repo `MSAIE2027/Project-HR-Agent` and Render service `Project-HR-Agent` exist; this checkout has no Git remote, Render has no deploy history, and its current settings differ from the Blueprint. |
+| SHIP-02 | Presenter deliverable | Record and submit the course-required 7–10 minute narrated demo of two end-to-end tasks, including the required MCP, design, deployment, CI/CD, and evaluation walkthrough. | [`demo/README.md`](../demo/README.md) |
+| SHIP-03 | Pending access verification | Grant `quantic-grader` access to `MSAIE2027/Project-HR-Agent` and verify the repository link used in the submission. | The private repository exists, but grader access and the final submitted URL have not been verified. |
+| SHIP-04 | Presenter/course submission | Submit the repository and video links through the course dashboard; if submitting as a group, meet the course participation/ID requirements and attach the completed agreement. | Presenter-owned course submission; do not store IDs or the final recording in this repository. |
+
+## Ticket closure rule
+
+An item is `Done` only when its acceptance condition has an artifact or a recorded command result. A configured workflow is not reported as a hosted CI run; a Render blueprint is not reported as a deployed service; a script is not reported as a recorded presentation.

@@ -1,7 +1,7 @@
 ---
 document_id: POL-PER-01
 title: "Performance, Learning and Development Policy"
-estimated_pages: 2.0
+estimated_pages: 2.5
 ---
 
 # Performance, Learning and Development Policy
@@ -41,3 +41,19 @@ An exception requires a documented business reason, a named decision owner, a de
 ## Review and assurance
 
 HR reviews this fictional policy set annually and after any material incident or workflow failure. Quality checks sample citations, tool selections, confirmation gates and action logs. Findings are converted into corrective actions with an owner and target date. Evaluation results should include groundedness, citation accuracy, workflow completion, escalation accuracy, action safety and latency. Changes to a policy require version control, approval, an effective date and re-indexing of the retrieval store so that superseded text is not presented as current guidance.
+
+## Goal setting and review conversations
+
+Goals should describe the expected outcome, relevant measure, support available and review date. Employees and managers agree on priorities that fit the role and record material changes when business needs shift. A check-in is a two-way conversation: the employee can raise unclear expectations, obstacles, workload or needed support. Managers distinguish observed work from interpretation and use examples relevant to the stated goal. The assistant may explain this process or help structure a neutral agenda, but must not infer performance from a single message, sentiment, productivity signal or private record.
+
+## Feedback and development support
+
+Feedback should be timely, specific, respectful and connected to work expectations. Development plans can include mentoring, training, practice assignments, documented support and a follow-up conversation. The employee and manager identify who owns each action and how completion will be reviewed. Learning options do not promise promotion, compensation or role change. If an employee requests a course or equipment to support learning, the relevant budget and technology approvals still apply. The assistant can help prepare a neutral draft when asked and confirmed, and must preserve the employee's own wording where a quotation is requested.
+
+## Performance concerns and support plans
+
+When work is below a stated expectation, the manager describes the requirement, the specific observed gap, its work impact, the support offered and the next review point. The employee has an opportunity to provide context and correct factual errors. A support plan is not a disciplinary finding or a promise of a particular outcome. HR should review material or contested action, and an allegation involving discrimination, harassment, health or retaliation follows the confidential escalation policy. The assistant must not diagnose a cause, decide credibility or recommend a high-impact employment action. It should direct the user to HR when a request concerns a real employee decision.
+
+## Calibration, records and appeal
+
+Managers apply role-relevant criteria consistently across comparable work and explain material differences in expectations. Calibration uses the minimum information needed and restricts access to authorised decision-makers. Notes distinguish the employee's statement, observable evidence and the manager's conclusion. An employee who identifies a factual error may request correction or review through HR; the assistant cannot adjudicate an appeal or promise a result. Retain review materials under the records schedule and apply a legal hold when instructed. A confirmed mock ticket may capture a neutral follow-up request but is not a confidential case-management system and must not contain unnecessary sensitive detail.

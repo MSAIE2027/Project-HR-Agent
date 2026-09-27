@@ -1,6 +1,9 @@
 {
   "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
   "embedding_dimensions": 384,
+  "corpus_document_count": 14,
+  "corpus_word_count": 15034,
+  "corpus_page_equivalents_400_words": 37.6,
   "query_count": 15,
   "multi_document_query_count": 5,
   "minimum_evidence_score": 0.12,
@@ -22,23 +25,23 @@
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
         "family_recall_at_5": 0.7619,
-        "family_mrr": 0.7497,
+        "family_mrr": 0.7381,
         "all_family_coverage_at_5": 0.7333,
         "multi_document_all_family_coverage_at_5": 0.2,
-        "mean_unique_documents_top5": 1.4,
-        "mean_unique_sections_top5": 4.2,
-        "search_ms_p50": 16.776,
-        "search_ms_p95": 78.561,
-        "build_seconds_warm": 2.064,
-        "index_bytes": 1998208,
         "filtered_all_family_coverage_at_5": 1.0,
-        "filtered_family_score_coverage": 1.0
+        "filtered_family_score_coverage": 1.0,
+        "mean_unique_documents_top5": 1.333,
+        "mean_unique_sections_top5": 4.267,
+        "search_ms_p50": 20.733,
+        "search_ms_p95": 112.157,
+        "build_seconds_warm": 3.928,
+        "index_bytes": 3065288
       },
       "index": {
         "status": "ready",
         "documents": 14,
-        "chunks": 212,
-        "estimated_pages": 34.5,
+        "chunks": 326,
+        "estimated_pages": 37.5,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
@@ -65,13 +68,13 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "security_access",
@@ -85,17 +88,17 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
-            "POL-RW-01",
+            "POL-SEC-01",
             "POL-SEC-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "pto_carryover",
@@ -113,13 +116,13 @@
             "POL-PTO-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_enrolment",
@@ -137,13 +140,13 @@
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "conduct_escalation",
@@ -156,18 +159,18 @@
           },
           "global_top_ids": [
             "POL-CON-01",
-            "POL-REC-01",
             "POL-CON-01",
             "POL-CON-01",
-            "POL-CON-01"
+            "POL-CON-01",
+            "POL-PER-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_receipts",
@@ -185,13 +188,13 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "service_ticket",
@@ -209,13 +212,13 @@
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "approval_matrix",
@@ -233,13 +236,13 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "employment_classification",
@@ -257,13 +260,13 @@
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-ONB-01",
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "medical_leave",
@@ -281,13 +284,13 @@
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_confidential_data",
@@ -303,19 +306,19 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
-            "POL-RW-01",
-            "POL-SEC-01"
+            "POL-SEC-01",
+            "POL-EQP-01",
+            "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
+            "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
-            "POL-SEC-01"
+            "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_approval_controls",
@@ -337,7 +340,6 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
@@ -345,7 +347,8 @@
             "POL-APR-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_approval",
@@ -356,7 +359,7 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 7
+            "POL-APR-": null
           },
           "global_top_ids": [
             "POL-EXP-01",
@@ -365,7 +368,6 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
@@ -373,7 +375,8 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "leave_record_privacy",
@@ -393,7 +396,6 @@
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
@@ -401,7 +403,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_exception_records",
@@ -412,16 +415,15 @@
           ],
           "global_family_ranks": {
             "POL-BEN-": 1,
-            "POL-REC-": 10
+            "POL-REC-": null
           },
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-PTO-01",
-            "POL-FLX-01"
+            "POL-BEN-01",
+            "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
@@ -429,7 +431,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         }
       ]
     },
@@ -446,24 +449,24 @@
         "hit_at_5": 1.0,
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
-        "family_recall_at_5": 0.8095,
-        "family_mrr": 0.7595,
-        "all_family_coverage_at_5": 0.8,
-        "multi_document_all_family_coverage_at_5": 0.4,
-        "mean_unique_documents_top5": 1.6,
-        "mean_unique_sections_top5": 4.933,
-        "search_ms_p50": 18.679,
-        "search_ms_p95": 66.561,
-        "build_seconds_warm": 2.6,
-        "index_bytes": 1619168,
+        "family_recall_at_5": 0.7619,
+        "family_mrr": 0.7434,
+        "all_family_coverage_at_5": 0.7333,
+        "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
-        "filtered_family_score_coverage": 1.0
+        "filtered_family_score_coverage": 1.0,
+        "mean_unique_documents_top5": 1.4,
+        "mean_unique_sections_top5": 4.533,
+        "search_ms_p50": 18.821,
+        "search_ms_p95": 100.919,
+        "build_seconds_warm": 3.894,
+        "index_bytes": 2665648
       },
       "index": {
         "status": "ready",
         "documents": 14,
-        "chunks": 168,
-        "estimated_pages": 34.5,
+        "chunks": 279,
+        "estimated_pages": 37.5,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
@@ -490,13 +493,13 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "security_access",
@@ -510,17 +513,17 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
-            "POL-RW-01",
+            "POL-SEC-01",
             "POL-SEC-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "pto_carryover",
@@ -535,16 +538,16 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01",
-            "POL-PTO-01"
+            "POL-PTO-01",
+            "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_enrolment",
@@ -562,13 +565,13 @@
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "conduct_escalation",
@@ -583,16 +586,16 @@
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01",
-            "POL-REC-01",
+            "POL-CON-01",
             "POL-CON-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_receipts",
@@ -610,13 +613,13 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "service_ticket",
@@ -632,15 +635,15 @@
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01",
-            "POL-SVC-01"
+            "POL-PER-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "approval_matrix",
@@ -656,15 +659,15 @@
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01",
-            "POL-RW-01"
+            "POL-APR-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "employment_classification",
@@ -682,13 +685,13 @@
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-ONB-01",
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "medical_leave",
@@ -703,16 +706,16 @@
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_confidential_data",
@@ -728,19 +731,19 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
-            "POL-RW-01"
+            "POL-RW-01",
+            "POL-EQP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_approval_controls",
@@ -753,7 +756,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 8
+            "POL-APR-": null
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -762,7 +765,6 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
@@ -770,7 +772,8 @@
             "POL-APR-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_approval",
@@ -781,16 +784,15 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 5
+            "POL-APR-": 9
           },
           "global_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
-            "POL-APR-01"
+            "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
@@ -798,7 +800,8 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "leave_record_privacy",
@@ -815,10 +818,9 @@
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
@@ -826,7 +828,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_exception_records",
@@ -837,16 +840,15 @@
           ],
           "global_family_ranks": {
             "POL-BEN-": 1,
-            "POL-REC-": 8
+            "POL-REC-": null
           },
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-FLX-01",
             "POL-BEN-01",
+            "POL-ONB-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
@@ -854,7 +856,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         }
       ]
     },
@@ -871,24 +874,24 @@
         "hit_at_5": 1.0,
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
-        "family_recall_at_5": 0.8095,
-        "family_mrr": 0.7604,
-        "all_family_coverage_at_5": 0.8,
-        "multi_document_all_family_coverage_at_5": 0.4,
-        "mean_unique_documents_top5": 1.6,
-        "mean_unique_sections_top5": 5,
-        "search_ms_p50": 11.854,
-        "search_ms_p95": 43.228,
-        "build_seconds_warm": 1.98,
-        "index_bytes": 1248368,
+        "family_recall_at_5": 0.7619,
+        "family_mrr": 0.7488,
+        "all_family_coverage_at_5": 0.7333,
+        "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
-        "filtered_family_score_coverage": 1.0
+        "filtered_family_score_coverage": 1.0,
+        "mean_unique_documents_top5": 1.267,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 17.024,
+        "search_ms_p95": 77.013,
+        "build_seconds_warm": 3.449,
+        "index_bytes": 1792208
       },
       "index": {
         "status": "ready",
         "documents": 14,
-        "chunks": 126,
-        "estimated_pages": 34.5,
+        "chunks": 182,
+        "estimated_pages": 37.5,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
@@ -915,13 +918,13 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "security_access",
@@ -935,17 +938,17 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
-            "POL-RW-01",
+            "POL-SEC-01",
             "POL-SEC-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "pto_carryover",
@@ -960,16 +963,16 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01",
-            "POL-PTO-01"
+            "POL-PTO-01",
+            "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_enrolment",
@@ -987,13 +990,13 @@
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "conduct_escalation",
@@ -1007,17 +1010,17 @@
           "global_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
-            "POL-REC-01",
+            "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_receipts",
@@ -1035,13 +1038,13 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "service_ticket",
@@ -1059,13 +1062,13 @@
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "approval_matrix",
@@ -1080,16 +1083,16 @@
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01",
-            "POL-RW-01",
+            "POL-APR-01",
             "POL-APR-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "employment_classification",
@@ -1107,13 +1110,13 @@
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-ONB-01",
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "medical_leave",
@@ -1128,16 +1131,16 @@
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_confidential_data",
@@ -1153,19 +1156,19 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_approval_controls",
@@ -1178,7 +1181,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 7
+            "POL-APR-": 10
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -1187,7 +1190,6 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
@@ -1195,7 +1197,8 @@
             "POL-APR-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_approval",
@@ -1206,16 +1209,15 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 5
+            "POL-APR-": 8
           },
           "global_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
-            "POL-APR-01"
+            "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
@@ -1223,7 +1225,8 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "leave_record_privacy",
@@ -1239,11 +1242,10 @@
           "global_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
@@ -1251,7 +1253,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_exception_records",
@@ -1262,16 +1265,15 @@
           ],
           "global_family_ranks": {
             "POL-BEN-": 1,
-            "POL-REC-": 8
+            "POL-REC-": null
           },
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-FLX-01",
+            "POL-ONB-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
@@ -1279,7 +1281,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         }
       ]
     },
@@ -1296,24 +1299,24 @@
         "hit_at_5": 1.0,
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
-        "family_recall_at_5": 0.8095,
-        "family_mrr": 0.7604,
-        "all_family_coverage_at_5": 0.8,
-        "multi_document_all_family_coverage_at_5": 0.4,
-        "mean_unique_documents_top5": 1.6,
-        "mean_unique_sections_top5": 5,
-        "search_ms_p50": 13.628,
-        "search_ms_p95": 46.988,
-        "build_seconds_warm": 2.021,
-        "index_bytes": 1248368,
+        "family_recall_at_5": 0.7619,
+        "family_mrr": 0.7488,
+        "all_family_coverage_at_5": 0.7333,
+        "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
-        "filtered_family_score_coverage": 1.0
+        "filtered_family_score_coverage": 1.0,
+        "mean_unique_documents_top5": 1.267,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 16.491,
+        "search_ms_p95": 75.559,
+        "build_seconds_warm": 3.366,
+        "index_bytes": 1792208
       },
       "index": {
         "status": "ready",
         "documents": 14,
-        "chunks": 126,
-        "estimated_pages": 34.5,
+        "chunks": 182,
+        "estimated_pages": 37.5,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
@@ -1340,13 +1343,13 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "security_access",
@@ -1360,17 +1363,17 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
-            "POL-RW-01",
+            "POL-SEC-01",
             "POL-SEC-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "pto_carryover",
@@ -1385,16 +1388,16 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01",
-            "POL-PTO-01"
+            "POL-PTO-01",
+            "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_enrolment",
@@ -1412,13 +1415,13 @@
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "conduct_escalation",
@@ -1432,17 +1435,17 @@
           "global_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
-            "POL-REC-01",
+            "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_receipts",
@@ -1460,13 +1463,13 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "service_ticket",
@@ -1484,13 +1487,13 @@
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "approval_matrix",
@@ -1505,16 +1508,16 @@
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01",
-            "POL-RW-01",
+            "POL-APR-01",
             "POL-APR-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "employment_classification",
@@ -1532,13 +1535,13 @@
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-ONB-01",
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "medical_leave",
@@ -1553,16 +1556,16 @@
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_confidential_data",
@@ -1578,19 +1581,19 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_approval_controls",
@@ -1603,7 +1606,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 7
+            "POL-APR-": 10
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -1612,7 +1615,6 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
@@ -1620,7 +1622,8 @@
             "POL-APR-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_approval",
@@ -1631,16 +1634,15 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 5
+            "POL-APR-": 8
           },
           "global_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
-            "POL-APR-01"
+            "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
@@ -1648,7 +1650,8 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "leave_record_privacy",
@@ -1664,11 +1667,10 @@
           "global_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
@@ -1676,7 +1678,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_exception_records",
@@ -1687,16 +1690,15 @@
           ],
           "global_family_ranks": {
             "POL-BEN-": 1,
-            "POL-REC-": 8
+            "POL-REC-": null
           },
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-FLX-01",
+            "POL-ONB-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
@@ -1704,7 +1706,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         }
       ]
     },
@@ -1721,24 +1724,24 @@
         "hit_at_5": 1.0,
         "family_recall_at_1": 0.7143,
         "family_recall_at_3": 0.7619,
-        "family_recall_at_5": 0.8095,
-        "family_mrr": 0.7604,
-        "all_family_coverage_at_5": 0.8,
-        "multi_document_all_family_coverage_at_5": 0.4,
-        "mean_unique_documents_top5": 1.6,
-        "mean_unique_sections_top5": 5,
-        "search_ms_p50": 13.269,
-        "search_ms_p95": 44.561,
-        "build_seconds_warm": 2.019,
-        "index_bytes": 1248368,
+        "family_recall_at_5": 0.7619,
+        "family_mrr": 0.7488,
+        "all_family_coverage_at_5": 0.7333,
+        "multi_document_all_family_coverage_at_5": 0.2,
         "filtered_all_family_coverage_at_5": 1.0,
-        "filtered_family_score_coverage": 1.0
+        "filtered_family_score_coverage": 1.0,
+        "mean_unique_documents_top5": 1.267,
+        "mean_unique_sections_top5": 5,
+        "search_ms_p50": 15.322,
+        "search_ms_p95": 69.268,
+        "build_seconds_warm": 3.386,
+        "index_bytes": 1792208
       },
       "index": {
         "status": "ready",
         "documents": 14,
-        "chunks": 126,
-        "estimated_pages": 34.5,
+        "chunks": 182,
+        "estimated_pages": 37.5,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "embedding_provider": "huggingface",
@@ -1765,13 +1768,13 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "security_access",
@@ -1785,17 +1788,17 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
-            "POL-RW-01",
+            "POL-SEC-01",
             "POL-SEC-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-SEC-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "pto_carryover",
@@ -1810,16 +1813,16 @@
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01",
-            "POL-LVE-01",
-            "POL-PTO-01"
+            "POL-PTO-01",
+            "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-PTO-01",
             "POL-PTO-01",
             "POL-PTO-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_enrolment",
@@ -1837,13 +1840,13 @@
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "conduct_escalation",
@@ -1857,17 +1860,17 @@
           "global_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
-            "POL-REC-01",
+            "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-CON-01",
             "POL-CON-01",
             "POL-CON-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_receipts",
@@ -1885,13 +1888,13 @@
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "service_ticket",
@@ -1909,13 +1912,13 @@
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SVC-01",
             "POL-SVC-01",
             "POL-SVC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "approval_matrix",
@@ -1930,16 +1933,16 @@
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01",
-            "POL-RW-01",
+            "POL-APR-01",
             "POL-APR-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-APR-01",
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "employment_classification",
@@ -1957,13 +1960,13 @@
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-ONB-01",
             "POL-ONB-01",
             "POL-ONB-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "medical_leave",
@@ -1978,16 +1981,16 @@
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_confidential_data",
@@ -2003,19 +2006,19 @@
           "global_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-SEC-01",
             "POL-RW-01",
-            "POL-RW-01",
             "POL-SEC-01",
+            "POL-RW-01",
             "POL-RW-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "international_approval_controls",
@@ -2028,7 +2031,7 @@
           "global_family_ranks": {
             "POL-RW-": 1,
             "POL-SEC-": null,
-            "POL-APR-": 7
+            "POL-APR-": 10
           },
           "global_top_ids": [
             "POL-RW-01",
@@ -2037,7 +2040,6 @@
             "POL-RW-01",
             "POL-RW-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-RW-01",
             "POL-RW-01",
@@ -2045,7 +2047,8 @@
             "POL-APR-01",
             "POL-SEC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "expense_approval",
@@ -2056,16 +2059,15 @@
           ],
           "global_family_ranks": {
             "POL-EXP-": 1,
-            "POL-APR-": 5
+            "POL-APR-": 8
           },
           "global_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
             "POL-EXP-01",
-            "POL-APR-01"
+            "POL-EXP-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-EXP-01",
             "POL-EXP-01",
@@ -2073,7 +2075,8 @@
             "POL-APR-01",
             "POL-APR-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "leave_record_privacy",
@@ -2089,11 +2092,10 @@
           "global_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
-            "POL-PTO-01",
+            "POL-LVE-01",
             "POL-LVE-01",
             "POL-LVE-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-LVE-01",
             "POL-LVE-01",
@@ -2101,7 +2103,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         },
         {
           "id": "benefit_exception_records",
@@ -2112,16 +2115,15 @@
           ],
           "global_family_ranks": {
             "POL-BEN-": 1,
-            "POL-REC-": 8
+            "POL-REC-": null
           },
           "global_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
-            "POL-FLX-01",
+            "POL-ONB-01",
             "POL-BEN-01",
             "POL-BEN-01"
           ],
-          "each_family_has_score_at_least_0_12": true,
           "filtered_top_ids": [
             "POL-BEN-01",
             "POL-BEN-01",
@@ -2129,7 +2131,8 @@
             "POL-REC-01",
             "POL-REC-01"
           ],
-          "filtered_all_families_at_5": true
+          "filtered_all_families_at_5": true,
+          "each_family_has_score_at_least_0_12": true
         }
       ]
     }
@@ -2147,24 +2150,24 @@
       "hit_at_5": 1.0,
       "family_recall_at_1": 0.7143,
       "family_recall_at_3": 0.7619,
-      "family_recall_at_5": 0.8095,
-      "family_mrr": 0.7604,
-      "all_family_coverage_at_5": 0.8,
-      "multi_document_all_family_coverage_at_5": 0.4,
-      "mean_unique_documents_top5": 1.6,
-      "mean_unique_sections_top5": 5,
-      "search_ms_p50": 11.854,
-      "search_ms_p95": 43.228,
-      "build_seconds_warm": 1.98,
-      "index_bytes": 1248368,
+      "family_recall_at_5": 0.7619,
+      "family_mrr": 0.7488,
+      "all_family_coverage_at_5": 0.7333,
+      "multi_document_all_family_coverage_at_5": 0.2,
       "filtered_all_family_coverage_at_5": 1.0,
-      "filtered_family_score_coverage": 1.0
+      "filtered_family_score_coverage": 1.0,
+      "mean_unique_documents_top5": 1.267,
+      "mean_unique_sections_top5": 5,
+      "search_ms_p50": 17.024,
+      "search_ms_p95": 77.013,
+      "build_seconds_warm": 3.449,
+      "index_bytes": 1792208
     },
     "index": {
       "status": "ready",
       "documents": 14,
-      "chunks": 126,
-      "estimated_pages": 34.5,
+      "chunks": 182,
+      "estimated_pages": 37.5,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "requested_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_provider": "huggingface",
@@ -2191,13 +2194,13 @@
           "POL-RW-01",
           "POL-RW-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-RW-01",
           "POL-RW-01",
           "POL-RW-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "security_access",
@@ -2211,17 +2214,17 @@
         "global_top_ids": [
           "POL-SEC-01",
           "POL-SEC-01",
-          "POL-RW-01",
+          "POL-SEC-01",
           "POL-SEC-01",
           "POL-RW-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-SEC-01",
           "POL-SEC-01",
           "POL-SEC-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "pto_carryover",
@@ -2236,16 +2239,16 @@
           "POL-PTO-01",
           "POL-PTO-01",
           "POL-PTO-01",
-          "POL-LVE-01",
-          "POL-PTO-01"
+          "POL-PTO-01",
+          "POL-LVE-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-PTO-01",
           "POL-PTO-01",
           "POL-PTO-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "benefit_enrolment",
@@ -2263,13 +2266,13 @@
           "POL-BEN-01",
           "POL-BEN-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-BEN-01",
           "POL-BEN-01",
           "POL-BEN-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "conduct_escalation",
@@ -2283,17 +2286,17 @@
         "global_top_ids": [
           "POL-CON-01",
           "POL-CON-01",
-          "POL-REC-01",
+          "POL-CON-01",
           "POL-CON-01",
           "POL-CON-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-CON-01",
           "POL-CON-01",
           "POL-CON-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "expense_receipts",
@@ -2311,13 +2314,13 @@
           "POL-EXP-01",
           "POL-EXP-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-EXP-01",
           "POL-EXP-01",
           "POL-EXP-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "service_ticket",
@@ -2335,13 +2338,13 @@
           "POL-SVC-01",
           "POL-SVC-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-SVC-01",
           "POL-SVC-01",
           "POL-SVC-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "approval_matrix",
@@ -2356,16 +2359,16 @@
           "POL-APR-01",
           "POL-APR-01",
           "POL-APR-01",
-          "POL-RW-01",
+          "POL-APR-01",
           "POL-APR-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-APR-01",
           "POL-APR-01",
           "POL-APR-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "employment_classification",
@@ -2383,13 +2386,13 @@
           "POL-ONB-01",
           "POL-ONB-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-ONB-01",
           "POL-ONB-01",
           "POL-ONB-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "medical_leave",
@@ -2404,16 +2407,16 @@
           "POL-LVE-01",
           "POL-LVE-01",
           "POL-LVE-01",
-          "POL-PTO-01",
+          "POL-LVE-01",
           "POL-LVE-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-LVE-01",
           "POL-LVE-01",
           "POL-LVE-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "international_confidential_data",
@@ -2429,19 +2432,19 @@
         "global_top_ids": [
           "POL-SEC-01",
           "POL-RW-01",
-          "POL-RW-01",
           "POL-SEC-01",
+          "POL-RW-01",
           "POL-RW-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-SEC-01",
           "POL-RW-01",
-          "POL-RW-01",
           "POL-SEC-01",
+          "POL-RW-01",
           "POL-RW-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "international_approval_controls",
@@ -2454,7 +2457,7 @@
         "global_family_ranks": {
           "POL-RW-": 1,
           "POL-SEC-": null,
-          "POL-APR-": 7
+          "POL-APR-": 10
         },
         "global_top_ids": [
           "POL-RW-01",
@@ -2463,7 +2466,6 @@
           "POL-RW-01",
           "POL-RW-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-RW-01",
           "POL-RW-01",
@@ -2471,7 +2473,8 @@
           "POL-APR-01",
           "POL-SEC-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "expense_approval",
@@ -2482,16 +2485,15 @@
         ],
         "global_family_ranks": {
           "POL-EXP-": 1,
-          "POL-APR-": 5
+          "POL-APR-": 8
         },
         "global_top_ids": [
           "POL-EXP-01",
           "POL-EXP-01",
           "POL-EXP-01",
           "POL-EXP-01",
-          "POL-APR-01"
+          "POL-EXP-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-EXP-01",
           "POL-EXP-01",
@@ -2499,7 +2501,8 @@
           "POL-APR-01",
           "POL-APR-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "leave_record_privacy",
@@ -2515,11 +2518,10 @@
         "global_top_ids": [
           "POL-LVE-01",
           "POL-LVE-01",
-          "POL-PTO-01",
+          "POL-LVE-01",
           "POL-LVE-01",
           "POL-LVE-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-LVE-01",
           "POL-LVE-01",
@@ -2527,7 +2529,8 @@
           "POL-REC-01",
           "POL-REC-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       },
       {
         "id": "benefit_exception_records",
@@ -2538,16 +2541,15 @@
         ],
         "global_family_ranks": {
           "POL-BEN-": 1,
-          "POL-REC-": 8
+          "POL-REC-": null
         },
         "global_top_ids": [
           "POL-BEN-01",
           "POL-BEN-01",
-          "POL-FLX-01",
+          "POL-ONB-01",
           "POL-BEN-01",
           "POL-BEN-01"
         ],
-        "each_family_has_score_at_least_0_12": true,
         "filtered_top_ids": [
           "POL-BEN-01",
           "POL-BEN-01",
@@ -2555,7 +2557,8 @@
           "POL-REC-01",
           "POL-REC-01"
         ],
-        "filtered_all_families_at_5": true
+        "filtered_all_families_at_5": true,
+        "each_family_has_score_at_least_0_12": true
       }
     ]
   }

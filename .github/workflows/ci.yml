@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check imports and syntax
+        run: python -m compileall -q app agent rag mcp_server mcp_client evaluation scripts
+      - name: Run unit, API, workflow, and MCP protocol tests
+        run: python -m pytest -q
+      - name: Run MCP discovery and tool-call smoke check
+        run: python scripts/smoke_mcp.py
+      - name: Run golden-set evaluation
+        run: >-
+          python -m evaluation.run_evaluation --transport inprocess
+          --fail-on-thresholds
+          --output /tmp/evaluation-results.json
+          --markdown /tmp/evaluation-results.md
+      - name: Run stdio golden-set evaluation
+        run: >-
+          python -m evaluation.run_evaluation --transport stdio
+          --fail-on-thresholds
+          --output /tmp/evaluation-results-stdio.json
+          --markdown /tmp/evaluation-results-stdio.md
+      - name: Upload evaluation evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: evaluation-results-${{ github.run_id }}
+          path: |
+            /tmp/evaluation-results.json
+            /tmp/evaluation-results.md
+            /tmp/evaluation-results-stdio.json
+            /tmp/evaluation-results-stdio.md
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    name: Deploy tested commit to Render
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.RENDER_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger Render deploy for this tested SHA
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "::error::Set the RENDER_DEPLOY_HOOK_URL secret before enabling the Render deploy job."
+            exit 1
+          fi
+          if ! curl --silent --fail --max-time 30 --get \
+            --data-urlencode "ref=${GITHUB_SHA}" \
+            "$RENDER_DEPLOY_HOOK_URL" >/dev/null; then
+            echo "::error::Render did not accept the deploy request for ${GITHUB_SHA}."
+            exit 1
+          fi
+          echo "Render accepted the tested commit ${GITHUB_SHA}."
