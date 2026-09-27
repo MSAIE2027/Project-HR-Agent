@@ -39,6 +39,7 @@ Build, evaluate, and demonstrate an agentic HR support application that grounds 
 ## Non-functional requirements
 
 - **Privacy:** Use only fictional policies, identities, and records. Keep secrets in environment configuration and never include them in traces or committed files.
+- **Authentication boundary:** Authentication and employee-role authorization are not implemented. The public app is a synthetic-data demonstration; an employee ID selects a fixture and does not prove authorization. Do not enter real HR information or describe the app as production self-service.
 - **Safety:** No production actions, legal/medical/tax/immigration determinations, hidden reasoning disclosure, or unsupported policy claims.
 - **Reproducibility:** Pin or constrain dependencies, keep retrieval settings documented, and provide one-command checks.
 - **Free-tier fit:** Use a small corpus, local SQLite storage, and quantized CPU inference; document index rebuild and cold-start implications. Verify hosted memory after a clean deployment; local measurements do not establish Render capacity.

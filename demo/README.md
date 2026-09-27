@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on runtime commit `eeceda7` (deployment `dep-dasl2lh7lnhs739ltkb0`), which passed CI run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726). The deployed build uses the pinned ONNX Runtime and the required SQLite index. The latest hosted preflight passed both privacy refusals and completed retrieval, then received an account-wide free-tier quota 429 from Qwen. The trace records `failure_scope=account_quota`; the model chain stopped after one attempt and returned 503 without exposing the draft. Keep recording on hold until a hosted cited answer shows the expected tool trace, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. The public demo has no employee authentication or role authorization; all employee records are fictional. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on runtime commit `071dfb8` (deployment `dep-dasm8l8473hc738v0dkg`), which passed CI run [36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520). The deployed build uses the pinned ONNX Runtime and required SQLite index. The latest hosted preflight passed both privacy refusals and completed retrieval/MCP checks, then Qwen returned HTTP 429; the API returned 503 without a resolved model or answer. The CLI summary does not expose failure scope. Keep recording on hold until a hosted cited answer shows the expected tool trace, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
 
 ## Start and verify
 
@@ -19,8 +19,8 @@ Every citation-bearing response goes to OpenRouter after MCP retrieval and deter
 Before recording, run:
 
 ```bash
-./.venv/bin/python -m pytest -q
-./.venv/bin/python scripts/smoke_mcp.py
+MSAIE_INDEX_PATH=.data/rag_index.sqlite3 ./.venv/bin/python -m pytest -q
+MSAIE_INDEX_PATH=.data/rag_index.sqlite3 ./.venv/bin/python scripts/smoke_mcp.py
 ```
 
 The smoke command makes read-only MCP policy and synthetic-profile calls. The full test run includes synthetic mock-action cases and writes only to the configured local mock-action log.
@@ -67,7 +67,7 @@ Use the visible confirmation control. The second run must include `draft_hr_emai
 
 ## Repeatable employee examples
 
-The browser includes fixed scenarios for E1001, E1002, E1003, E1004, and E1005. Use the prompt chips to show a full-time employee, a recently hired employee, a contractor, a part-time employee, and an employee near the remote-work limit. These records are stable across page reloads so the grader can repeat the same question and observe the same structured result. The UI does not randomize employee data.
+The browser includes fixed scenarios for E1001, E1002, E1003, E1004, and E1005. Use the examples above the chat to show a full-time employee, a recently hired employee, a contractor, a part-time employee, and an employee near the remote-work limit. These records are stable across page reloads so the grader can repeat the same question and observe the same structured result. The UI does not randomize employee data.
 
 ## Course metric evidence to show
 
@@ -77,7 +77,7 @@ The supplied course blueprint groups evidence into quality, behavior, and system
 |---|---|---|
 | Quality | The two 30-case reports, citation coverage, and keyword score. | Groundedness proxy, citation-prefix accuracy, and exact tool-sequence accuracy are 1.0; mean keyword score is 0.95. These are deterministic fixture checks, not independent semantic judgments, and OpenRouter generation is excluded. |
 | Behavior | The remote-work and PTO traces, the pre-confirmation stop, the confirmed mock action, and an early safety refusal. | Workflow completion is 5/5 in each report. The examples use fixed synthetic cases and do not establish behavior for arbitrary conversations. |
-| System | The latency reports, retrieval comparison/ablation, and hosted memory observations. | In-process priming is 733.66 ms; warm p50/p95 are 28.05/147.84 ms. Stdio priming is 2,864.73 ms; fresh-process p50/p95 are 1,723.99/1,857.45 ms. Both exclude OpenRouter. The hosted ONNX memory samples are 71,155,710 bytes after startup and 274,866,180 bytes after the first policy request, against a 536,870,900-byte limit; they are not a capacity benchmark. |
+| System | The latency reports, retrieval comparison/ablation, and hosted memory observations. | In-process priming is 733.66 ms; warm p50/p95 are 28.05/147.84 ms. Stdio priming is 2,864.73 ms; fresh-process p50/p95 are 1,723.99/1,857.45 ms. Both exclude OpenRouter. Latest hosted ONNX samples reached 247,119,870 bytes against a 536,870,900-byte limit; they are not a capacity benchmark. |
 | Cold start | A hosted post-idle wake-to-ready measurement and a separate first model-backed request measurement, or explicitly identify this evidence as still open. | Hosted cold-start duration has not been measured. Local priming, fresh MCP subprocess timings, and memory samples are not Render cold-start latency. |
 
 For a valid hosted cold-start sample, first confirm from Render service events/metrics that the instance has spun down. Start an external timer before the first `/health/ready` request and stop it at the first HTTP 200; record this as wake-to-ready round-trip time. Then time the first synthetic model-backed policy request separately after quota is available. Record the deployment SHA, UTC timestamps, HTTP outcomes, and sample count. A single observation is one sample, not a percentile or a capacity claim. The end-to-end policy request includes OpenRouter time; label that scope and do not substitute local evaluation latency for it.

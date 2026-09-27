@@ -15,3 +15,18 @@
 ## Limits
 
 This was a local browser review using visible rendering and the browser accessibility tree. It was not a screen-reader session, automated contrast audit, hosted-browser check, or review of a deployed service. The confirmed action wrote only a fictional mock result to the ignored local demo data/log area.
+
+## UI clarity follow-up
+
+**Date:** 2026-09-27
+
+**Build:** local working tree at `http://127.0.0.1:8000/`
+
+**Scope:** evaluator navigation, duplicate examples, initial/health status copy, and synthetic-data boundary.
+
+- The header now has the single Evaluator & Test Lab entry point. The sidebar retains chat navigation and no duplicate evaluator action or repeated prompt list; the main example strip is the one set of chat starters.
+- The initial message label reads “Demo assistant” while the service chip begins at “Checking service.” The app updates the chip from `/health`; a failed health request says “Health check failed” instead of presenting a ready state.
+- The sidebar and README disclose that the public demo has no employee authentication or role authorization. All available employee data is fictional; an ID is only a fixture selector.
+- The local page returned HTTP 200 and its accessibility tree showed the single evaluator entry, one example strip, and an online health state. A source-level regression checks that non-JSON responses are reported as an HTTP error; this follow-up did not inject a synthetic 500, and it does not diagnose the earlier reported local failure.
+
+The follow-up was not a hosted browser review or a security authorization test. See `tickets/README.md` for the separate authorization design work.

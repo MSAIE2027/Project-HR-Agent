@@ -209,9 +209,14 @@ with TestClient(app) as client:
         assert "data-tooltip" in response.text
         assert "Why 120 words / 20 overlap?" in response.text
         assert "Explore common requests" in response.text
+        assert "Checking service" in response.text
+        assert 'message-meta">MSAIE <span>Demo assistant</span>' in response.text
+        assert 'data-open-lab' not in response.text
+        assert response.text.count('data-fill="Can E1001 work remotely overseas for 10 days?"') == 1
+        assert response.text.count('data-fill="How much PTO does E1002 have?"') == 1
+        assert "readJsonResponse" in response.text
+        assert "returned a non-JSON response" in response.text
         assert "E001" not in response.text
-        assert 'data-fill="Can E1001 work remotely overseas for 10 days?"' in response.text
-        assert 'data-fill="How much PTO does E1002 have?"' in response.text
         assert 'data-fill="How much PTO does E1003 have?"' in response.text
         assert 'data-fill="How much PTO does E1004 have?"' in response.text
         assert 'data-fill="Can E1005 work remotely overseas for 3 days?"' in response.text

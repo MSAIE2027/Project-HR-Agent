@@ -6,21 +6,21 @@
 
 **Render service:** `Project-HR-Agent` in workspace `MSAIE2027`
 
-**Runtime commit:** `eeceda7132bf64545f51a0a61f00fc0c332eaed2`
+**Runtime commit:** `071dfb8a8f590057f446684bc76ccc06b264435e`
 
-**Render deployment:** `dep-dasl2lh7lnhs739ltkb0`
+**Render deployment:** `dep-dasm8l8473hc738v0dkg`
 
 ## Current status
 
-The Render runtime is live on 2026-09-27 at commit `eeceda7`; it passed [GitHub Actions run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) and deployed as `dep-dasl2lh7lnhs739ltkb0`. The live build command now matches `render.yaml`, including the pinned ONNX index assertion. Render service metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The service built the semantic SQLite index and started successfully.
+The Render runtime is live on 2026-09-27 at commit `071dfb8`; it passed [GitHub Actions run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) and deployed as `dep-dasm8l8473hc738v0dkg`. The live build command matches `render.yaml`, including the shared pinned ONNX index assertion. Render service metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The service built the semantic SQLite index and started successfully.
 
-The deployed `eeceda7` runtime passed [GitHub Actions run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726), including the full test suite, MCP stdio smoke, both golden evaluations, and artifact upload. The manual deploy used that exact tested SHA. Render auto-deploy remains off.
+The deployed `071dfb8` runtime passed [GitHub Actions run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520), including the full test suite, MCP stdio smoke, both golden evaluations, and artifact upload. The manual deploy used that exact tested SHA. Render auto-deploy remains off.
 
-**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight passed both privacy refusals and reached OpenRouter after policy retrieval and structured checks. Qwen returned HTTP 429; the safe trace identified `failure_scope=account_quota`, and the fallback chain correctly stopped after one attempt. The API returned HTTP 503 with no resolved model or unrefined draft. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
+**Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight passed both privacy refusals and reached OpenRouter after policy retrieval and MCP tool calls. Qwen returned HTTP 429; the API returned HTTP 503 with no resolved model or unrefined draft. This smoke output does not expose the sanitized failure-scope field, and the Render key's quota state is not independently visible. A separate read-only check of the local `.env` key showed its free-model daily allowance exhausted; this does not prove the Render key is the same. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
 
-At 18:06 UTC, a read-only OpenRouter key-status request using the local `.env` key reported the free-model daily counter at 51 used / 50 limit / 0 remaining. This confirms the local key is over its free daily allowance, so no model-generation retry was made. This is local-key metadata only; the Render key is not exposed by the available read-only service APIs, so its quota state is not independently confirmed. OpenRouter documents the [current-key counter](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key) and [free-tier request limit](https://openrouter.ai/pricing/).
+At 18:50 UTC, a read-only OpenRouter key-status request using the local `.env` key reported the free-model daily counter at 51 used / 50 limit / 0 remaining. No model-generation retry was made after the 429. This is local-key metadata only; the Render key is not exposed by the available read-only service APIs, so its quota state is not independently confirmed. OpenRouter documents the [current-key counter](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key) and [free-tier request limit](https://openrouter.ai/pricing/).
 
-The live service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness remained HTTP 200 after the first query. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached three MCP tool calls and then the LLM refinement event before the account quota failure.
+The live `071dfb8` service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, 256-token limit, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness and document inspection returned HTTP 200. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached OpenRouter after MCP retrieval and checks, then failed on Qwen HTTP 429; the current CLI output does not identify the quota scope.
 
 After ONNX deployment, Render sampled memory at 71,155,710 bytes after startup and 274,866,180 bytes one minute later after the first policy request, against the 536,870,900-byte service limit. The service stayed live. This small sample does not establish peak or concurrent capacity. Historical PyTorch observations reached 536,264,700 bytes and later restarted during model loading, without an explicit OOM record.
 

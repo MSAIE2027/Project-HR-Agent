@@ -1,12 +1,12 @@
 # MSAIE HR Agent
 
-A fictional HR support assistant that combines policy retrieval, structured synthetic employee tools, and required LLM response composition. It cites policy evidence, reports its tool workflow, and gates mock actions on explicit confirmation. It does not access real employee data or production HR systems.
+A fictional HR support assistant that combines policy retrieval, structured synthetic employee tools, and required LLM response composition. It cites policy evidence, reports its tool workflow, and gates mock actions on explicit confirmation. It does not access real employee data or production HR systems. The public demo has no employee authentication or role authorization; an ID selects a synthetic fixture and does not prove access rights.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Employee([Employee]) --> Browser[Browser workspace]
+    Presenter([Demo user]) --> Browser[Browser workspace]
 
     subgraph App["HR agent · Render Python service"]
         direction TB
@@ -54,7 +54,7 @@ flowchart LR
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
     classDef external fill:#fff7ed,stroke:#ea5800,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
-    class Employee,Browser client
+    class Presenter,Browser client
     class API,Guard,Client,Server,SearchTool,HRTool,Query,Search,Index,Evidence,Policies,Chunk,DocEmbed,Records,Context local
     class HF,OpenRouter external
     class Refusal,Validate,Answer,Fail output
@@ -147,6 +147,7 @@ Keep provider credentials in the ignored `.env` file or shell environment. Never
 | Retrieval evaluation and visualizations | `evaluation/`, `visuals/` |
 | Tests and GitHub Actions | `tests/`, `.github/workflows/ci.yml` |
 | Review and acceptance evidence | `reviews/`, `evidence/` |
+| Security boundaries and residual risks | [`docs/security-control-map.md`](docs/security-control-map.md) |
 | Demo runbook | `demo/README.md`, `docs/demo-script.md` |
 | AI tooling disclosure and deployment status | `ai-tooling.md`, `deployed.md` |
 

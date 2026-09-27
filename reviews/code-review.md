@@ -73,16 +73,16 @@
 
 - The SRS requires a pinned 384-dimensional MiniLM index with 120/20 chunks. Review found that CI and Render only asserted that some semantic embedding revision existed. Both build gates now require the exact model revision, backend, 384 dimensions, and 120/20 settings.
 - No remaining implementation mismatch or unrelated scope change was found in this review. OpenRouter composition remains required for citation-bearing answers, and the ONNX change leaves that path unchanged.
-- The release-gate and hosted runtime checks have since passed on the deployed commit. Live answer acceptance remains blocked by an identified OpenRouter account-wide free-tier quota 429, not an embedding or routing regression.
+- The release-gate and hosted runtime checks have since passed on the deployed commit. Live answer acceptance remains open: the latest Qwen request returned HTTP 429, and the CLI does not expose failure scope. The local key's daily free counter is exhausted, while Render key identity/quota remains unverified.
 
 ### Verification
 
 - Full local suite: **99 passed**, one third-party Starlette/AnyIO deprecation warning.
 - Pinned SQLite build assertion, FastMCP stdio discovery/tool-call smoke, compile check, both 30-case evaluation transports with thresholds, YAML parsing, and `git diff --check` passed.
-- GitHub Actions run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed on `eeceda7`; Render deployment `dep-dasl2lh7lnhs739ltkb0` serves that exact SHA. The first ONNX-backed query stayed live at 274,866,180/536,870,900 sampled bytes; this is not a concurrency benchmark.
-- The hosted preflight completed privacy refusals and retrieval, then returned HTTP 503 after Qwen received HTTP 429 with sanitized `failure_scope=account_quota`. No model resolved; retry when quota is available.
+- GitHub Actions run [36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) passed on `071dfb8`; Render deployment `dep-dasm8l8473hc738v0dkg` serves that exact SHA. The latest preflight memory samples reached 247,119,870/536,870,900 bytes; this is not a concurrency benchmark.
+- The latest hosted preflight passed both privacy refusals and retrieval, then returned HTTP 503 after Qwen received HTTP 429. Its CLI output does not include the sanitized failure-scope field; no model resolved. Retry after provider availability is restored.
 
-**Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed and deployed. Hosted answer acceptance remains open only because the provider account's free-tier daily quota is exhausted.
+**Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed and deployed. Hosted answer acceptance remains open after the latest provider 429; the local key is quota-exhausted, but the Render key state is not independently confirmed.
 
 ## Review — tokenizer configuration and readiness
 
@@ -94,4 +94,14 @@
 
 **Spec:** The SRS requires a reproducible pinned semantic index. Review found that changing tokenizer truncation could reuse vectors built under the old limit, and `/health/ready` accepted a sparse fallback that did not satisfy the selected MiniLM baseline. Both gaps are fixed: the public `RagIndex` regression verifies rebuild at 256→128 tokens and `/health/ready` rejects sparse fallback or a mismatched production index.
 
-**Verification:** Red/green regressions passed; a clean 14-document/182-chunk index passed the pinned verifier; full local suite **101 passed**; local readiness, deep MCP discovery, and SQLite document listing returned HTTP 200; compileall, workflow/Blueprint YAML parsing, and `git diff --check` passed. Commit `2ace284` passed [GitHub Actions run 36341337888](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341337888); Render deployment is pending.
+**Verification:** Red/green regressions passed; a clean 14-document/182-chunk index passed the pinned verifier; full local suite **101 passed**; local and hosted readiness, deep MCP discovery, and SQLite document listing returned HTTP 200; compileall, workflow/Blueprint YAML parsing, and `git diff --check` passed. Commit `071dfb8` passed [GitHub Actions run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) and is live on Render deployment `dep-dasm8l8473hc738v0dkg`.
+
+## Review — demo UI clarity and disclosure
+
+**Review date:** 2026-09-27
+
+**Scope:** Remove duplicated evaluator/example entry points, align initial and failed health messaging, and state the synthetic-data/authentication boundary.
+
+**Findings and changes:** The sidebar evaluator launcher and repeated prompt list were redundant with the header lab button and main example strip; they are removed. The chat greeting now says “Demo assistant,” while the service indicator starts at “Checking service.” Non-JSON health/index responses receive a stable HTTP status message instead of leaking a JavaScript parse exception. The UI, README, and SRS state that the public app has no employee authentication or role authorization; IDs select synthetic fixtures and do not establish access rights.
+
+**Verification:** The public root-page regression passes; the complete local suite passed **101 tests** with the pinned SQLite index path configured. A local browser accessibility-tree review confirmed one evaluator entry point, one example strip, the synthetic/no-auth notice, and an online service indicator. No synthetic 500 response was injected, so the earlier transient local error remains undiagnosed. Production authorization and trace-field redaction remain open follow-up tickets.

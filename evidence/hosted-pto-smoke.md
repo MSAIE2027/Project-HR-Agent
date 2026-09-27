@@ -1,12 +1,29 @@
 # Hosted LLM Acceptance Evidence
 
-## Latest ONNX deployment preflight
+## Latest deployment preflight
+
+**Date:** 2026-09-27 18:47 UTC | **Service:** [Project-HR-Agent](https://project-hr-agent.onrender.com) | **Deployed commit:** `071dfb8a8f590057f446684bc76ccc06b264435e` | **CI:** [run 36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) passed | **Render deployment:** `dep-dasm8l8473hc738v0dkg` | **Command:** `./.venv/bin/python scripts/smoke_hosted_demo.py` | **Inputs:** synthetic employee IDs only
+
+| Check | Result | Evidence |
+|---|---|---|
+| Render build and service | Pass | Manual deploy used the CI-tested `071dfb8` SHA. The stored Render build command now matches `render.yaml` and runs the shared pinned-index verifier; auto-deploy remains off. Render marked deployment `dep-dasm8l8473hc738v0dkg` live. |
+| Deep health and SQLite index | Pass | `/health/ready`, `/health?deep=true`, and `/api/index/documents` returned HTTP 200. The index reports 14 documents, 182 chunks, 384 dimensions, a 256-token maximum, pinned MiniLM ONNX revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, and 120/20 chunks; eight MCP tools are available over stdio. Vectors are not exposed. |
+| Medical-record privacy refusal | Pass | HTTP 200, `refused`, no MCP tool calls and no LLM attempt. |
+| Multiple-employee privacy refusal | Pass | HTTP 200, `refused`, no MCP tool calls and no LLM attempt. |
+| International remote-work final answer | **Blocked by OpenRouter 429** | HTTP 503 after one Qwen attempt (`qwen/qwen3.8-27b:free`, HTTP 429). No model resolved and no final answer was returned. The API withheld the unrefined draft. The CLI summary does not include the sanitized failure-scope field. |
+| PTO answer and confirmation gate | Not reached | The preflight stopped on the remote-work failure. |
+| Confirmed mock email | Not run | The explicit `--confirm-mock-email` option was not enabled. |
+| Post-deploy memory sample | Pass for observed stability | Render samples: 143,806,460 bytes at 18:48 UTC, 244,117,500 at 18:49, and 247,119,870 at 18:50, against a 536,870,900-byte limit. The app stayed ready. These few samples are not a peak or concurrency result. Hosted p50/p95 latency was unavailable from the metrics endpoint, and cold-start duration was not isolated. |
+
+At 18:50 UTC, a read-only current-key request using the local `.env` OpenRouter key reported `is_free_tier=true` and `free_model_daily_requests={used: 51, limit: 50, remaining: 0}`. This confirms that local key is over its free daily limit; the Render key identity is not independently exposed or verified. No repeat model call was made after Qwen returned 429. Credentials and provider response bodies were not retained.
+
+## Prior ONNX deployment preflight: eeceda7
 
 **Date:** 2026-09-27 | **Service:** [Project-HR-Agent](https://project-hr-agent.onrender.com) | **Deployed commit:** `eeceda7132bf64545f51a0a61f00fc0c332eaed2` | **CI:** [run 36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed | **Render deployment:** `dep-dasl2lh7lnhs739ltkb0` | **Command:** `./.venv/bin/python scripts/smoke_hosted_demo.py --timeout 90` | **Inputs:** synthetic employee IDs only
 
 | Check | Result | Evidence |
 |---|---|---|
-| Render build and service | Pass | Manual deployment used the CI-tested SHA. The live build command now matches `render.yaml`; auto-deploy remains off. Startup completed and `/health/ready` stayed HTTP 200. |
+| Render build and service | Pass | Manual deployment used the CI-tested SHA. At that time the stored build command matched the then-current `render.yaml`; the latest service build command is recorded in the section above. Auto-deploy remains off. |
 | Deep health and SQLite index | Pass | 14 documents, 182 chunks, 384 dimensions, pinned MiniLM ONNX Runtime backend/revision, 120/20 chunk settings, eight MCP tools over stdio, OpenRouter configured. |
 | First ONNX model-backed request | Pass for runtime stability | Render memory samples: 71,155,710 bytes at 17:26:25 UTC after startup and 274,866,180 bytes at 17:27:25 UTC after the first policy request, against a 536,870,900-byte service limit. The process remained live and readiness checks continued. This is a small number of samples, not a concurrency or capacity result. |
 | Medical-record privacy refusal | Pass | HTTP 200, `refused`, no MCP or LLM call. |
@@ -37,8 +54,8 @@ The live home page showed **Service online**. `/health/ready`, `/api/index/docum
 
 That earlier preflight passed both privacy refusals, then attempted remote-work generation. All four routes (`qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, `google/gemma-4-26b-a4b-it:free`, and `openrouter/free`) returned HTTP 429; the public API returned HTTP 503 with `llm_refinement.status=unavailable` and no resolved model. The app withheld its draft, and the preflight stopped before PTO. No confirmation-gated action was enabled. The user later replaced the local and Render keys; this older run does not establish their current quota.
 
-## Acceptance gate
+## Remaining hosted answer gate
 
-The deployment and retrieval stages are verified, but the app is not ready for recording until hosted answer generation succeeds. When the account's free-model quota is available, rerun the preflight and require remote-work and PTO checks to return HTTP 200 with policy citations, `llm_refinement.status=completed`, the actual resolved model, and the expected workflow status. Then use `--confirm-mock-email` separately to verify the explicit confirmation path; this creates only a fictional mock draft and sends no message.
+The current service, pinned retrieval index, MCP layer, CI, and safety refusals are verified. Hosted answer generation remains a recording gate. When OpenRouter quota is available, rerun the preflight and require remote-work and PTO checks to return HTTP 200 with policy citations, `llm_refinement.status=completed`, the actual resolved model, and the expected workflow status. Run `--confirm-mock-email` separately only when demonstrating the explicit confirmation path; it creates only a fictional mock draft and sends no message.
 
 The live smoke command and its CLI contract tests are [`scripts/smoke_hosted_demo.py`](../scripts/smoke_hosted_demo.py) and [`tests/test_hosted_smoke_cli.py`](../tests/test_hosted_smoke_cli.py). A successful local provider example is recorded in [`openrouter-chain-smoke.md`](openrouter-chain-smoke.md); it does not establish current hosted availability.
