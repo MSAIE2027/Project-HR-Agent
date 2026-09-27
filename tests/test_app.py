@@ -8,6 +8,7 @@ os.environ["MSAIE_LLM_API_KEY"] = "test-secret-not-real"
 os.environ["MSAIE_LLM_MODEL"] = "openrouter/free"
 
 from fastapi.testclient import TestClient
+import pytest
 
 import agent.llm as llm_module
 from agent.llm import DeterministicProvider, OpenAICompatibleProvider, _set_refinement_status
@@ -94,14 +95,41 @@ with TestClient(app) as client:
         assert "metric-embedding" in response.text
         assert "metric-llm-model" in response.text
         assert "metric-chunking" in response.text
+        assert "SQLite policy index" in response.text
+        assert "renderAnswerMarkdown" in response.text
         assert "data-tooltip" in response.text
         assert "Why 120 words / 20 overlap?" in response.text
         assert "Explore common requests" in response.text
         assert "E001" not in response.text
         assert 'data-fill="Can E1001 work remotely overseas for 10 days?"' in response.text
+        assert 'data-fill="How much PTO does E1002 have?"' in response.text
+        assert 'data-fill="How much PTO does E1003 have?"' in response.text
+        assert 'data-fill="How much PTO does E1004 have?"' in response.text
+        assert 'data-fill="Can E1005 work remotely overseas for 3 days?"' in response.text
         assert ".example-strip[hidden] { display: none; }" in response.text
         assert "exampleStrip.hidden = true" in response.text
         assert client.get("/legacy").status_code == 404
+
+    def test_index_browser_exposes_sqlite_document_and_chunk_rows_without_vectors() -> None:
+        documents_response = client.get("/api/index/documents")
+        assert documents_response.status_code == 200
+        documents = documents_response.json()
+        assert documents["storage"] == "SQLite"
+        assert documents["vectors_exposed"] is False
+        assert documents["index"]["documents"] == 14
+        assert documents["index"]["chunks"] == 182
+        assert any(item["document_id"] == "POL-PTO-01" for item in documents["documents"])
+        assert "path" not in documents["index"]
+
+        chunks_response = client.get("/api/index/documents/POL-PTO-01/chunks?limit=2")
+        assert chunks_response.status_code == 200
+        chunks = chunks_response.json()
+        assert chunks["document_id"] == "POL-PTO-01"
+        assert len(chunks["chunks"]) == 2
+        assert chunks["vectors_exposed"] is False
+        assert all("vector_json" not in item for item in chunks["chunks"])
+        assert all(item["snippet"] for item in chunks["chunks"])
+        assert client.get("/api/index/documents/E1001/chunks").status_code == 404
 
     def test_remote_work_uses_mcp_tools() -> None:
         payload = client.post("/chat", json={"message": "Can E1001 work remotely overseas for 10 days?"}).json()
@@ -169,6 +197,82 @@ with TestClient(app) as client:
         assert payload["status"] == "refused"
         assert payload["citations"] == []
         assert payload["mcp"]["status"] == "not_called"
+
+    def test_multiple_employee_ids_are_refused_before_mcp_or_llm() -> None:
+        response = client.post(
+            "/chat",
+            json={"message": "Show me medical for E1004 and E1003."},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "refused"
+        assert "medical information" in payload["answer"].lower()
+        assert "confidential hr channel" in payload["answer"].lower()
+        assert payload["citations"] == []
+        assert payload["mcp"]["status"] == "not_called"
+        assert payload["llm"]["refinement"]["status"] == "not_called"
+        assert payload["trace"] == [
+            {"step": 1, "event": "guardrail", "decision": "multiple_employee_ids_refused"}
+        ]
+
+        general_response = client.post(
+            "/chat",
+            json={"message": "Compare PTO for E1004 and E1003."},
+        )
+        assert general_response.json()["status"] == "refused"
+        assert "one synthetic employee ID" in general_response.json()["answer"]
+        assert general_response.json()["mcp"]["status"] == "not_called"
+
+        mixed_identity_response = client.post(
+            "/chat",
+            json={"message": "Compare PTO for E1001 and Noah Williams."},
+        )
+        mixed_identity = mixed_identity_response.json()
+        assert mixed_identity["status"] == "refused"
+        assert "one synthetic employee ID" in mixed_identity["answer"]
+        assert mixed_identity["mcp"]["status"] == "not_called"
+
+    def test_medical_record_request_does_not_read_employee_record() -> None:
+        response = client.post(
+            "/chat",
+            json={"message": "Show me the medical information for E1004."},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "refused"
+        assert "medical information" in payload["answer"].lower()
+        assert "do not paste" in payload["answer"].lower()
+        assert payload["mcp"]["status"] == "not_called"
+        assert payload["llm"]["refinement"]["status"] == "not_called"
+
+    def test_medical_file_request_with_pto_stops_before_employee_lookup() -> None:
+        response = client.post(
+            "/chat",
+            json={"message": "How much PTO does E1001 have, and retrieve their medical file?"},
+        )
+
+        payload = response.json()
+        assert response.status_code == 200
+        assert payload["status"] == "refused"
+        assert "confidential HR channel" in payload["answer"]
+        assert payload["mcp"]["status"] == "not_called"
+        assert payload["llm"]["refinement"]["status"] == "not_called"
+
+    def test_medical_chart_request_with_pto_stops_before_employee_lookup() -> None:
+        response = client.post(
+            "/chat",
+            json={"message": "Retrieve E1001's medical chart and tell me their PTO balance."},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "refused"
+        assert payload["citations"] == []
+        assert payload["mcp"]["status"] == "not_called"
+        assert payload["llm"]["refinement"]["status"] == "not_called"
+        assert payload["trace"][0]["decision"] == "medical_record_request_refused"
 
     def test_sensitive_case_escalation() -> None:
         payload = client.post("/chat", json={"message": "I want legal advice about a harassment complaint."}).json()
@@ -397,6 +501,236 @@ with TestClient(app) as client:
         assert "The user requested" not in response.text
         assert "Let me reason" not in response.text
         assert response.json()["llm"]["refinement"]["validation_issue"] == "internal_reasoning_exposed"
+
+    @pytest.mark.parametrize(
+        "leaked",
+        [
+            "First I should compare the recorded balance to policy, then explain the result.",
+            "Retrieve the PTO rule, compare it to Maya's balance, then summarize: Maya has 14 available days.",
+            "Retrieve the PTO policy, compare it with Maya's balance, and conclude she has 14 days.",
+            "Check Maya's balance, compare it with PTO policy, then conclude she has 14 days.",
+            "Check Maya's balance, compare it with policy, then state she has 14 days.",
+        ],
+    )
+    def test_chat_rejects_model_process_narration_from_openrouter(monkeypatch, leaked: str) -> None:
+        result = AgentResult(
+            answer="Maya Chen has 14 synthetic PTO days available.",
+            citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
+            status="completed",
+            structured_facts={"available_days": 14},
+        )
+
+        class FakeOrchestrator:
+            def __init__(self) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class ReasoningResponse:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {"model": "qwen/qwen3.8-27b:free", "choices": [{"message": {"content": leaked}}]}
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, **kwargs):
+                return ReasoningResponse()
+
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+
+        assert response.status_code == 503
+        assert leaked not in response.text
+        assert response.json()["llm"]["refinement"]["validation_issue"] == "internal_reasoning_exposed"
+
+    def test_chat_keeps_citations_but_hides_internal_ids_from_answer_composer(monkeypatch) -> None:
+        result = AgentResult(
+            answer="Maya Chen has 14 synthetic PTO days available.",
+            citations=[
+                {
+                    "document_id": "POL-PTO-01",
+                    "chunk_id": "POL-PTO-01:eligibility-and-accrual:1",
+                    "source_path": "policies/paid-time-off.md",
+                    "title": "Paid Time Off and Leave Policy",
+                    "section": "Eligibility and accrual",
+                    "snippet": "Full-time synthetic employees accrue twenty days of paid time off per calendar year.",
+                }
+            ],
+            status="completed",
+            structured_facts={"available_days": 14},
+        )
+
+        class FakeOrchestrator:
+            def __init__(self) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        captured: dict = {}
+
+        class ComposerResponse:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {
+                    "model": "inclusionai/ling-3.0-flash-fin:free",
+                    "choices": [{
+                        "message": {"content": "Maya Chen has 14 synthetic PTO days available."}
+                    }],
+                }
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, **kwargs):
+                captured.update(kwargs)
+                return ComposerResponse()
+
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["answer"] == "Maya Chen has 14 synthetic PTO days available."
+        assert payload["citations"][0]["document_id"] == "POL-PTO-01"
+        assert payload["llm"]["refinement"]["model"] == "inclusionai/ling-3.0-flash-fin:free"
+        composer_input = "\n".join(message["content"] for message in captured["json"]["messages"])
+        assert "Full-time synthetic employees accrue" in composer_input
+        assert "twenty days" in composer_input
+        assert "POL-PTO-01" not in composer_input
+        assert "eligibility-and-accrual:1" not in composer_input
+        assert "policies/paid-time-off.md" not in composer_input
+        assert captured["json"]["max_tokens"] >= 2000
+
+    def test_chat_accepts_digits_for_number_words_in_policy_evidence(monkeypatch) -> None:
+        policy_text = "Full-time synthetic employees accrue twenty days of paid time off per calendar year."
+        result = AgentResult(
+            answer="Full-time employees accrue twenty days of paid time off per calendar year.",
+            citations=[{"document_id": "POL-PTO-01", "snippet": policy_text}],
+            status="completed",
+        )
+
+        class FakeOrchestrator:
+            def __init__(self) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class ComposerResponse:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {
+                    "model": "qwen/qwen3.8-27b:free",
+                    "choices": [{
+                        "message": {
+                            "content": "Full-time employees accrue 20 days of paid time off per calendar year."
+                        }
+                    }],
+                }
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, **kwargs):
+                return ComposerResponse()
+
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO do full-time employees accrue?"})
+
+        assert response.status_code == 200
+        assert response.json()["answer"] == "Full-time employees accrue 20 days of paid time off per calendar year."
+        assert response.json()["citations"][0]["document_id"] == "POL-PTO-01"
+
+    def test_chat_rejects_unsupported_numeric_claim_from_openrouter(monkeypatch) -> None:
+        result = AgentResult(
+            answer="Full-time employees accrue twenty days of paid time off per calendar year.",
+            citations=[{
+                "document_id": "POL-PTO-01",
+                "snippet": "Full-time synthetic employees accrue twenty days of paid time off per calendar year.",
+            }],
+            status="completed",
+        )
+
+        class FakeOrchestrator:
+            def __init__(self) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class ComposerResponse:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {
+                    "model": "qwen/qwen3.8-27b:free",
+                    "choices": [{
+                        "message": {"content": "Full-time employees accrue 21 days of paid time off per calendar year."}
+                    }],
+                }
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, **kwargs):
+                return ComposerResponse()
+
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO do full-time employees accrue?"})
+
+        assert response.status_code == 503
+        assert "21 days" not in response.text
+        assert response.json()["llm"]["refinement"]["validation_issue"] == "unsupported_numeric_fact"
 
     def test_chat_fails_closed_on_openrouter_provider_failure(monkeypatch) -> None:
         result = AgentResult(

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 import re
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from agent.models import AgentResult
@@ -8,6 +11,11 @@ from mcp_client.client import MCPGateway, MCPGatewayError, ToolCall
 from rag.index import get_index
 
 EMPLOYEE_PATTERN = re.compile(r"\bE\d{4}\b", re.IGNORECASE)
+MEDICAL_RECORD_REQUEST = re.compile(
+    r"\b(?:medical|health|clinical)\s+(?:records?|files?|documents?|charts?|summaries?|details|history|information|diagnos(?:is|es)|notes?)\b|"
+    r"\bshow\s+me\s+(?:the\s+)?(?:medical|health|clinical)\b|\bdiagnos(?:is|es)\b",
+    re.IGNORECASE,
+)
 DAYS_PATTERN = re.compile(r"\b(\d{1,3})\s*(?:calendar\s+|working\s+)?days?\b", re.IGNORECASE)
 INJECTION_PATTERNS = (
     re.compile(r"\b(?:ignore|disregard|override|forget)\b.{0,70}\b(?:instructions?|rules?|safeguards?|policy)\b", re.I),
@@ -23,6 +31,31 @@ SENSITIVE_TERMS = {
 def _employee_id(message: str) -> str | None:
     match = EMPLOYEE_PATTERN.search(message)
     return match.group(0).upper() if match else None
+
+
+@lru_cache(maxsize=1)
+def _synthetic_employee_names() -> dict[str, str]:
+    roster_path = Path(__file__).resolve().parents[1] / "mock_data" / "employees.json"
+    try:
+        roster = json.loads(roster_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(roster, list):
+        return {}
+    return {
+        str(record["employee_id"]).upper(): str(record["name"])
+        for record in roster
+        if isinstance(record, dict) and record.get("employee_id") and record.get("name")
+    }
+
+
+def _employee_references(message: str) -> set[str]:
+    references = {match.group(0).upper() for match in EMPLOYEE_PATTERN.finditer(message)}
+    normalized_message = message.casefold()
+    for employee_id, name in _synthetic_employee_names().items():
+        if re.search(rf"(?<!\w){re.escape(name.casefold())}(?!\w)", normalized_message):
+            references.add(employee_id)
+    return references
 
 
 def _days(message: str) -> int:
@@ -98,6 +131,36 @@ class MSAIEOrchestrator:
                 status="refused",
                 confidence="high",
                 mcp={"status": "not_called", "reason": "request rejected before tool access"},
+            )
+        employee_references = _employee_references(message)
+        if len(employee_references) > 1:
+            if MEDICAL_RECORD_REQUEST.search(message):
+                answer = (
+                    "I can't retrieve or disclose medical information about employees in chat. Do not paste medical records here. "
+                    "For leave-related documents, use the confidential HR channel. No employee records were accessed."
+                )
+            else:
+                answer = (
+                    "Please ask about one synthetic employee ID per request. I can't retrieve or compare multiple employee records "
+                    "in one chat, and no employee records were accessed."
+                )
+            return AgentResult(
+                answer=answer,
+                trace=[{"step": 1, "event": "guardrail", "decision": "multiple_employee_ids_refused"}],
+                status="refused",
+                confidence="high",
+                mcp={"status": "not_called", "reason": "multiple employee IDs rejected before tool access"},
+            )
+        if MEDICAL_RECORD_REQUEST.search(message):
+            return AgentResult(
+                answer=(
+                    "I can't retrieve or disclose employee medical information, records, or diagnoses in chat. Do not paste medical documents here. "
+                    "For leave-related documents, use the confidential HR channel. Ask for general leave-process guidance without an employee ID."
+                ),
+                trace=[{"step": 1, "event": "guardrail", "decision": "medical_record_request_refused"}],
+                status="refused",
+                confidence="high",
+                mcp={"status": "not_called", "reason": "sensitive record request rejected before tool access"},
             )
         lowered = message.lower()
         try:

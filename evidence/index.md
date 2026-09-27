@@ -1,35 +1,26 @@
 # Evidence Index
 
-This index distinguishes local evidence from hosted evidence. Commit `b4e1394` is published to the private repository `MSAIE2027/Project-HR-Agent`; latest prior CI run [36289994440](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289994440) passed. This checkout adds a Hugging Face index-build CI gate and deployment configuration updates; their first hosted run is pending. The Render service is linked to that repository and has the assigned URL `https://project-hr-agent.onrender.com`, but it has no deploy history and does not yet match the Python Blueprint; no hosted app behavior or cold-start measurement is claimed.
+This index separates the current local working tree from the last hosted release. The local changes are based on published SHA `1130dde62a5751c2fd64ee19092c2b16f7c4dfed`; they still need GitHub CI and a Render deploy before they can be called hosted evidence.
 
-| Evidence | Artifact / command | What it establishes | Limit |
-|---|---|---|---|
-| Source baseline | `git status --short --branch`; `git log -1 --oneline` | Initial baseline `32497e5`; the reviewed implementation was published as `42de2e8`; deployment hardening is pending in the current checkout. | The new deployment changes have not yet been pushed or exercised by hosted CI. |
-| Full tests | `./.venv/bin/python -m pytest -q`; [hosted CI run](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289121722) | 64 passed locally, 1 third-party Starlette/AnyIO deprecation warning; hosted pytest also passed on commit `42de2e8`. | Does not test live OpenRouter generation or hosted app behavior. |
-| Current OpenRouter runtime | [`openrouter-chain-smoke.md`](openrouter-chain-smoke.md) | On the rebuilt 14-document / 182-chunk Hugging Face → SQLite index, a synthetic cited `/chat` retry returned 200 with five citations and `llm_refinement=completed`; the resolved model was `poolside/laguna-s-2.1:free`. | Two earlier calls returned 503; this identifies one remote-work request only, not a separate PTO request or sustained availability. |
-| Historical OpenRouter success | [`openrouter-smoke.md`](openrouter-smoke.md) | A previous cited request completed with five `POL-RW-01` citations and `llm_refinement=completed`. | Historical only: it used the stale 126-chunk index and does not verify current behavior. |
-| Complete golden sets | `evaluation/results.json`, `evaluation/results.md`, `evaluation/results-stdio.json`, `evaluation/results-stdio.md` | All 25 cases pass status, citation-prefix, exact tool sequence, workflow completion, clarification/escalation, and action-safety fixture checks over in-process and stdio transports. Workflow completion is 5/5 workflow-category cases. | `llm_generation_included=false`; deterministic proxies are not independent semantic judgments. Stdio latency includes subprocess/model/index initialization. |
-| Retrieval comparison | `evaluation/retrieval-comparison.md`, `.json`, `visuals/retrieval-comparison.svg` | Chunk/top-k/MMR/routing and ranking-weight measurements. | Small, hand-labeled corpus-specific sample. |
-| Chunk ablation | `evaluation/ablation-results.md`, `.json` | Five chunk configurations compared with the chosen MiniLM model. | Does not establish a universal chunk optimum. |
-| MCP protocol smoke | `./.venv/bin/python scripts/smoke_mcp.py`; stdio golden report | Stdio discovery of eight MCP tools, read-only policy/profile calls, and all 25 golden scenarios over the protocol; both browser workflows were rehearsed over stdio. | Does not replace a hosted MCP check. |
-| CLI help | `./.venv/bin/python scripts/build_index.py --help` | Direct documented script invocation imports correctly. | Help path only; it does not rebuild or overwrite the local index. |
-| UI/API regression | `tests/test_app.py` | Current example prompts, workflow tool order, action confirmation, refusal, escalation, missing-record behavior, and response contract. | Automated markup/API checks do not prove visual or assistive-technology quality. |
-| CI/deployment gate | `.github/workflows/ci.yml`, `render.yaml`, [previous hosted run](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289994440) | Previous hosted compile, pytest, MCP discovery/calls, both threshold-gated golden evaluations, and evidence upload passed for `b4e1394`. This checkout adds an actual Hugging Face index-build assertion before tests. | The new workflow run and Render source/runtime/health reconciliation are pending; auto-deploy remains Off. |
-| Code review | [`reviews/code-review.md`](../reviews/code-review.md) | Separate standards/spec reviews of completion changes against baseline `32497e5`, including findings and disposition. | Local review; hosted CI passed, but no remote PR review was performed. |
-| Human/browser review | [`ui-review.md`](ui-review.md), `docs/grader-ux-validation.md`, `demo/README.md` | Local desktop and narrow-viewport review, keyboard focus behavior, Escape close/focus restoration, citations/trace, and confirmation-gated demo flow. | Visual and basic keyboard review only; no screen-reader, automated contrast, hosted-browser, or deployed-interface audit. |
-| Course presentation | `demo/README.md`, `docs/demo-script.md` | Presenter prompts, expected calls, timings, limitations, and recording checklist. | The human-recorded 7–10 minute video and course submission are presenter-owned. |
+## Current local evidence
 
-## Golden-set result snapshot
+| Claim | Evidence | Scope / limit |
+|---|---|---|
+| Test suite | `./.venv/bin/python -m pytest -q` — **82 passed**, one third-party Starlette/AnyIO deprecation warning | Includes API, RAG, provider validation, safety, and MCP tests; does not verify live provider availability. |
+| Golden-set evaluation | `evaluation/results.json`, `.md`, `results-stdio.json`, `.md` — **30 cases** per transport; workflow completion **5/5**; mean keyword score **0.95** in-process | Deterministic orchestrator proxies; `llm_generation_included=false`; no independent semantic-judgment score. |
+| In-process latency | Priming **6,005.88 ms**; warm 15-task p50/p95 **23.59/104.74 ms** | Priming reported separately; not hosted latency. |
+| Stdio latency | Priming **8,478.52 ms**; fresh-subprocess 15-task p50/p95 **7,471.90/7,917.17 ms** | Each task starts a fresh MCP process and loads the local model/index; not a Render cold-start benchmark. |
+| MCP protocol | `scripts/smoke_mcp.py`, stdio golden report, `tests/test_mcp.py` | Official SDK client discovers and calls eight FastMCP tools over stdio. |
+| Retrieval comparison and ablation | `evaluation/retrieval-comparison.md`, `evaluation/ablation-results.md`, `visuals/retrieval-comparison.svg` | Hand-labeled, corpus-specific comparisons; chart is tracked and embedded in the GitHub README. |
+| UI/API behavior | `tests/test_app.py`, `evidence/ui-review.md` | API regression and prior local browser review. Current Markdown rendering and SQLite browser have automated regression coverage; this does not replace screen-reader or hosted-browser review. |
+| Requirements and design | `specs/system-requirements.md`, `docs/traceability-matrix.md`, `docs/adr/`, `tickets/`, `docs/implementation-slices.md` | Maps project requirements to implementation and evidence. |
 
-The local reports are in `evaluation/results.json` (in-process) and `evaluation/results-stdio.json` (protocol-backed stdio). Each records:
+The golden reports measure expected status, tool calls, source families, safety, and keyword overlap. A 1.0 groundedness proxy is not a semantic entailment score. All timings exclude OpenRouter answer generation.
 
-- 25/25 task statuses matched the rubric fixtures.
-- Groundedness proxy, citation-prefix accuracy, exact tool-sequence accuracy, workflow completion, clarification/escalation accuracy, and action-safety pass rate each scored 1.0.
-- Mean gold-keyword overlap was 0.94.
-- `llm_generation_included` is `false`; these are orchestrator-level results and exclude OpenRouter generation.
-- In-process priming request: 6,369.82 ms; subsequent 15-task warm sample: p50 20.28 ms, p95 62.54 ms.
-- Stdio priming request: 9,659.28 ms; each sampled task starts a fresh MCP process, so the 15-task p50/p95 were 8,645.27/11,180.99 ms, including process and model/index initialization.
+## Hosted evidence
 
-The full test suite and both golden evaluations passed locally and in the hosted CI workflow for `42de2e8`. MCP stdio smoke, direct CLI help, and syntax compilation also passed. These results establish a successful hosted CI run, not a Render deployment.
+Render service `Project-HR-Agent` is live at [project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on SHA `1130dde` (deployment `dep-das9kd59fdbs73cfutpg`). `/health/ready` reports HTTP 200, Python runtime, a 14-document/182-chunk Hugging Face MiniLM SQLite index, eight discovered stdio MCP tools, and OpenRouter configuration. Hosted CI run [36293782172](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36293782172) passed on this SHA with the earlier 25-case set. The current local changes have not passed hosted CI or been deployed.
 
-These scores are fixture metrics. The groundedness check is not a human entailment judgment. In-process figures are warm-request latencies after a separate priming request; stdio figures include per-task MCP subprocess/model initialization. Neither is a Render cold-start measurement.
+After the OpenRouter key replacement, readiness continued to report the provider as configured. Two hosted synthetic E1002 PTO requests completed policy search, employee lookup, balance lookup, and compliance, then returned HTTP 503 after 56.97 and 64.16 seconds; their trace did not expose per-route HTTP codes. A current-working-tree local synthetic E1002 request returned HTTP 503 in 10.72 seconds after the same four MCP calls; all four routes returned HTTP 429. There were no citations or resolved model, and the app withheld the unrefined draft. These results do not identify the provider-side cause. See [`hosted-pto-smoke.md`](hosted-pto-smoke.md) for sanitized details.
+
+**Recording gate:** do not record the hosted workflow until the deployed tested SHA returns a synthetic PTO answer with `check_pto_balance`, policy citations, `llm_refinement.status=completed`, the actual resolved model, and no reasoning leakage. The course recording and submission remain presenter-owned.

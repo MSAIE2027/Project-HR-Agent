@@ -9,7 +9,7 @@ An earlier combined-folder report described legacy status mismatches, a full-eva
 - The six-item read-only policy golden slice scored 100% on status, citation-prefix, and groundedness-proxy checks.
 - Runtime retrieval reported `huggingface_dense_cosine`, confirming the MiniLM dense cosine path during this run.
 - Global top-five MMR λ=0.5 improved all-family coverage from 2/5 to 3/5 and family recall from 0.81 to 0.86.
-- The current full local pytest suite and 25-case golden set have been run. The saved report is `results.md`; all recorded deterministic proxy metrics pass. The first UI test run also exposed stale demo fixture assumptions and embedding environment variables; those were corrected and are documented in `docs/implementation-slices.md`.
+- At the time of the original report, the full local suite and 25-case golden set passed; those saved reports were later refreshed. The current 82-test suite and 30-case golden reports are recorded in `../evidence/index.md` and `results*.md`. The first UI test run also exposed stale demo fixture assumptions and embedding environment variables; those were corrected and are documented in `docs/implementation-slices.md`.
 
 ## What remains unverified
 

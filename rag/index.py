@@ -393,7 +393,7 @@ class RagIndex:
                         "section": row["section"],
                         "source_path": row["source_path"],
                         "retrieval_method": retrieval_method,
-                        "snippet": content[:650] + ("…" if len(content) > 650 else ""),
+                        "snippet": content,
                         "score": round(score, 4),
                     }
                 )
@@ -506,6 +506,57 @@ class RagIndex:
                 }
                 for row in rows
             ]
+
+    def list_documents(self) -> list[dict[str, Any]]:
+        """List safe document-level fields stored in the local SQLite index."""
+        self.ensure()
+        database_uri = f"{self.path.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(database_uri, uri=True) as connection:
+            rows = connection.execute(
+                """SELECT document_id, title, COUNT(*) AS chunk_count,
+                          COUNT(DISTINCT section) AS section_count,
+                          MAX(estimated_pages) AS estimated_pages
+                   FROM chunks
+                   GROUP BY document_id, title
+                   ORDER BY document_id"""
+            ).fetchall()
+        return [
+            {
+                "document_id": row[0],
+                "title": row[1],
+                "chunk_count": int(row[2]),
+                "section_count": int(row[3]),
+                "estimated_pages": round(float(row[4] or 0), 1),
+            }
+            for row in rows
+        ]
+
+    def get_chunks(self, document_id: str, *, limit: int = 20) -> list[dict[str, Any]]:
+        """Return full text and citation metadata for a bounded document preview."""
+        self.ensure()
+        capped_limit = max(1, min(int(limit), 50))
+        database_uri = f"{self.path.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(database_uri, uri=True) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """SELECT chunk_id, document_id, title, section, source_path, content
+                   FROM chunks
+                   WHERE document_id = ?
+                   ORDER BY chunk_id
+                   LIMIT ?""",
+                (document_id.upper(), capped_limit),
+            ).fetchall()
+        return [
+            {
+                "chunk_id": row["chunk_id"],
+                "document_id": row["document_id"],
+                "title": row["title"],
+                "section": row["section"],
+                "source_path": row["source_path"],
+                "snippet": row["content"],
+            }
+            for row in rows
+        ]
 
     def stats(self) -> dict[str, Any]:
         if not self.path.exists():

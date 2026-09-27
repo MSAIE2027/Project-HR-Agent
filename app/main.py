@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+import re
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
@@ -125,6 +126,43 @@ async def tools() -> dict[str, Any]:
         return await gateway.discover()
     except MCPGatewayError as exc:
         return {"status": "unavailable", "transport": gateway.transport, "error": str(exc), "tools": []}
+
+
+@app.get("/api/index/documents")
+def index_documents() -> dict[str, Any]:
+    index = get_index()
+    stats = index.stats()
+    return {
+        "storage": "SQLite",
+        "vectors_exposed": False,
+        "index": {
+            key: stats.get(key)
+            for key in (
+                "status",
+                "documents",
+                "chunks",
+                "embedding_model",
+                "embedding_provider",
+                "dimensions",
+                "chunk_words",
+                "overlap_words",
+            )
+        },
+        "documents": index.list_documents(),
+    }
+
+
+@app.get("/api/index/documents/{document_id}/chunks")
+def index_document_chunks(
+    document_id: str,
+    limit: int = Query(default=20, ge=1, le=50),
+) -> dict[str, Any]:
+    if not re.fullmatch(r"POL-[A-Z0-9]+-\d{2}", document_id.upper()):
+        raise HTTPException(status_code=404, detail="Policy document was not found.")
+    chunks = get_index().get_chunks(document_id, limit=limit)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="Policy document was not found.")
+    return {"document_id": document_id.upper(), "chunks": chunks, "vectors_exposed": False}
 
 
 @app.post("/chat", response_model=ChatResponse)

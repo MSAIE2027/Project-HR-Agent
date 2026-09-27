@@ -30,6 +30,61 @@ def test_persistent_index_and_citation_metadata(tmp_path: Path) -> None:
     assert results[0]["snippet"]
 
 
+def test_search_returns_complete_chunk_text_for_composition_and_citations(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import rag.index as index_module
+
+    policy_dir = tmp_path / "policies"
+    policy_dir.mkdir()
+    policy_text = "remote " * 120
+    (policy_dir / "policy.md").write_text(
+        "---\ndocument_id: POL-TST-01\ntitle: Test policy\nestimated_pages: 1\n---\n"
+        "# Test policy\n## Scope\n" + policy_text,
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(index_module, "POLICY_DIR", policy_dir)
+    monkeypatch.setattr(index_module, "_local_embeddings", lambda texts, model: [[1.0, 0.0] for _ in texts])
+    index = RagIndex(tmp_path / "rag.sqlite3")
+
+    result = index.search("remote policy", limit=1)[0]
+
+    assert len(result["snippet"]) > 650
+    assert result["snippet"].endswith("remote")
+    assert not result["snippet"].endswith("…")
+
+
+def test_sqlite_document_browser_returns_rows_without_vectors(tmp_path: Path, monkeypatch) -> None:
+    import rag.index as index_module
+
+    policy_dir = tmp_path / "policies"
+    policy_dir.mkdir()
+    (policy_dir / "policy.md").write_text(
+        "---\ndocument_id: POL-TST-01\ntitle: Test policy\nestimated_pages: 1\n---\n"
+        "# Test policy\n## Scope\nA remote-work rule with evidence.",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(index_module, "POLICY_DIR", policy_dir)
+    monkeypatch.setattr(index_module, "_local_embeddings", lambda texts, model: [[1.0, 0.0] for _ in texts])
+    index = RagIndex(tmp_path / "rag.sqlite3")
+
+    documents = index.list_documents()
+    chunks = index.get_chunks("POL-TST-01", limit=5)
+
+    assert documents == [
+        {
+            "document_id": "POL-TST-01",
+            "title": "Test policy",
+            "chunk_count": 1,
+            "section_count": 1,
+            "estimated_pages": 1.0,
+        }
+    ]
+    assert chunks[0]["chunk_id"] == "POL-TST-01:scope:1"
+    assert chunks[0]["snippet"] == "A remote-work rule with evidence."
+    assert "vector_json" not in chunks[0]
+
+
 def test_existing_sqlite_index_refreshes_when_policy_source_changes(
     tmp_path: Path, monkeypatch
 ) -> None:

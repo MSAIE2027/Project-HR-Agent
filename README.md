@@ -1,6 +1,71 @@
 # MSAIE HR Agent
 
-A standalone, fictional HR support agent. It answers policy questions with cited retrieval, looks up synthetic employee records, and prepares confirmation-gated mock actions. It does not access real employee data or contact production HR systems.
+A fictional HR support assistant that combines policy retrieval, structured synthetic employee tools, and required LLM response composition. It cites policy evidence, reports its tool workflow, and gates mock actions on explicit confirmation. It does not access real employee data or production HR systems.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph EXPERIENCE[Employee experience]
+        EMP([Employee]) --> UI[Browser workspace]
+    end
+
+    subgraph CONTROL[Application and deterministic control]
+        API[FastAPI chat API] --> G[Safety and workflow gates]
+        INDEXAPI[Read-only SQLite index API]
+        G --> AGENT[Agent orchestrator]
+        AGENT --> DRAFT[Controlled draft + structured facts]
+        CHECK[Answer and safety validation]
+    end
+
+    subgraph PROTOCOL[Official MCP protocol over stdio]
+        CLIENT[MCP SDK client] --> SERVER[FastMCP server]
+        SERVER -->|tools/call| TOOLS[Synthetic HR tools]
+        TOOLS -->|read or update fixture| RECORDS[(Fictional employee records)]
+        RECORDS -->|structured result| TOOLS
+        TOOLS -->|MCP result| SERVER
+    end
+
+    subgraph RETRIEVAL[Local policy retrieval]
+        SEARCH[Policy search] --> EMBED[Hugging Face MiniLM]
+        EMBED --> SQLITE[(SQLite vector index)]
+        SQLITE --> CITED[Evidence chunks + citations]
+    end
+
+    subgraph GENERATION[Required answer composition]
+        OR[OpenRouter model chain<br/>Qwen → Nemotron → Gemma → free fallback]
+    end
+
+    UI --> API
+    UI -. browse documents and chunks .-> INDEXAPI
+    INDEXAPI -. safe rows only .-> SQLITE
+    AGENT --> CLIENT
+    SERVER --> SEARCH
+    CITED --> SERVER
+    SERVER --> CLIENT
+    CLIENT --> AGENT
+    DRAFT --> OR
+    OR --> CHECK
+    CHECK --> OUT[Validated answer + citations + trace]
+    OUT --> UI
+
+    classDef user fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
+    classDef service fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef protocol fill:#ecfeff,stroke:#0891b2,color:#164e63
+    classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef hosted fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
+    class EMP,UI user
+    class API,INDEXAPI,G,AGENT,DRAFT,CHECK service
+    class CLIENT,SERVER,TOOLS protocol
+    class RECORDS,SEARCH,EMBED,SQLITE,CITED local
+    class OR hosted
+    class OUT output
+```
+
+Every citation-bearing response goes through OpenRouter before the application returns it. The chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. The model formats and enriches a controlled draft using retrieved policy text and structured facts. It cannot select tools, change eligibility, or authorize actions. If the response is unavailable, truncated, unsupported, or unsafe, the API withholds the draft and reports a safe failure.
+
+The project uses fixed synthetic records so the same demo query produces a repeatable scenario. The workspace includes examples for several employee IDs and a read-only browser for the SQLite policy documents and chunks; vector payloads are not exposed.
 
 ## Run locally
 
@@ -11,82 +76,46 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
+# Set MSAIE_LLM_API_KEY in .env, then:
 ./scripts/start_local.sh
 ```
 
-The launcher loads `.env`, uses `.venv`, starts the web app, waits for its health endpoint, and opens the local page. The readiness wait defaults to 180 seconds; set `MSAIE_STARTUP_TIMEOUT_SECONDS` to override it. Pass `--no-browser` to keep it in the terminal without opening a browser. Use `./scripts/start_local.sh --detach` and `./scripts/stop_local.sh` for a background process.
+The launcher loads `.env`, starts the service, waits for readiness, and opens the browser. The first start builds the SQLite index and loads `sentence-transformers/all-MiniLM-L6-v2` from Hugging Face. Embeddings run locally; OpenRouter is used for final answer generation. Restart the service after changing `.env`.
 
-The server reads `.env` only at startup. After changing OpenRouter settings, stop the current process with `./scripts/stop_local.sh` and start it again so the running app receives the new configuration.
+For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is available for quick local development, while the demo and CI exercise the official MCP SDK client and FastMCP server over stdio.
 
-The first start builds a local SQLite policy index and loads the configured embedding model. The Hugging Face model is downloaded on first use. Embeddings run locally and need no provider key. Every citation-bearing answer requires `https://openrouter.ai/api/v1`: copy `.env.example` to `.env`, add your OpenRouter API key, and verify `/health/ready` passes before rehearsal. Health only checks provider configuration, so also send a synthetic `/chat` request and verify `llm_refinement=completed` before recording. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B in order, then falls back to `openrouter/free`. Each candidate gets one request capped at 12 seconds; the four-route chain is bounded to about 48 seconds plus request setup, leaving room for retrieval and MCP work inside the public HTTP request deadline. The value is clamped even if an environment override is higher. It fails closed with HTTP 503 if all routes are unavailable or return invalid answers, and the failure response retains the attempted model trace. If the local embedding model cannot be loaded, retrieval records the failure and uses its hashing fallback; inspect `/health` to see which embedding path is active.
+## Configuration and endpoints
 
-The 14 policy files contain 15,034 indexed policy-text words, or about 37.6 page-equivalents at 400 words per page. The index metadata sums individually rounded per-document estimates to 37.5 pages. Neither number is a rendered page count; the corpus text and method are reported so the rubric's page floor can be inspected without treating the estimate as a PDF measurement.
+Keep provider credentials in the ignored `.env` file or shell environment. Never commit secrets.
 
-## Configuration
+- OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY`, and `MSAIE_LLM_FALLBACK_MODEL`.
+- Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions.
+- `/`: synthetic HR workspace and evaluator lab.
+- `/health` and `/health/ready`: service, SQLite index, MCP, and provider status.
+- `/api/index/documents` and `/api/index/documents/{document_id}/chunks`: read-only SQLite index preview without stored vectors.
+- `/api/tools`: discover the available MCP tools.
+- `/docs`: API schema.
 
-`.env.example` contains safe local defaults. Keep provider credentials in the ignored `.env` file or the shell environment; never commit secrets.
+## Project map
 
-- `MSAIE_MCP_TRANSPORT=inprocess` is the quick local-development default. The demo and operator runbooks use stdio to exercise MCP protocol calls.
-- Set `MSAIE_MCP_TRANSPORT=stdio` to use the official MCP client and launch the FastMCP server as a subprocess.
-- Required OpenRouter response generation uses `MSAIE_LLM_BASE_URL=https://openrouter.ai/api/v1`, `MSAIE_LLM_API_KEY`, and `MSAIE_LLM_FALLBACK_MODEL=openrouter/free`. `MSAIE_LLM_MODEL` and `OPENROUTER_MODEL` remain supported aliases for the fallback setting, and `OPENROUTER_API_KEY` remains a supported key alias for a local `.env` carried over from `HR-Agent_static`. The endpoint and fallback model are validated. The three pinned answer models are ordered in application code.
-- Retrieval uses `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions) and stores vectors in the local SQLite index. Optional remote serving can use the same model through the separate `MSAIE_EMBEDDING_*` variables; embeddings and answer generation use separate configuration.
-
-## Architecture
-
-```text
-Browser -> FastAPI -> deterministic safety gates and orchestrator
-                         |-> official MCP client -> FastMCP server -> synthetic HR tools
-                         |-> Hugging Face MiniLM -> local SQLite vector retrieval
-                         |-> controlled draft + evidence + structured facts
-                         |-> OpenRouter free LLM composition (required for cited answers)
-                         |-> consistency validation -> final answer + citations + trace
-```
-
-The orchestrator controls tool selection, safety checks, and action confirmation. Every citation-bearing response is composed by the required OpenRouter model chain from the controlled draft, retrieved policy evidence, and structured facts; a missing, misconfigured, unavailable, or rejected LLM response fails closed with HTTP 503 instead of returning unrefined vector-derived text. The operational trace records the requested and resolved model plus the attempted fallback sequence. The LLM does not select tools or approve actions. Injection refusals that retrieve no policy evidence stop before the LLM. All records and actions are synthetic.
-
-## Useful endpoints
-
-- `/`: employee workspace
-- `/health`: app, retrieval, MCP, and provider status
-- `/health/ready`: readiness gate requiring the policy index, MCP tools, and OpenRouter configuration
-- `/api/tools`: available MCP tools
-- `/docs`: API schema
-
-To rebuild the index after policy changes, run `python scripts/build_index.py --force` from the repository root.
-
-The MiniLM 384d chunk comparison selected 120/20 as the smallest tied setting. On the expanded corpus, global top-five ranking covered every expected family in 1 of 5 multi-family probes; MMR at λ=0.5 improved that to 2 of 5 and family recall from 0.76 to 0.81. Production then routes explicitly detected families and seeds one result per family; that routed comparison covered all expected families in all five labeled multi-family probes. These are small retrieval checks, not answer-quality scores. See [the chunk ablation](evaluation/ablation-results.md) and [routing comparison](evaluation/retrieval-comparison.md).
-
-See [architecture](docs/architecture.md) and [design and evaluation](design-and-evaluation.md).
-
-## Requirements, verification, and demo
-
-- [Supplied source-material review](docs/source-materials-review.md)
-- [System requirements](specs/system-requirements.md) and [traceability matrix](docs/traceability-matrix.md)
-- [Architecture decision records](docs/adr/)
-- [Implementation slices and project tickets](docs/implementation-slices.md) and [tickets](tickets/README.md)
-- [Final code review](reviews/code-review.md)
-- [Evidence index](evidence/index.md)
-- [Demo runbook](demo/README.md) and [compact demo script](docs/demo-script.md)
-
-### Deliverable locations
-
-| Brief deliverable | This repository |
+| Deliverable | Location |
 |---|---|
-| Policy corpus and source documents | `policies/` (14 fictional policy files) |
-| SRS and requirement traceability | `specs/system-requirements.md`, `docs/traceability-matrix.md` |
-| Architecture and ADRs | `docs/architecture.md`, `docs/adr/` |
-| Agent application and UI | `agent/`, `app/`, `app/static/` |
-| MCP server and client (`mcp/` in the brief) | `mcp_server/` (FastMCP server and tools), `mcp_client/` (official SDK stdio client) |
-| Synthetic records (`mock_data/` in the brief) | `mock_data/` |
-| Evaluation and retrieval ablation | `evaluation/`, `visuals/` |
-| Tests and CI | `tests/`, `.github/workflows/ci.yml` |
-| Implementation tickets and TDD slices | `tickets/`, `docs/implementation-slices.md` |
-| Review, evidence, and demo package | `reviews/`, `evidence/`, `demo/` |
-| Hosting configuration and status | `render.yaml`, `deployed.md`, `docs/local-to-render-workflow.md` |
+| Fictional HR policy corpus | `policies/` |
+| Requirements and traceability | `specs/`, `docs/traceability-matrix.md` |
+| Architecture and decisions | `docs/architecture.md`, `docs/adr/` |
+| Orchestrator, API, and browser app | `agent/`, `app/` |
+| MCP client, server, and tools | `mcp_client/`, `mcp_server/` |
+| Synthetic records | `mock_data/` |
+| Retrieval evaluation and visualizations | `evaluation/`, `visuals/` |
+| Tests and GitHub Actions | `tests/`, `.github/workflows/ci.yml` |
+| Review and acceptance evidence | `reviews/`, `evidence/` |
+| Demo runbook | `demo/README.md`, `docs/demo-script.md` |
 
-The brief's `mcp/` label is a deliverable category; this project keeps the separately named `mcp_server/` and `mcp_client/` source packages.
+The brief's `mcp/` category is implemented as the separately named `mcp_client/` and `mcp_server/` packages.
 
-Run the local checks and complete evaluation from the repository root:
+## Verification
+
+Run from the repository root:
 
 ```bash
 python -m compileall -q app agent rag mcp_server mcp_client evaluation scripts
@@ -96,21 +125,18 @@ python -m evaluation.run_evaluation --transport stdio
 python scripts/smoke_mcp.py
 ```
 
-GitHub Actions builds and verifies the Hugging Face dense SQLite policy index, runs the suite, protocol smoke, and 25-case golden set over both in-process and stdio transports, then uploads the JSON and Markdown reports. The first hosted run for commit `42de2e8` passed all steps; see [the run](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289121722). A separate deploy job depends on the full `test` job and is disabled until the repository variable `RENDER_DEPLOY_ENABLED=true` and secret `RENDER_DEPLOY_HOOK_URL` are configured. The job requests the exact tested SHA. Render auto-deploy is Off so a commit cannot bypass that CI gate. The live Render service still needs its Python runtime, build command, and `/health/ready` settings synchronized before use; see [deployment status](deployed.md).
+The golden set measures orchestrator behavior and deterministic control-flow proxies; it does not include OpenRouter generation or independent semantic judging. See [evaluation limits and results](evaluation/), [the review](reviews/code-review.md), and the [evidence index](evidence/index.md) for the current acceptance record. Deployment health and live request evidence are in [deployed.md](deployed.md).
 
-### Hosting target
+## Retrieval visualization
 
-- GitHub repository: [MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent) (`origin` is configured locally).
-- Assigned Render URL: [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com).
-- The Blueprint service name is `Project-HR-Agent`, which matches the assigned hostname. The URL is not verified as live: `main` is populated and hosted CI passed on the previous deployment commit, but the existing Render service has no deploy history and its Docker runtime and empty health-check path still differ from `render.yaml`.
+The retrieval comparison chart is checked into the repository and embedded here so it is visible in GitHub. It compares top-k coverage and MMR for the labeled policy queries; the result is corpus-specific, not a general answer-quality score.
 
-## Retrieval comparison
+![Retrieval comparison chart](visuals/retrieval-comparison.svg)
 
-The latest comparison fixes MiniLM 384d and 120/20 chunks while measuring global k, actual policy routing, MMR, and ranking-weight alternatives. It also runs a six-case read-only policy slice. The script builds in a temporary index and writes reports to evaluation/ and the chart to visuals/; it does not run pytest or action workflows.
+See the [retrieval comparison report](evaluation/retrieval-comparison.md) and [chunk ablation report](evaluation/ablation-results.md) for methods and limitations.
 
-- [Comparison report](evaluation/retrieval-comparison.md)
-- [Coverage chart](visuals/retrieval-comparison.svg)
-- [Failure analysis and scope](evaluation/failed-test-analysis.md)
-- [AI tooling and verification record](ai-tooling.md)
+## Hosting
 
-After adding multi-family intent routing and production MMR, the actual route cited every expected family in all 5 labeled multi-family probes. The six-case read-only golden policy slice scored 100% on status, citation-prefix, and groundedness-proxy checks. Runtime evidence reported huggingface_dense_cosine. The sample is hand-labeled and small; it does not establish general answer correctness.
+- GitHub repository: [MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent).
+- Assigned Render URL: [project-hr-agent.onrender.com](https://project-hr-agent.onrender.com).
+- See [deployed.md](deployed.md) for verified live status and current release evidence.
