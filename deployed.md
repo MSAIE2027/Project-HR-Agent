@@ -14,13 +14,13 @@
 
 The live Render runtime is commit `ead8c33`, deployed as `dep-dasmt9npn0mc73947ko0`. That exact commit passed [GitHub Actions run 36344335941](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36344335941), including the pinned SQLite build gate, test suite, MCP stdio smoke, and both golden evaluations. Render metadata confirms `Project-HR-Agent`, branch `main`, Python runtime, `/health/ready`, manual deploys, and auto-deploy Off. The live build command matches `render.yaml` and the service started successfully.
 
-The current working changes add an OpenCode Zen provider fallback and bounded SQLite response templates. They passed **105 local tests** under Python 3.12, the pinned-index verifier, MCP stdio smoke, and both 30-case evaluations. They have not yet passed hosted CI or been deployed; the live Render runtime above predates these changes.
+The OpenCode Zen provider fallback and bounded SQLite response templates are published at `10833a5`. They passed **105 local tests** under Python 3.12, the pinned-index verifier, MCP stdio smoke, and both 30-case evaluations. [GitHub Actions run 36348984924](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36348984924) passed on that exact commit. The deploy job was skipped because the explicit CI deploy gate is off; the live Render runtime above predates these changes.
 
 **Hosted answer generation is not verified, so the app is not ready for recording.** The latest preflight on the live release passed both privacy refusals and reached OpenRouter after policy retrieval and MCP tool calls. Qwen returned HTTP 429; the API returned HTTP 503 with no resolved model or unrefined draft. The deployed release predates the OpenCode and SQLite response fallbacks. The Render service now has an empty `OPENCODE_API_KEY` field for the owner to populate. Locally, the OpenCode model catalog returned HTTP 200, but a simulated OpenRouter quota handoff got HTTP 403 for two OpenCode routes and timed out on the third; no OpenCode model resolved. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md) and [fallback implementation record](docs/adr/0010-provider-and-sqlite-response-fallbacks.md).
 
 At 18:50 UTC, a read-only OpenRouter key-status request using the local `.env` key reported the free-model daily counter at 51 used / 50 limit / 0 remaining. No extra OpenRouter generation retry was made after the 429. This is local-key metadata only; the Render key's quota is not independently confirmed. OpenRouter documents the [current-key counter](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key) and [free-tier request limit](https://openrouter.ai/pricing/).
 
-The live `071dfb8` service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, 256-token limit, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness and document inspection returned HTTP 200. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached OpenRouter after MCP retrieval and checks, then failed on Qwen HTTP 429; the current CLI output does not identify the quota scope.
+The live `ead8c33` service reports a ready MiniLM ONNX/SQLite index: 14 documents, 182 chunks, 384 dimensions, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, 256-token limit, and 120/20 chunking. Deep health discovered all eight MCP tools over stdio. Readiness and document inspection returned HTTP 200. Two hosted privacy probes returned `refused` with no MCP tool calls or LLM event. The remote-work request reached OpenRouter after MCP retrieval and checks, then failed on Qwen HTTP 429; the current CLI output does not identify the quota scope.
 
 After ONNX deployment, Render sampled memory at 71,155,710 bytes after startup and 274,866,180 bytes one minute later after the first policy request, against the 536,870,900-byte service limit. The service stayed live. This small sample does not establish peak or concurrent capacity. Historical PyTorch observations reached 536,264,700 bytes and later restarted during model loading, without an explicit OOM record.
 
@@ -28,15 +28,15 @@ A later idle-wake recheck on 2026-09-27 showed Render's loading interstitial in 
 
 ## Verification and demo gate
 
-Before recording, wait until OpenRouter's account-wide free quota is available and rerun the hosted smoke. Confirm:
+Before recording, populate the Render `OPENCODE_API_KEY`, manually deploy the CI-passing `10833a5` source, and rerun the hosted smoke. Confirm:
 
-- PTO balance and policy response returns HTTP 200, citations, and `llm_refinement.status=completed` with the actual resolved model.
+- PTO balance and policy response returns HTTP 200 with citations and the operational trace. If `llm_refinement.status=completed`, report its resolved model; if the bounded template answers, report `status=cached_template` and do not call it live LLM generation.
 - International remote-work guidance returns cited policy evidence and the structured compliance result.
 - The confirmation-gated email or ticket workflow stops before the mock action until the user confirms.
 - Responses show no internal reasoning and preserve the required safety language.
 - The first model-backed request completes without a service restart; the current observed ONNX sample is 274,866,180 bytes, but it is not a concurrency benchmark.
 - Show the course quality, behavior, and system evidence: the 30-case proxy results and limits, local latency with priming separated from p50/p95, retrieval ablation, hosted memory observations, and hosted cold-start status. Cold-start duration is currently unmeasured; do not substitute local priming, readiness, or memory samples.
-- A citation-bearing answer reports its actual resolved provider/model; test the OpenRouter account-quota handoff to OpenCode and the bounded SQLite template route on the deployed revision. The 429 classifier stops only on an identifiable account-wide free daily cap.
+- Test the OpenRouter account-quota handoff to OpenCode and the bounded SQLite template route on the deployed revision. The 429 classifier stops only on an identifiable account-wide free daily cap.
 
 The sanitized automated preflight is `python scripts/smoke_hosted_demo.py`. It sends synthetic requests through the configured OpenRouter chain and uses free-model quota; by default it does not confirm the mock email action. See the [demo runbook](demo/README.md) for the optional explicit confirmation flag.
 
