@@ -16,6 +16,8 @@ cp .env.example .env
 
 The launcher loads `.env`, uses `.venv`, starts the web app, waits for its health endpoint, and opens the local page. The readiness wait defaults to 180 seconds; set `MSAIE_STARTUP_TIMEOUT_SECONDS` to override it. Pass `--no-browser` to keep it in the terminal without opening a browser. Use `./scripts/start_local.sh --detach` and `./scripts/stop_local.sh` for a background process.
 
+The server reads `.env` only at startup. After changing OpenRouter settings, stop the current process with `./scripts/stop_local.sh` and start it again so the running app receives the new configuration.
+
 The first start builds a local SQLite policy index and loads the configured embedding model. The Hugging Face model is downloaded on first use. Embeddings run locally and need no provider key. Every citation-bearing answer requires `https://openrouter.ai/api/v1`: copy `.env.example` to `.env`, add your OpenRouter API key, and verify `/health/ready` passes before rehearsal. Health only checks provider configuration, so also send a synthetic `/chat` request and verify `llm_refinement=completed` before recording. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B in order, then falls back to `openrouter/free`. Each candidate gets one request with an 18-second maximum; the four-route chain is bounded to about 72 seconds plus request setup. It fails closed with HTTP 503 if all routes are unavailable or return invalid answers, and the failure response retains the attempted model trace. If the local embedding model cannot be loaded, retrieval records the failure and uses its hashing fallback; inspect `/health` to see which embedding path is active.
 
 The 14 policy files contain 15,034 indexed policy-text words, or about 37.6 page-equivalents at 400 words per page. The index metadata sums individually rounded per-document estimates to 37.5 pages. Neither number is a rendered page count; the corpus text and method are reported so the rubric's page floor can be inspected without treating the estimate as a PDF measurement.
@@ -95,6 +97,12 @@ python scripts/smoke_mcp.py
 ```
 
 GitHub Actions runs the suite, protocol smoke, and 25-case golden set over both in-process and stdio transports, then uploads the JSON and Markdown reports. A separate deploy job depends on the full `test` job and is disabled until the repository variable `RENDER_DEPLOY_ENABLED=true` and secret `RENDER_DEPLOY_HOOK_URL` are configured. The job requests the exact tested SHA. `render.yaml` turns off Render's independent auto-deploy so a commit cannot bypass that CI gate. The existing Render service still needs its Blueprint settings synchronized before use; see [deployment status](deployed.md).
+
+### Hosting target
+
+- GitHub repository: [MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent) (`origin` is configured locally).
+- Assigned Render URL: [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com).
+- The Blueprint service name is `Project-HR-Agent`, which matches the assigned hostname. The URL is not verified as live: the local source has not been pushed and the existing Render service settings still differ from `render.yaml`.
 
 ## Retrieval comparison
 

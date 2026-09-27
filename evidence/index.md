@@ -1,6 +1,6 @@
 # Evidence Index
 
-This index points to evidence for the current local checkout. The local checkout has no Git remote. A Render service is linked to the intended private GitHub repository and has an assigned URL, but Render reports no deploy history; no hosted URL, CI result, or cold-start measurement is claimed.
+This index points to evidence for the current local checkout. `origin` is configured as `https://github.com/MSAIE2027/Project-HR-Agent.git`, but the current local source has not been pushed. A Render service is linked to that private GitHub repository and has the assigned URL `https://project-hr-agent.onrender.com`, but Render reports no deploy history; no hosted URL, CI result, or cold-start measurement is claimed.
 
 | Evidence | Artifact / command | What it establishes | Limit |
 |---|---|---|---|
