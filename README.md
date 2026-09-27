@@ -5,72 +5,62 @@ A fictional HR support assistant that combines policy retrieval, structured synt
 ## Architecture
 
 ```mermaid
-flowchart TB
-    subgraph Experience["User experience"]
-        direction LR
-        Employee([Employee]) --> Browser[Browser chat and evaluator lab]
-    end
+flowchart LR
+    Employee([Employee]) --> Browser[Browser workspace]
 
-    subgraph Providers["External model services"]
-        direction LR
-        HF[Hugging Face<br/>MiniLM weights source]
-        Compose[OpenRouter<br/>required free-model chain]
-    end
-
-    subgraph Service["Render application service · Python 3.12"]
+    subgraph App["HR agent · Render Python service"]
         direction TB
         Browser -->|POST /chat| API[FastAPI]
-        API --> Agent[Deterministic orchestrator<br/>routing · privacy · confirmation]
+        API --> Guard{Deterministic routing<br/>privacy · safety · confirmation}
+        Guard -->|refuse or clarify| Refusal[Safe response]
+        Guard -->|continue| Client[Official MCP client]
+        Client <-->|stdio · tools/list + tools/call| Server[FastMCP server<br/>8 typed tools]
 
-        subgraph MCP["Official MCP tool path · reused stdio process"]
+        Server -->|policy search| SearchTool[Policy search tool]
+        Server -->|employee lookup| HRTool[Structured HR tools]
+
+        subgraph Retrieval["Local policy retrieval"]
             direction LR
-            Client[MCP client] <-->|tools/list · tools/call| Server[FastMCP server]
-            Server --> Tools[Typed policy and HR tools]
+            Query[MiniLM query embedding] --> Search[Hybrid search<br/>family routing · MMR]
+            Index[(SQLite<br/>policy vectors)] --> Search
+            Search --> Evidence[Policy passages<br/>citation metadata]
+            Policies[Policy corpus] --> Chunk[Section-aware chunks]
+            Chunk --> DocEmbed[MiniLM document embeddings]
+            DocEmbed --> Index
         end
-        Agent --> Client
+        SearchTool --> Query
+        HRTool --> Records[(Synthetic PTO<br/>benefits · employee data)]
 
-        subgraph Local["Local data and retrieval"]
-            direction LR
-            Query[MiniLM query embedding] --> Rank[Hybrid search<br/>family routing · MMR]
-            Rank -->|read policy vectors| SQLite[(SQLite policy index)]
-            SQLite --> Evidence[Policy passages<br/>and citation metadata]
-            Records[(Synthetic employee<br/>PTO and benefits records)]
-            Policies[Packaged policy files] --> Ingest[Section-aware chunking]
-            Ingest --> DocEmbeddings[Local MiniLM document embeddings]
-            DocEmbeddings --> SQLite
-        end
-        Tools -->|policy search| Query
-        Tools -->|HR lookups| Records
-
-        Records --> Draft[Controlled context<br/>status · facts · evidence]
-        Evidence --> Draft
-        Draft --> Compose
-        Compose --> Validate{Validate answer}
+        Evidence --> Context[Controlled answer context<br/>draft · facts · evidence]
+        Records --> Context
+        Context --> OpenRouter
+        OpenRouter --> Validate{Application validation}
         Validate -->|valid| Answer[Final answer<br/>citations · operational trace]
-        Validate -->|provider or validation failure| Fail[HTTP 503<br/>draft withheld]
-        Evidence -.->|citations remain app-owned| Answer
-        Answer -->|HTTP response| API
-        Fail -->|HTTP response| API
+        Validate -->|invalid or unavailable| Fail[HTTP 503<br/>draft withheld]
+        Evidence -. citations stay app-owned .-> Answer
+        Answer -->|response| API
+        Refusal --> API
+        Fail -->|response| API
 
-        Browser -->|GET /api/index/...| API
-        API -->|bounded, read-only preview| SQLite
+        Browser -->|read-only SQLite preview| API
+        API -->|bounded document and chunk rows| Index
     end
 
-    HF -.->|weights only| Query
-    HF -.->|weights only| DocEmbeddings
-    Compose --> Validate
+    HF[Hugging Face<br/>MiniLM weight source] -. weights only .-> Query
+    HF -. weights only .-> DocEmbed
+    OpenRouter[OpenRouter<br/>required free-model chain]
 
     classDef client fill:#eff6ff,stroke:#2563eb,color:#1e3a8a
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
     classDef external fill:#fff7ed,stroke:#ea5800,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
     class Employee,Browser client
-    class API,Agent,Client,Server,Tools,Query,Rank,SQLite,Evidence,Records,Draft,Policies,Ingest,DocEmbeddings local
-    class HF,Compose external
-    class Validate,Answer,Fail output
+    class API,Guard,Client,Server,SearchTool,HRTool,Query,Search,Index,Evidence,Policies,Chunk,DocEmbed,Records,Context local
+    class HF,OpenRouter external
+    class Refusal,Validate,Answer,Fail output
 ```
 
-**Reading the diagram:** blue is the user interface, green is app-local processing and data, orange is the external model services, and purple marks the answer-validation boundary. The MCP client and FastMCP server communicate over stdio in the demo and hosted configuration; local quick-start can use in-process MCP. Refusals that stop before evidence retrieval do not call OpenRouter.
+**Reading the diagram:** blue is the user interface, green is app-local processing and data, orange is an external model service, and purple marks response and safety boundaries. MCP retrieves policy evidence and synthetic HR facts; OpenRouter composes every successful evidence-backed answer. The model does not choose tools, set eligibility, authorize actions, or own citations. Requests refused before retrieval stop before OpenRouter. Local quick-start can use in-process MCP; CI and Render exercise the stdio path.
 
 ### Data and storage
 
