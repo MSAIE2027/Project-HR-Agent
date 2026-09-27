@@ -61,7 +61,7 @@
 
 **Code baseline:** `a24154d` (user-confirmed)
 
-**Review scope:** Local Hugging Face MiniLM ONNX embedding implementation, SQLite metadata and rebuild behavior, CI/Render index gates, related requirements/evidence documentation, and the private presenter vault.
+**Review scope:** Local Hugging Face MiniLM ONNX embedding implementation, SQLite metadata and rebuild behavior, CI/Render index gates, and related requirements/evidence documentation.
 
 ### Standards
 
@@ -83,3 +83,15 @@
 - The hosted preflight completed privacy refusals and retrieval, then returned HTTP 503 after Qwen received HTTP 429 with sanitized `failure_scope=account_quota`. No model resolved; retry when quota is available.
 
 **Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed and deployed. Hosted answer acceptance remains open only because the provider account's free-tier daily quota is exhausted.
+
+## Review — tokenizer configuration and readiness
+
+**Review date:** 2026-09-27
+
+**Baseline:** `8eded3f` (working-tree changes)
+
+**Standards:** The tokenizer limit is now part of both the SQLite index signature and the cached ONNX runtime key. GitHub Actions and Render call one shared exact-index verifier instead of maintaining duplicate assertions.
+
+**Spec:** The SRS requires a reproducible pinned semantic index. Review found that changing tokenizer truncation could reuse vectors built under the old limit, and `/health/ready` accepted a sparse fallback that did not satisfy the selected MiniLM baseline. Both gaps are fixed: the public `RagIndex` regression verifies rebuild at 256→128 tokens and `/health/ready` rejects sparse fallback or a mismatched production index.
+
+**Verification:** Red/green regressions passed; a clean 14-document/182-chunk index passed the pinned verifier; full local suite **101 passed**; local readiness, deep MCP discovery, and SQLite document listing returned HTTP 200; compileall, workflow/Blueprint YAML parsing, and `git diff --check` passed. GitHub Actions and Render have not run on these working-tree changes yet.

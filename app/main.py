@@ -18,7 +18,13 @@ from agent.llm import (
 )
 from agent.orchestrator import MSAIEOrchestrator
 from mcp_client.client import MCPGateway, MCPGatewayError
-from rag.index import get_index
+from rag.index import (
+    DEFAULT_LOCAL_MODEL,
+    HF_EMBEDDING_BACKEND,
+    HF_EMBEDDING_MAX_LENGTH,
+    HF_EMBEDDING_REVISION,
+    get_index,
+)
 
 
 @asynccontextmanager
@@ -43,6 +49,21 @@ app = FastAPI(
     description="A synthetic agentic HR assistant with policy RAG, MCP workflows, and required OpenRouter answer generation.",
     lifespan=lifespan,
 )
+
+
+def _pinned_index_ready(index_status: dict[str, Any]) -> bool:
+    return (
+        index_status.get("status") == "ready"
+        and index_status.get("semantic_embeddings") is True
+        and index_status.get("embedding_provider") == "huggingface"
+        and index_status.get("embedding_model") == DEFAULT_LOCAL_MODEL
+        and index_status.get("embedding_backend") == HF_EMBEDDING_BACKEND
+        and index_status.get("embedding_revision") == HF_EMBEDDING_REVISION
+        and index_status.get("embedding_max_length") == HF_EMBEDDING_MAX_LENGTH
+        and index_status.get("dimensions") == 384
+        and index_status.get("chunk_words") == 120
+        and index_status.get("overlap_words") == 20
+    )
 
 
 class ChatRequest(BaseModel):
@@ -101,7 +122,7 @@ async def health(deep: bool = Query(False)) -> dict[str, Any]:
     index_status = get_index().stats()
     llm_status = provider_status()
     ready = (
-        index_status.get("status") == "ready"
+        _pinned_index_ready(index_status)
         and llm_status.get("status") == "configured"
         and mcp_status.get("status") == "available"
     )
@@ -123,7 +144,7 @@ async def readiness() -> dict[str, Any]:
     if report["status"] != "ok":
         raise HTTPException(
             status_code=503,
-            detail="The policy index and required OpenRouter configuration must be ready before serving traffic.",
+            detail="The pinned semantic index, required OpenRouter configuration, and MCP tools must be ready before serving traffic.",
         )
     return report
 

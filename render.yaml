@@ -8,7 +8,7 @@ services:
       python -m pip install -r requirements-render.txt &&
       python -m compileall app agent rag mcp_server mcp_client evaluation scripts &&
       python scripts/build_index.py --force &&
-      python -c 'from rag.index import RagIndex; stats = RagIndex().stats(); assert stats["semantic_embeddings"] and stats["embedding_provider"] == "huggingface" and stats["embedding_model"] == "sentence-transformers/all-MiniLM-L6-v2" and stats["embedding_backend"] == "onnxruntime-quint8-avx2" and stats["embedding_revision"] == "1110a243fdf4706b3f48f1d95db1a4f5529b4d41" and stats["dimensions"] == 384 and stats["chunk_words"] == 120 and stats["overlap_words"] == 20, stats; print("Pinned MiniLM INT8 ONNX 384d 120/20 SQLite policy index is ready")'
+      python scripts/verify_pinned_index.py
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/ready
     autoDeployTrigger: "off"

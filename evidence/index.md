@@ -6,8 +6,9 @@ This index distinguishes the published source, hosted CI, the live Render build,
 
 | Claim | Evidence | Scope / limit |
 |---|---|---|
-| Test suite | **99 passed** in local verification and CI run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726), one third-party Starlette/AnyIO deprecation warning locally | Tests do not verify live provider availability. |
-| SQLite index release gate | Exact MiniLM repo/revision, ONNX backend, 384 dimensions, and 120/20 chunking pass in CI and the live Render build | Hosted `/health` also reports the pinned semantic index. |
+| Test suite | **101 passed** in local verification of the current working tree; previous deployed CI run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed 99 tests | The new working-tree changes still need a GitHub Actions run; tests do not verify live provider availability. |
+| SQLite index release gate | A fresh isolated index passed `scripts/verify_pinned_index.py` with the exact MiniLM repo/revision, ONNX backend, 256-token limit, 384 dimensions, and 120/20 chunking; deployed CI run `36336569726` verified the prior baseline | The shared verifier is now called by both CI and Render; its next hosted build remains pending. |
+| Local readiness and SQLite inspection | `GET /health/ready`, `/health?deep=true`, and `/api/index/documents` | All returned HTTP 200 after rebuilding the local index: pinned 256-token ONNX MiniLM, 14 documents, 182 chunks, and all eight stdio MCP tools. This did not call OpenRouter or verify answer generation. |
 | Golden-set evaluation | `evaluation/results.json`, `.md`, `results-stdio.json`, `.md` — **30 cases** per transport; workflow completion **5/5**; mean keyword score **0.95** in-process | Deterministic orchestrator proxies; `llm_generation_included=false`; no independent semantic-judgment score. |
 | In-process latency | Priming **733.66 ms**; warm 15-task p50/p95 **28.05/147.84 ms** | Local ONNX runtime; priming reported separately; not hosted latency. |
 | Stdio latency | Priming **2,864.73 ms**; fresh-subprocess 15-task p50/p95 **1,723.99/1,857.45 ms** | Each task starts a fresh MCP process and loads the local ONNX model/index; not a Render cold-start benchmark. |

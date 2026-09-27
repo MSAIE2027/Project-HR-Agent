@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 os.environ["MSAIE_MCP_TRANSPORT"] = "inprocess"
 os.environ["MSAIE_LLM_BASE_URL"] = "https://openrouter.ai/api/v1"
@@ -133,6 +134,34 @@ with TestClient(app) as client:
 
         assert response.status_code == 503
         assert "required OpenRouter configuration" in response.json()["detail"]
+
+    def test_readiness_rejects_sparse_fallback_index(monkeypatch) -> None:
+        previous_mcp = app.state.mcp
+
+        class SparseFallbackIndex:
+            def stats(self) -> dict[str, Any]:
+                return {
+                    "status": "ready",
+                    "semantic_embeddings": False,
+                    "embedding_provider": "local-hashing-fallback",
+                    "embedding_model": "msaie-hashing-tfidf-v1",
+                }
+
+        monkeypatch.setattr(main_module, "get_index", lambda: SparseFallbackIndex())
+        monkeypatch.setattr(
+            main_module,
+            "provider_status",
+            lambda: {"status": "configured", "type": "openrouter", "model": "test-model"},
+        )
+        app.state.mcp = {"status": "available", "transport": "test", "tools": []}
+
+        try:
+            response = client.get("/health/ready")
+        finally:
+            app.state.mcp = previous_mcp
+
+        assert response.status_code == 503
+        assert "pinned semantic index" in response.json()["detail"]
 
     def test_readiness_uses_cached_mcp_status_without_blocking_on_discovery(monkeypatch) -> None:
         previous_mcp = app.state.mcp

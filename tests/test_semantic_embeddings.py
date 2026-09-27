@@ -92,7 +92,7 @@ def test_local_index_rebuilds_when_pinned_embedding_revision_changes(
     loaded_revisions: list[str] = []
 
     class FakeEmbedder:
-        def __init__(self, model_name: str, revision: str) -> None:
+        def __init__(self, model_name: str, revision: str, max_length: int) -> None:
             assert model_name == "sentence-transformers/all-MiniLM-L6-v2"
             loaded_revisions.append(revision)
 
@@ -111,6 +111,45 @@ def test_local_index_rebuilds_when_pinned_embedding_revision_changes(
     assert first["embedding_revision"] == "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
     assert second["embedding_revision"] == "b" * 40
     assert loaded_revisions == ["1110a243fdf4706b3f48f1d95db1a4f5529b4d41", "b" * 40]
+    assert first["embedding_max_length"] == 256
+    assert second["embedding_max_length"] == 256
+
+
+def test_local_index_rebuilds_when_tokenizer_max_length_changes(
+    monkeypatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("MSAIE_EMBEDDING_PROVIDER", "huggingface")
+    monkeypatch.setenv("MSAIE_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+    monkeypatch.delenv("MSAIE_EMBEDDING_BASE_URL", raising=False)
+    monkeypatch.delenv("MSAIE_EMBEDDING_API_KEY", raising=False)
+    import numpy as np
+
+    loaded_lengths: list[int] = []
+
+    class FakeEmbedder:
+        def __init__(
+            self, model_name: str, revision: str, max_length: int
+        ) -> None:
+            assert model_name == "sentence-transformers/all-MiniLM-L6-v2"
+            assert revision == "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+            loaded_lengths.append(max_length)
+
+        def encode(self, texts: list[str], **_kwargs) -> np.ndarray:
+            return np.tile(np.array([[1.0, 0.0, 0.0]], dtype=np.float32), (len(texts), 1))
+
+    monkeypatch.setattr(index_module, "HuggingFaceOnnxEmbedder", FakeEmbedder)
+    index_module._local_embedding_model.cache_clear()
+    index = RagIndex(tmp_path / "hf-max-length.sqlite3")
+    try:
+        first = index.build(force=True)
+        monkeypatch.setattr(index_module, "HF_EMBEDDING_MAX_LENGTH", 128)
+        second = index.build()
+    finally:
+        index_module._local_embedding_model.cache_clear()
+
+    assert loaded_lengths == [256, 128]
+    assert first["embedding_max_length"] == 256
+    assert second["embedding_max_length"] == 128
 
 
 def test_local_index_rejects_unsupported_huggingface_model_without_downloading(

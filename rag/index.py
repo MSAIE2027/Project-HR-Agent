@@ -107,6 +107,7 @@ def _embedding_config_signature() -> str:
                 "backend": HF_EMBEDDING_BACKEND,
                 "revision": _local_embedding_revision(_requested_embedding_model()),
                 "onnx_model_file": HF_ONNX_MODEL_FILE,
+                "max_length": HF_EMBEDDING_MAX_LENGTH,
             }
         )
     return hashlib.sha256(json.dumps(signature, sort_keys=True).encode("utf-8")).hexdigest()
@@ -133,7 +134,7 @@ def _local_embedding_revision(model_name: str) -> str:
 class HuggingFaceOnnxEmbedder:
     """Run the pinned MiniLM checkpoint with the Hugging Face INT8 ONNX export."""
 
-    def __init__(self, model_name: str, revision: str) -> None:
+    def __init__(self, model_name: str, revision: str, max_length: int) -> None:
         if model_name != DEFAULT_LOCAL_MODEL:
             raise ValueError(
                 f"Local Hugging Face embeddings supports only {DEFAULT_LOCAL_MODEL}"
@@ -154,7 +155,7 @@ class HuggingFaceOnnxEmbedder:
             revision=revision,
         )
         self.tokenizer = Tokenizer.from_file(tokenizer_path)
-        self.tokenizer.enable_truncation(max_length=HF_EMBEDDING_MAX_LENGTH)
+        self.tokenizer.enable_truncation(max_length=max_length)
         self.tokenizer.enable_padding()
 
         options = ort.SessionOptions()
@@ -201,13 +202,15 @@ class HuggingFaceOnnxEmbedder:
 
 
 @lru_cache(maxsize=2)
-def _local_embedding_model(model_name: str, revision: str) -> HuggingFaceOnnxEmbedder:
-    return HuggingFaceOnnxEmbedder(model_name, revision)
+def _local_embedding_model(
+    model_name: str, revision: str, max_length: int
+) -> HuggingFaceOnnxEmbedder:
+    return HuggingFaceOnnxEmbedder(model_name, revision, max_length)
 
 
 def _local_embeddings(texts: list[str], model_name: str) -> list[list[float]]:
     revision = _local_embedding_revision(model_name)
-    model = _local_embedding_model(model_name, revision)
+    model = _local_embedding_model(model_name, revision, HF_EMBEDDING_MAX_LENGTH)
     vectors = model.encode(texts, normalize_embeddings=True, batch_size=32).tolist()
     return [[float(value) for value in vector] for vector in vectors]
 
@@ -378,6 +381,10 @@ class RagIndex:
                         ("embedding_provider", provider),
                         ("embedding_backend", embedding_backend),
                         ("embedding_revision", embedding_revision),
+                        (
+                            "embedding_max_length",
+                            str(HF_EMBEDDING_MAX_LENGTH) if not embedding_config else "",
+                        ),
                         ("embedding_error", embedding_error),
                         ("vector_format", vector_format),
                         ("dimensions", str(dimensions)),
@@ -674,6 +681,11 @@ class RagIndex:
             "embedding_provider": metadata.get("embedding_provider", "unknown"),
             "embedding_backend": metadata.get("embedding_backend", "unknown"),
             "embedding_revision": metadata.get("embedding_revision") or None,
+            "embedding_max_length": (
+                int(metadata["embedding_max_length"])
+                if metadata.get("embedding_max_length")
+                else None
+            ),
             "semantic_embeddings": metadata.get("vector_format") == "dense",
             "embedding_error": metadata.get("embedding_error") or None,
             "dimensions": int(metadata.get("dimensions", "0")),
