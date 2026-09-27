@@ -10,6 +10,8 @@ import threading
 from typing import Any, Callable
 from urllib.parse import urlsplit
 
+import pytest
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SMOKE_SCRIPT = PROJECT_ROOT / "scripts" / "smoke_hosted_demo.py"
@@ -58,6 +60,8 @@ def _chat_response(
     refinement_status: str | None = None,
     refinement_provider: str = "openrouter",
     template_key: str | None = None,
+    refinement_overrides: dict[str, Any] | None = None,
+    trace_refinement_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     trace = [
         {"step": 1, "event": "discover_tools", "tools": TOOL_NAMES, "transport": "stdio"}
@@ -85,7 +89,42 @@ def _chat_response(
                 "response_mode": "sqlite_template",
                 "template_key": template_key or "remote_work_positive_v1",
                 "template_version": "1",
-                "attempted_models": ["qwen/qwen3.8-27b:free", "opencode/space-bunny-free"],
+                "attempted_models": [
+                    "qwen/qwen3.8-27b:free",
+                    "opencode/nemotron-3.5-lightning-free",
+                    "opencode/big-pickle",
+                    "opencode/space-bunny-free",
+                ],
+                "attempts": 4,
+                "model_attempts": [
+                    {
+                        "model": "qwen/qwen3.8-27b:free",
+                        "outcome": "unavailable",
+                        "error_type": "HTTPStatusError",
+                        "http_status": "429",
+                        "failure_scope": "account_quota",
+                    },
+                    {
+                        "provider": "opencode-zen",
+                        "model": "nemotron-3.5-lightning-free",
+                        "outcome": "unavailable",
+                        "error_type": "HTTPStatusError",
+                        "http_status": "403",
+                    },
+                    {
+                        "provider": "opencode-zen",
+                        "model": "big-pickle",
+                        "outcome": "unavailable",
+                        "error_type": "HTTPStatusError",
+                        "http_status": "403",
+                    },
+                    {
+                        "provider": "opencode-zen",
+                        "model": "space-bunny-free",
+                        "outcome": "unavailable",
+                        "error_type": "ReadTimeout",
+                    },
+                ],
             }
         else:
             refinement = {
@@ -94,7 +133,10 @@ def _chat_response(
                 "model": "qwen/qwen3.8-27b:free",
                 "attempted_models": ["qwen/qwen3.8-27b:free"],
             }
-        trace.append({"step": len(trace) + 1, "event": "llm_refinement", **refinement})
+        refinement.update(refinement_overrides or {})
+        trace_event = {"step": len(trace) + 1, "event": "llm_refinement", **refinement}
+        trace_event.update(trace_refinement_overrides or {})
+        trace.append(trace_event)
     return {
         "answer": answer,
         "citations": citation_rows,
@@ -323,7 +365,22 @@ def test_hosted_smoke_cli_does_not_confirm_mock_email_by_default() -> None:
     assert PRIVATE_ANSWER_SENTINEL not in result.stdout
 
 
-def test_hosted_smoke_cli_accepts_traced_sqlite_template_for_read_only_case() -> None:
+@pytest.mark.parametrize(
+    ("refinement_overrides", "trace_refinement_overrides", "expected_status"),
+    [
+        ({}, {}, "passed"),
+        ({}, {"upstream_provider": "openrouter"}, "failed"),
+        ({}, {"template_version": "2"}, "failed"),
+        ({"model_attempts": []}, {}, "failed"),
+        ({"attempted_models": ["qwen/qwen3.8-27b:free"]}, {}, "failed"),
+    ],
+    ids=["complete-trace", "upstream-mismatch", "version-mismatch", "no-attempts", "attempt-count-mismatch"],
+)
+def test_hosted_smoke_cli_requires_consistent_sqlite_trace_and_attempts(
+    refinement_overrides: dict[str, Any],
+    trace_refinement_overrides: dict[str, Any],
+    expected_status: str,
+) -> None:
     def respond(request: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         message = request["message"]
         if "medical" in message.lower():
@@ -349,6 +406,8 @@ def test_hosted_smoke_cli_accepts_traced_sqlite_template_for_read_only_case() ->
                 refinement_status="cached_template",
                 refinement_provider="sqlite",
                 template_key="remote_work_eligible",
+                refinement_overrides=refinement_overrides,
+                trace_refinement_overrides=trace_refinement_overrides,
             )
         if "draft an email" in message.lower():
             return 200, _chat_response(
@@ -369,16 +428,24 @@ def test_hosted_smoke_cli_accepts_traced_sqlite_template_for_read_only_case() ->
     with _hosted_app(respond) as server:
         result = _run_smoke(server)
 
-    assert result.returncode == 0, result.stderr
     report = json.loads(result.stdout)
-    assert report["status"] == "passed"
-    remote_work = report["checks"][2]
-    assert remote_work["status"] == "provisionally_eligible"
-    assert remote_work["response_source"] == "sqlite_template"
-    assert remote_work["provider"] == "sqlite"
-    assert remote_work["template_key"] == "remote_work_eligible"
-    assert report["checks"][3]["response_source"] == "live_model"
-    assert len(server.chat_requests) == 4
+    assert report["status"] == expected_status
+    if expected_status == "passed":
+        assert result.returncode == 0, result.stderr
+        remote_work = report["checks"][2]
+        assert remote_work["status"] == "provisionally_eligible"
+        assert remote_work["response_source"] == "sqlite_template"
+        assert remote_work["provider"] == "sqlite"
+        assert remote_work["template_key"] == "remote_work_eligible"
+        assert remote_work["template_version"] == "1"
+        assert remote_work["upstream_provider"] == "openrouter+opencode-zen"
+        assert remote_work["attempts"] == 4
+        assert report["checks"][3]["response_source"] == "live_model"
+    else:
+        assert result.returncode == 1
+        assert report["failed_check"]["name"] == "remote_work"
+        assert report["failed_check"]["reason"] == "llm_refinement_incomplete"
+    assert len(server.chat_requests) == (4 if expected_status == "passed" else 3)
 
 
 def test_hosted_smoke_cli_rejects_sqlite_template_for_confirmation_gated_pto() -> None:

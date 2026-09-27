@@ -83,7 +83,7 @@ def _has_completed_refinement(payload: dict[str, Any]) -> tuple[bool, str | None
     return completed, model if isinstance(model, str) and model else None, attempts
 
 
-def _cached_template_summary(payload: dict[str, Any]) -> dict[str, str] | None:
+def _cached_template_summary(payload: dict[str, Any]) -> dict[str, Any] | None:
     refinement = _refinement(payload)
     template_key = refinement.get("template_key")
     if (
@@ -109,18 +109,67 @@ def _cached_template_summary(payload: dict[str, Any]) -> dict[str, str] | None:
     )
     if not isinstance(event, dict):
         return None
+    upstream = refinement.get("upstream_provider")
+    version = refinement.get("template_version")
     if (
         event.get("provider") != "sqlite"
         or event.get("response_mode") != "sqlite_template"
         or event.get("cache_hit") is not True
         or event.get("template_key") != template_key
+        or event.get("upstream_provider") != upstream
+        or event.get("template_version") != version
     ):
         return None
-    upstream = refinement.get("upstream_provider")
-    version = refinement.get("template_version")
-    if not isinstance(upstream, str) or not isinstance(version, str) or not version:
+    if upstream not in {"openrouter", "openrouter+opencode-zen"}:
         return None
-    return {"provider": "sqlite", "template_key": template_key}
+    if not isinstance(version, str) or not version:
+        return None
+
+    attempted_models = refinement.get("attempted_models")
+    model_attempts = refinement.get("model_attempts")
+    attempts = refinement.get("attempts")
+    if (
+        not isinstance(attempted_models, list)
+        or not attempted_models
+        or any(not isinstance(model, str) or not model for model in attempted_models)
+        or not isinstance(model_attempts, list)
+        or not model_attempts
+        or isinstance(attempts, bool)
+        or not isinstance(attempts, int)
+        or attempts != len(attempted_models)
+        or len(model_attempts) != attempts
+    ):
+        return None
+
+    traced_models: list[str] = []
+    for attempt in model_attempts:
+        if not isinstance(attempt, dict):
+            return None
+        model = attempt.get("model")
+        outcome = attempt.get("outcome")
+        if not isinstance(model, str) or not model or outcome not in {"unavailable", "rejected"}:
+            return None
+        provider = attempt.get("provider")
+        if provider == "opencode-zen":
+            traced_models.append(f"opencode/{model}")
+        elif provider is None:
+            traced_models.append(model)
+        else:
+            return None
+    if traced_models != attempted_models:
+        return None
+    if any(event.get(field) != refinement.get(field) for field in ("attempted_models", "model_attempts", "attempts")):
+        return None
+    if len(_model_attempt_summaries(payload)) != attempts:
+        return None
+
+    return {
+        "provider": "sqlite",
+        "template_key": template_key,
+        "template_version": version,
+        "upstream_provider": upstream,
+        "attempts": attempts,
+    }
 
 
 def _model_attempt_summaries(payload: dict[str, Any]) -> list[dict[str, str]]:
@@ -278,12 +327,17 @@ def _post_chat(
     response_source: str | None = None
     provider: str | None = None
     template_key: str | None = None
+    template_version: str | None = None
+    upstream_provider: str | None = None
     if expect_llm:
         cached = _cached_template_summary(payload) if allow_cached_template else None
         if cached:
             response_source = "sqlite_template"
             provider = cached["provider"]
             template_key = cached["template_key"]
+            template_version = cached["template_version"]
+            upstream_provider = cached["upstream_provider"]
+            attempts = cached["attempts"]
         else:
             completed, model, attempts = _has_completed_refinement(payload)
             if not completed:
@@ -315,6 +369,8 @@ def _post_chat(
         "response_source": response_source,
         "provider": provider,
         "template_key": template_key,
+        "template_version": template_version,
+        "upstream_provider": upstream_provider,
     }
 
 

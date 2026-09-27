@@ -84,6 +84,33 @@
 
 **Review summary:** Standards — no open actionable findings. Spec — the identified model-support, revision-cache, and exact-index release-gate gaps are fixed and deployed. Hosted answer acceptance remains open after the latest provider 429; the local key is quota-exhausted, but the Render key state is not independently confirmed.
 
+## Review — hosted smoke verification and response fallback
+
+**Review date:** 2026-09-27
+
+**Code baseline:** `a24154d` (user-confirmed)
+
+**Review scope:** OpenRouter/OpenCode fallback, supported SQLite response templates, hosted smoke verification, and current release evidence.
+
+### Standards
+
+- No confirmed hard violation of `AGENTS.md`. The OpenRouter-first route, account-quota handoff, bounded SQLite fallback, action gate, and fixed MiniLM/chunk baseline match the project instructions.
+- Judgment-call smells: OpenRouter/OpenCode response parsing repeats similar validation code; prompt/fact arguments form a repeated data group; `cached_response` is less precise than a template-rendering name.
+
+### Spec
+
+- Review found the hosted smoke accepted mismatched upstream-provider/template-version trace metadata and incomplete model-attempt reporting. The verifier now requires matching summary/trace fields, a complete attempt count, ordered model identifiers, and failed outcomes before accepting the read-only SQLite template.
+- Review found no regression proving model/provider-scoped failures try the whole OpenRouter chain before OpenCode. A new public `/chat` test verifies all four OpenRouter routes precede OpenCode; the account-wide quota test still verifies immediate handoff.
+- No other incorrect implementation or unrelated scope creep found. Hosted smoke passed both answer cases through `space-bunny-free`; one supported read-only request also used the SQLite template. No mock action was invoked. Provider access varies.
+
+### Verification
+
+- TDD reproduced the verifier's false acceptance for mismatched trace fields and incomplete model attempts; the updated contract suite passes **10 cases**.
+- Public `/chat` model-scoped fallback-order regression passes. Combined focused run of the hosted smoke CLI and fallback-order regression: **11 passed**.
+- Full CI for commit `703a180` passed; full CI for the current verifier/test update is pending push.
+
+**Review summary:** Standards — 0 confirmed hard violations; 3 judgment-call smells. Spec — 2 findings fixed and covered by regression tests; no remaining implementation mismatch identified.
+
 ## Review — tokenizer configuration and readiness
 
 **Review date:** 2026-09-27

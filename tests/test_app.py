@@ -891,6 +891,96 @@ with TestClient(app) as client:
             "opencode/nemotron-3.5-lightning-free",
         ]
 
+    def test_chat_exhausts_openrouter_chain_before_opencode_on_model_scoped_failure(monkeypatch) -> None:
+        answer = (
+            "Maya Chen has 14 synthetic PTO days available. A request for 0 day(s) would leave 14 days "
+            "if approved. The policy notice expectation is 14 calendar days, and manager approval remains required."
+        )
+        result = AgentResult(
+            answer=answer,
+            citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
+            status="completed",
+            structured_facts={
+                "workflow": "pto",
+                "employee_id": "E1001",
+                "employee_name": "Maya Chen",
+                "available_days": 14,
+                "requested_days": 0,
+                "remaining_if_approved": 14,
+                "notice_days": 14,
+                "eligible": True,
+            },
+        )
+        requests: list[tuple[str, str]] = []
+
+        class FakeOrchestrator:
+            def __init__(self, gateway=None) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, *, headers: dict[str, str], json: dict[str, Any]):
+                model = json["model"]
+                requests.append((url, model))
+                if "openrouter.ai" in url:
+                    return llm_module.httpx.Response(
+                        429,
+                        json={
+                            "error": {
+                                "code": 429,
+                                "message": "The selected provider rate limit was reached for this model.",
+                                "metadata": {"scope": "model"},
+                            }
+                        },
+                        request=llm_module.httpx.Request("POST", url),
+                    )
+                return llm_module.httpx.Response(
+                    200,
+                    json={"model": model, "choices": [{"message": {"content": answer}}]},
+                    request=llm_module.httpx.Request("POST", url),
+                )
+
+        monkeypatch.setenv("OPENCODE_API_KEY", "test-opencode-key")
+        monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+
+        response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+
+        openrouter_models = [
+            "qwen/qwen3.8-27b:free",
+            "nvidia/nemotron-3.5-lightning:free",
+            "google/gemma-4-26b-a4b-it:free",
+            "openrouter/free",
+        ]
+        assert response.status_code == 200
+        assert [url for url, _ in requests] == [
+            "https://openrouter.ai/api/v1/chat/completions"
+        ] * 4 + ["https://opencode.ai/zen/v1/chat/completions"]
+        assert [model for _, model in requests] == openrouter_models + ["nemotron-3.5-lightning-free"]
+        refinement = response.json()["llm"]["refinement"]
+        assert refinement["provider"] == "opencode-zen"
+        assert refinement["attempted_models"] == openrouter_models + ["opencode/nemotron-3.5-lightning-free"]
+        assert [attempt["outcome"] for attempt in refinement["model_attempts"]] == [
+            "unavailable",
+            "unavailable",
+            "unavailable",
+            "unavailable",
+            "completed",
+        ]
+
     def test_chat_rejects_internal_reasoning_from_openrouter(monkeypatch) -> None:
         result = AgentResult(
             answer="Maya Chen has 14 synthetic PTO days available.",
