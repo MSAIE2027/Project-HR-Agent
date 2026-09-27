@@ -44,30 +44,33 @@ sequenceDiagram
 flowchart LR
     subgraph Build[Policy index build]
         DOCS[Policy files] --> CHUNK[Section-aware chunks]
-        CHUNK --> EMBED[Hugging Face MiniLM embeddings]
+        CHUNK --> EMBED[Local MiniLM document embeddings]
         EMBED --> DB[(SQLite vector index)]
     end
 
     subgraph Request[Runtime evidence]
-        QUESTION[Policy question] --> QUERY[MiniLM query embedding]
+        QUESTION[Policy question] --> QUERY[Local MiniLM query embedding]
         DB --> RETRIEVE[Hybrid retrieval + family routing + MMR]
         QUERY --> RETRIEVE
         RETRIEVE --> PASSAGES[Evidence chunks + citation metadata]
         HR[(Synthetic HR records)] --> FACTS[Typed structured facts]
     end
 
-    PASSAGES --> COMPOSE[OpenRouter composes the answer]
-    FACTS --> COMPOSE
+    PASSAGES --> PROMPT[Controlled draft + evidence + structured facts]
+    FACTS --> PROMPT
+    PROMPT --> COMPOSE[OpenRouter LLM response composition]
     COMPOSE --> CHECK[Application validation]
     CHECK -->|valid| RESPONSE[Answer + citations]
     CHECK -->|invalid or unavailable| SAFE[HTTP 503; draft withheld]
     UI[Browser SQLite viewer] -. read-only document and chunk rows .-> DB
+    HF[Hugging Face model source] -. model weights downloaded to app .-> EMBED
+    HF -. model weights downloaded to app .-> QUERY
 
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
-    classDef hosted fill:#fff7ed,stroke:#ea5800,color:#7c2d12
+    classDef external fill:#fff7ed,stroke:#ea5800,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
-    class DOCS,CHUNK,EMBED,DB,QUESTION,QUERY,RETRIEVE,PASSAGES,HR,FACTS local
-    class COMPOSE hosted
+    class DOCS,CHUNK,EMBED,DB,QUESTION,QUERY,RETRIEVE,PASSAGES,HR,FACTS,PROMPT local
+    class HF,COMPOSE external
     class CHECK,RESPONSE,SAFE output
 ```
 

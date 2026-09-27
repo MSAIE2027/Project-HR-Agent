@@ -16,11 +16,95 @@ Provide a local-first, fictional HR support agent that answers policy questions 
 - rag/index.py stores vectors and metadata in SQLite, ranks with cosine similarity, and exposes embedding/index status.
 - agent/llm.py composes every citation-bearing final response through an ordered OpenRouter chain: pinned Qwen, Nemotron Lightning, and Gemma free model IDs, then `openrouter/free`; the actual resolved route and attempted list are included in the operational trace.
 
+```mermaid
+flowchart LR
+    subgraph Service["One local or Render web service"]
+        UI[Browser chat and SQLite viewer] --> API[FastAPI]
+        API --> Agent[Deterministic orchestrator]
+        Agent --> Client[Official MCP client]
+        Client <-->|stdio: tools/list and tools/call| Server[FastMCP server]
+        Server --> HR["Synthetic employee, PTO, and benefits records"]
+        Server --> Search[Policy search tool]
+        Search --> Embed[Local MiniLM query embedding]
+        Embed --> Rank[Hybrid ranking and family routing + MMR]
+        Rank --> DB[(SQLite policy index)]
+        DB --> Search
+        DB -. bounded, read-only rows .-> UI
+        Server --> Section[Policy section tool]
+        Section --> DB
+        Agent --> Draft["Controlled draft + status + structured facts"]
+        Draft --> Compose[Response composer]
+        Compose --> Validate[Deterministic output validation]
+        Validate -->|valid| Answer["Answer + citations + operational trace"]
+        Validate -->|invalid| Fail["HTTP 503; draft withheld"]
+    end
+
+    Files[Policy Markdown and HTML] --> Chunk[Heading-aware chunks]
+    Chunk --> BuildEmbed[Local MiniLM embeddings]
+    BuildEmbed --> DB
+    HF["Hugging Face model source"] -. model weights .-> Embed
+    HF -. model weights .-> BuildEmbed
+    Compose <-->|required generation for citation-bearing answers| OR[OpenRouter model chain]
+    Answer --> UI
+    Fail --> UI
+
+    classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef provider fill:#fff7ed,stroke:#ea5800,color:#7c2d12
+    classDef outcome fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
+    class UI,API,Agent,Client,Server,HR,Search,Embed,Rank,DB,Section,Files,Chunk,BuildEmbed local
+    class HF,OR provider
+    class Validate,Answer,Fail outcome
+```
+
+The app, orchestrator, MCP subprocess, JSON records, and SQLite index run in one service. MiniLM weights are downloaded from Hugging Face and inference runs locally; OpenRouter is the external text-generation provider. Every successful citation-bearing response passes through OpenRouter and deterministic validation. Refusals that stop before retrieval do not call the provider.
+
 ## MCP transport behavior
 
 The local default is in-process. It calls TOOL_REGISTRY functions directly and does not exercise MCP serialization or protocol negotiation. The stdio option launches mcp_server.server as a subprocess, discovers tools through the official MCP client, and exercises FastMCP over the protocol.
 
 The retrieval comparison does not change MCP transport or dependencies.
+
+## MCP tool schemas
+
+All eight tools are registered on the FastMCP server and return the envelope `{ok, data, error}`. On success, `error` is null; on failure, `data` is null and `error` contains a code and message.
+
+| Tool | Arguments | Successful `data` |
+|---|---|---|
+| `search_policy_documents` | `query: str`, `limit: int = 4`, `document_prefix: str?` | Query, retrieval method, citation-ready chunk results, and index metadata. |
+| `get_policy_section` | `document_id: str`, `section: str?` | Normalized document ID, requested section, and matching passage results. |
+| `lookup_employee_profile` | `employee_id: str` | One synthetic employee profile. |
+| `check_pto_balance` | `employee_id: str`, `requested_days: int = 0` | Synthetic balance, sufficiency, and remaining balance if approved. |
+| `lookup_benefits_status` | `employee_id: str` | One synthetic benefits eligibility and enrollment record. |
+| `check_policy_compliance` | `workflow: str` (`remote_work` or `pto`), `employee_id: str`, `requested_days: int = 0`, `destination: str?` | Eligibility, reasons, limits, required approvals, and applicable policy prefixes. |
+| `draft_hr_email` | `employee_id: str`, `purpose: str`, `requested_days: int = 0`, `confirmed: bool = false` | Confirmation-gated local email draft with `sent: false`; no message is sent. |
+| `create_mock_hr_ticket` | `employee_id: str`, `category: str`, `summary: str`, `confirmed: bool = false` | Confirmation-gated local ticket with `production_system: false`; no production record is created. |
+
+The orchestrator discovers these schemas through `tools/list` and invokes them through `tools/call` over stdio for the demo and CI path. The in-process adapter is only a development shortcut and does not test protocol serialization.
+
+## Required demo task sequences
+
+### International remote-work eligibility
+
+Prompt: “Can E1001 work remotely overseas for 10 days?” The expected stdio calls are:
+
+1. `search_policy_documents(query="international remote work eligibility rolling limit security approvals immigration tax", limit=5, document_prefix="POL-RW-")`
+2. `lookup_employee_profile(employee_id="E1001")`
+3. `check_policy_compliance(workflow="remote_work", employee_id="E1001", requested_days=10, destination=None)`
+4. OpenRouter composes from the controlled draft, citations, and structured facts; it is a provider call rather than an MCP tool.
+
+Expected answer: provisional eligibility, `POL-RW-01` evidence, and 14 of 20 rolling days after the request. The answer must list manager, HR, tax, information-security, and immigration reviews as outstanding; eligibility is not final authorization.
+
+### PTO balance and confirmation-gated email draft
+
+Prompt: “How much PTO does E1001 have and draft an email for 5 days?” Before confirmation, the expected calls are:
+
+1. `search_policy_documents(query="paid time off balance eligibility notice carry over manager approval", limit=5, document_prefix="POL-PTO-")`
+2. `lookup_employee_profile(employee_id="E1001")`
+3. `check_pto_balance(employee_id="E1001", requested_days=5)`
+4. `check_policy_compliance(workflow="pto", employee_id="E1001", requested_days=5, destination=None)`
+5. OpenRouter composes a `confirmation_required` response from the policy evidence and structured values. `draft_hr_email` must not be called yet.
+
+After the user confirms in the UI, the next turn calls `draft_hr_email(employee_id="E1001", purpose="PTO request", requested_days=5, confirmed=True)`. Expected answer: 14 available days, 9 remaining if the five-day request is approved, manager approval required, and a local draft with `sent: false`. The draft is not approval and is not sent. Full prompts and presenter steps are in [`demo/README.md`](demo/README.md).
 
 ## Retrieval and embeddings
 
@@ -31,6 +115,10 @@ The follow-up comparison holds MiniLM and 120/20 fixed. At global k=5, current r
 The updated orchestrator route cited all expected families in 15/15 labeled queries, including 5/5 multi-family probes. The six-item read-only policy golden slice had 100% status, citation-prefix, and groundedness-proxy scores, with `huggingface_dense_cosine` observed. The full 30-case golden-set evaluation is recorded in `evaluation/results.md` and `evaluation/results-stdio.md`; its metric values are deterministic fixture proxies, not independent semantic judgments. The complete query-level matrix and limits are in `evaluation/retrieval-comparison.md`.
 
 Dense local embeddings use cosine similarity plus bounded lexical and title signals. Embedding configuration uses MSAIE_EMBEDDING_*; required OpenRouter answer generation uses MSAIE_LLM_*. Runtime retrieval traces identify the actual path, including huggingface_dense_cosine.
+
+## Deployment choice
+
+`render.yaml` describes one free-tier Python web service containing the UI/API, orchestrator, stdio MCP server, synthetic JSON data, and SQLite policy index. The index is built with the service image; no paid database or separate MCP host is required. Credentials are supplied as environment variables. This keeps the deployment within the course's single-service free-tier option while preserving the real MCP protocol path. The hosted service's cold-start latency has not been isolated; local startup and stdio timings below are not Render cold-start measurements. Live readiness and hosted answer-generation acceptance are tracked separately in [`deployed.md`](deployed.md).
 
 ## Refiner fact contract
 
