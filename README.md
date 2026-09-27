@@ -5,69 +5,73 @@ A fictional HR support assistant that combines policy retrieval, structured synt
 ## Architecture
 
 ```mermaid
-flowchart TB
-    EMP([Employee]) --> UI[Browser workspace]
+sequenceDiagram
+    actor Employee
+    participant UI as Browser workspace
+    participant API as FastAPI
+    participant Agent as Orchestrator and safety gates
+    participant MCP as Official MCP client/server over stdio
+    participant Store as Synthetic HR data and SQLite policy index
+    participant LLM as OpenRouter model chain
 
-    subgraph APP[FastAPI application]
-        UI --> API[Chat API]
-        API --> G{Privacy, safety, and confirmation gates}
-        G -->|refuse or await confirmation| SAFE[Safe status response]
-        G -->|continue| AGENT[Deterministic orchestrator]
-        AGENT --> DRAFT[Controlled draft + evidence + facts]
-        DRAFT --> OR[OpenRouter model chain]
-        OR --> VALIDATE[Answer and safety validation]
-        VALIDATE -->|valid| ANSWER[Answer + citations + operational trace]
-        VALIDATE -->|unavailable or invalid| FAIL[HTTP 503; no draft exposed]
-        ANSWER --> UI
-        SAFE --> UI
-        FAIL --> UI
+    Employee->>UI: Ask an HR question
+    UI->>API: POST /chat
+    API->>Agent: Validate, apply privacy rules, route
+    alt Refused or confirmation required
+        Agent-->>API: Safe refusal or pending-action status
+        API-->>UI: Status response
+    else Continue
+        Agent->>MCP: tools/list and tools/call
+        MCP->>Store: Read HR facts or retrieve policy evidence
+        Store-->>MCP: Structured facts and cited passages
+        MCP-->>Agent: MCP tool results
+        Agent->>LLM: Controlled draft + evidence + facts
+        LLM-->>Agent: Formatted, evidence-enriched response
+        Agent->>Agent: Validate content and safety requirements
+        alt Valid response
+            Agent-->>API: Answer + citations + operational trace
+            API-->>UI: Final response
+        else Provider unavailable or response invalid
+            Agent-->>API: Fail closed; withhold draft
+            API-->>UI: HTTP 503
+        end
     end
-
-    subgraph MCP[Official MCP protocol over stdio]
-        AGENT --> CLIENT[Official MCP SDK client]
-        CLIENT -->|tools/list and tools/call| SERVER[FastMCP server]
-        SERVER --> TOOLS[Eight typed HR and policy tools]
-        TOOLS -->|structured lookup| HRDATA[(Synthetic HR records)]
-        HRDATA -->|structured facts| TOOLS
-        TOOLS -->|MCP result| SERVER
-        SERVER --> CLIENT
-        CLIENT --> AGENT
-    end
-
-    subgraph RAG[Policy retrieval]
-        TOOLS -->|policy search| QUERY[Search query]
-        QUERY --> EMBED[Hugging Face MiniLM query embedding]
-        EMBED --> RANK[Hybrid ranking + family routing + MMR]
-        SQLITE[(Service-local SQLite vector index)] --> RANK
-        RANK --> EVIDENCE[Evidence chunks + citation metadata]
-        EVIDENCE --> TOOLS
-    end
-
-    subgraph INGESTION[Policy indexing]
-        POLICY[Policy files] --> INGEST[Chunk + embed with MiniLM]
-        INGEST --> SQLITE
-    end
-
-    UI -. read-only document and chunk preview .-> INDEXAPI[SQLite index API]
-    INDEXAPI -. safe metadata and text rows .-> SQLITE
-
-    classDef user fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
-    classDef app fill:#eff6ff,stroke:#2563eb,color:#172554
-    classDef protocol fill:#ecfeff,stroke:#0891b2,color:#164e63
-    classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
-    classDef hosted fill:#fff7ed,stroke:#ea580c,color:#7c2d12
-    classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
-    class EMP,UI user
-    class API,G,AGENT,DRAFT,VALIDATE,INDEXAPI app
-    class CLIENT,SERVER,TOOLS protocol
-    class HRDATA,QUERY,EMBED,RANK,EVIDENCE,POLICY,INGEST,SQLITE local
-    class OR hosted
-    class ANSWER,SAFE,FAIL output
 ```
 
-Embedding and retrieval run locally. OpenRouter is the required composition step between deterministic orchestration and the final answer: the chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. It formats and enriches a controlled draft using retrieved policy text and structured facts; it cannot select tools, change eligibility, or authorize actions. The application validates the result and returns HTTP 503 without exposing the draft if generation is unavailable, truncated, unsupported, or unsafe.
+### Data and storage
 
-**Release status:** The Render service is live and health-checked, but the latest hosted preflight did not complete model refinement. See [deployment status](deployed.md) before recording a hosted workflow.
+```mermaid
+flowchart LR
+    subgraph Build[Policy index build]
+        DOCS[Policy files] --> CHUNK[Section-aware chunks]
+        CHUNK --> EMBED[Hugging Face MiniLM embeddings]
+        EMBED --> DB[(SQLite vector index)]
+    end
+
+    subgraph Request[Runtime evidence]
+        QUESTION[Policy question] --> QUERY[MiniLM query embedding]
+        DB --> RETRIEVE[Hybrid retrieval + family routing + MMR]
+        QUERY --> RETRIEVE
+        RETRIEVE --> PASSAGES[Evidence chunks + citation metadata]
+        HR[(Synthetic HR records)] --> FACTS[Typed structured facts]
+    end
+
+    PASSAGES --> COMPOSE[OpenRouter composes the answer]
+    FACTS --> COMPOSE
+    COMPOSE --> CHECK[Application validation]
+    CHECK -->|valid| RESPONSE[Answer + citations]
+    CHECK -->|invalid or unavailable| SAFE[HTTP 503; draft withheld]
+    UI[Browser SQLite viewer] -. read-only document and chunk rows .-> DB
+
+    classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef hosted fill:#fff7ed,stroke:#ea5800,color:#7c2d12
+    classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
+    class DOCS,CHUNK,EMBED,DB,QUESTION,QUERY,RETRIEVE,PASSAGES,HR,FACTS local
+    class COMPOSE hosted
+    class CHECK,RESPONSE,SAFE output
+```
+
+Policy embeddings and the vector index run in the app service. OpenRouter is required for every successful citation-bearing answer: the chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. The model formats and enriches a controlled draft; it cannot select tools, change eligibility, or authorize actions. Validation fails closed on unavailable, truncated, unsupported, or unsafe output. Requests refused before retrieval return without an LLM call. The active hosted release and its acceptance status are maintained in [deployment status](deployed.md).
 
 The project uses fixed synthetic records so the same demo query produces a repeatable scenario. The workspace includes examples for several employee IDs and a read-only browser for the SQLite policy documents and chunks; vector payloads are not exposed.
 

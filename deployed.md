@@ -16,7 +16,7 @@ The service is live and readiness returned HTTP 200 on 2026-09-27. It reports th
 
 The deployed runtime commit passed [GitHub Actions run 36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067) before it was manually deployed. Render auto-deploy is off. The later documentation-only commits on `main` do not change the deployed runtime.
 
-**Hosted answer generation is not verified, so the app is not ready for recording.** After the OpenRouter configuration was refreshed, the latest live preflight returned HTTP 200 for both privacy refusals, then HTTP 503 on the international remote-work request. All four configured model routes returned HTTP 429; `llm_refinement.status` was `unavailable`, and no model resolved. The public app failed closed. Render reports the provider as configured, but configuration and readiness do not establish a completed answer. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
+**Hosted answer generation is not verified, so the app is not ready for recording.** After the OpenRouter configuration was refreshed, the latest live preflight returned HTTP 200 for both privacy refusals, then HTTP 503 on the international remote-work request. All four configured model routes returned HTTP 429; `llm_refinement.status` was `unavailable`, and no model resolved. The public app failed closed. A read-only check confirms the local key's Free-model allowance is exhausted; this explains local 429s and is consistent with the hosted result, but Render's key quota cannot be independently inspected. OpenRouter still lists all four configured model IDs as free text models. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
 
 ## Verification and demo gate
 

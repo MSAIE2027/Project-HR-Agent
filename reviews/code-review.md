@@ -1,21 +1,18 @@
-# Code Review — Completion Worktree
+# Code Review — HR Agent Demo Readiness
 
 **Review date:** 2026-09-27
+
 **Baseline:** published commit `1130dde62a5751c2fd64ee19092c2b16f7c4dfed`
-**Scope:** OpenRouter answer composition and output validation; employee privacy refusals; SQLite index inspection; UI response formatting; evaluation, README, and evidence updates.
+**Scope:** OpenRouter composition and output validation; employee privacy boundaries; MCP tool execution; SQLite index inspection; UI formatting; evaluation and deployment evidence.
 
-## Standards
+## Review findings
 
-The README now provides a grouped Mermaid architecture diagram with the application, real MCP stdio boundary, local Hugging Face/SQLite retrieval, required OpenRouter model chain, validation, final response, and read-only SQLite inspection path. The answer arrow goes from validation through the final response into the browser. The former deployment-status and experiment-scope commentary has been removed from the README; current deployment claims are in `deployed.md`, and retrieval methods/results are in `evaluation/`.
+- **Privacy boundary — pass:** Multi-employee requests and requests for an individual's medical records are refused before MCP or OpenRouter calls. Regression coverage is in `tests/test_app.py` and `SAFE-06`–`SAFE-10` in `evaluation/golden_set.json`.
+- **LLM boundary — pass:** Successful citation-bearing answers use OpenRouter composition. Truncated output, unsupported changes, process narration, and provider failures are rejected or fail closed; public API and provider tests cover these cases in `tests/test_app.py` and `tests/test_llm.py`.
+- **MCP boundary — pass:** The stdio integration uses the official MCP client/server protocol for discovery and tool calls; `tests/test_mcp.py` and `scripts/smoke_mcp.py` exercise it.
+- **SQLite inspection — pass:** The browser reads bounded document and chunk rows without exposing stored vectors or the database path; `tests/test_app.py` covers the read-only endpoints.
+- **Hosted generation — open:** The service passes health and tool discovery, but a hosted citation-bearing answer has not passed acceptance. See the current [deployment status](../deployed.md) and [hosted acceptance evidence](../evidence/hosted-pto-smoke.md).
 
-Evaluation reports now use the same 30-case set; historical timeouts are distinguished by request in the evidence log.
+## Verification
 
-## Spec
-
-Multi-employee refusals now count explicit IDs and names in the fixed synthetic roster. Requests for medical records, files, or charts stop before employee lookup, including a PTO question combined with a medical-record request. Public `/chat` regression tests and golden cases `SAFE-06`–`SAFE-10` cover these boundaries. The evidence-based composer rejects truncated completions at the provider seam and continues through the configured model chain; a separate public `/chat` test verifies fail-closed behavior for model-generated process narration.
-
-The local suite passes **86 tests** with one third-party Starlette/AnyIO deprecation warning. The refreshed in-process and stdio golden sets each pass **30/30**; `llm_generation_included=false`, and the groundedness figure is a deterministic proxy rather than semantic answer judging. Full test and evaluation details are in [`../evidence/index.md`](../evidence/index.md).
-
-## Release status
-
-Commit `6ce0da8` is published, passed GitHub Actions run [36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067), and is live on Render as deployment `dep-dasdc7fpn0mc73fu752g`. Health and tool discovery pass. The latest preflight after the OpenRouter configuration refresh returned HTTP 503 after four model-route attempts, each returning HTTP 429; no model resolved. The cause of those provider responses is not established by this check. Hosted answer acceptance remains open until a cited response records `llm_refinement.status=completed` and the resolved model; see [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+The local suite passed **86 tests** with one third-party Starlette/AnyIO deprecation warning. The 30-case in-process and stdio golden evaluations passed; they are deterministic control-flow proxies, exclude LLM generation, and do not independently judge semantic groundedness. The hosted runtime commit passed [GitHub Actions run 36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067). Current CI and deployment evidence is summarized in [`../evidence/index.md`](../evidence/index.md).

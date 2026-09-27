@@ -13,7 +13,7 @@
 | PTO answer and confirmation gate | Not reached | The preflight stops on its first failed check. |
 | Confirmed mock email | Not run | Requires the explicit `--confirm-mock-email` option and was not enabled. |
 
-The refreshed hosted configuration still failed closed: all four model routes returned HTTP 429, so the request produced no resolved model or answer. The preflight confirms provider routing was attempted, but does not establish why the upstream returned 429. Generated text, provider response bodies, and credentials were not retained.
+The refreshed hosted configuration still failed closed: all four model routes returned HTTP 429, so the request produced no resolved model or answer. A read-only check of the refreshed local key returned HTTP 200 and reported Free-tier status with `free_model_daily_requests` at 51 used of 50, with none remaining. This explains why local free-model requests cannot currently complete. OpenRouter lists 50 requests per day for its Free plan ([pricing](https://openrouter.ai/pricing/)) and states that failed attempts count toward the daily allowance ([free-model guide](https://openrouter.ai/blog/tutorials/how-to-get-the-lowest-cost-llm-inference-on-openrouter/)). The hosted 429s are consistent with the same allowance being exhausted, but Render does not expose its key's quota metadata, so their cause is not independently confirmed. Generated text, provider response bodies, and credentials were not retained.
 
 ## Acceptance gate
 
