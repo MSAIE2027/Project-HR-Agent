@@ -5,7 +5,7 @@
 
 ## Context
 
-The live Render resource is linked to `MSAIE2027/Project-HR-Agent`, but inspection found no deploy history and settings that differ from the checked-in Blueprint: Docker runtime, deploy on commit, and no health-check path. The prior `checksPass` Blueprint could not prove that this existing service had been synchronized. A deploy on commit could run before CI completes.
+At the time of this decision, the linked Render service had no deploy history and differed from the Blueprint: Docker runtime, deploy on commit, and no health-check path. Auto-deploy was switched Off in the dashboard and verified on 2026-09-27 before publishing `main`; the Docker runtime and health-check mismatch remain. Hosted CI passed on published commit `42de2e8`, while the opt-in deploy job was skipped. A deploy on commit could otherwise run before CI completes.
 
 ## Decision
 

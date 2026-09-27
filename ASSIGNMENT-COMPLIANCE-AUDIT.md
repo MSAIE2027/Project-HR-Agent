@@ -20,8 +20,8 @@ This audit uses the official course project prompt and rubric PDF supplied with 
 | Tickets and implementation slices | Complete for local scope | `tickets/README.md`, `docs/implementation-slices.md` |
 | Local app, workflows, RAG, MCP, confirmation boundary | Verified locally | `tests/`, `scripts/smoke_mcp.py`, `evaluation/results.md` |
 | Retrieval comparison and ablation | Measured; evidence scoped | `evaluation/retrieval-comparison.md`, `evaluation/ablation-results.md` |
-| CI and Render deployment gate | Configured in source | `.github/workflows/ci.yml`, `render.yaml`; hosted CI still needs GitHub connection |
-| Public deployment and URL | Pending external setup | GitHub `origin` is configured and Render has assigned `https://project-hr-agent.onrender.com`, but the local source has not been pushed and no deploy is verified |
+| CI and Render deployment gate | Hosted CI passed; deploy remains opt-in | [GitHub Actions run 36289121722](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289121722); `.github/workflows/ci.yml`, `render.yaml` |
+| Public deployment and URL | Pending external setup | Commit `42de2e8` is published and CI passed; Render has assigned `https://project-hr-agent.onrender.com`, but no deploy is verified and service runtime/health settings still differ from the Blueprint |
 | GitHub grader access | Pending user/repository setup | The private repository link is `https://github.com/MSAIE2027/Project-HR-Agent`; `quantic-grader` access remains unverified |
 | Hands-on browser/accessibility review | Local browser review complete | `evidence/ui-review.md`; limited to visual/basic keyboard inspection, not screen-reader or automated contrast validation |
 | Demo package | Prepared for local rehearsal | `demo/README.md`, `docs/demo-script.md` |

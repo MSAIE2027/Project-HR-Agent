@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Rehearse locally as needed; the course recording must use the deployed public URL once the reviewed source is pushed and the linked Render service is synchronized and verified. Render has assigned `https://project-hr-agent.onrender.com`, but reports no deploy history, so no live application URL is verified yet.
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Rehearse locally as needed; the course recording must use the deployed public URL once the linked Render service is synchronized and verified. The reviewed source is published, and hosted CI passed for `42de2e8`; Render has assigned `https://project-hr-agent.onrender.com` but reports no deploy history, so no live application URL is verified yet.
 
 ## Start and verify
 

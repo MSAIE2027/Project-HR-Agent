@@ -7,7 +7,7 @@ services:
     buildCommand: pip install -r requirements.txt && python -m compileall app agent rag mcp_server mcp_client evaluation scripts
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/ready
-    autoDeployTrigger: off
+    autoDeployTrigger: "off"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.14
