@@ -21,6 +21,55 @@ def _tools(payload: dict) -> list[str]:
     return [item["tool"] for item in payload["trace"] if item.get("event") == "tool_call"]
 
 
+def _post_chat_after_first_429(monkeypatch, client, error: dict) -> tuple[object, list[str], AgentResult]:
+    result = AgentResult(
+        answer="Maya Chen has 14 synthetic PTO days available.",
+        citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
+        status="completed",
+        structured_facts={"available_days": 14},
+    )
+    calls: list[str] = []
+
+    class FakeOrchestrator:
+        def __init__(self, gateway=None) -> None:
+            pass
+
+        async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+            return result
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def post(self, url: str, **kwargs):
+            model = kwargs["json"]["model"]
+            calls.append(model)
+            if len(calls) == 1:
+                return llm_module.httpx.Response(
+                    429,
+                    json={"error": error},
+                    request=llm_module.httpx.Request("POST", url),
+                )
+            return llm_module.httpx.Response(
+                200,
+                json={"model": model, "choices": [{"message": {"content": result.answer}}]},
+                request=llm_module.httpx.Request("POST", url),
+            )
+
+    monkeypatch.setenv("MSAIE_LLM_FALLBACK_MODEL", "openrouter/free")
+    monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+    monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+    monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+    response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+    return response, calls, result
+
+
 class _TestOpenRouterProvider:
     configured = True
     provider_type = "openai-compatible"
@@ -576,6 +625,83 @@ with TestClient(app) as client:
             for item in response.json()["llm"]["refinement"]["model_attempts"]
         )
         assert response.json()["trace"][-1]["event"] == "llm_refinement"
+
+    def test_chat_stops_fallback_after_account_wide_free_quota_429(monkeypatch) -> None:
+        provider_body_sentinel = "PROVIDER_BODY_MUST_NOT_LEAK"
+        response, calls, _ = _post_chat_after_first_429(
+            monkeypatch,
+            client,
+            {
+                "code": 429,
+                "message": "Free models per day quota exhausted. " + provider_body_sentinel,
+                "metadata": {"key": provider_body_sentinel},
+            },
+        )
+
+        assert response.status_code == 503
+        assert calls == ["qwen/qwen3.8-27b:free"]
+        assert "Maya Chen has 14 synthetic PTO days" not in response.text
+        assert provider_body_sentinel not in response.text
+        refinement = response.json()["llm"]["refinement"]
+        assert refinement["status"] == "unavailable"
+        assert refinement["failure_scope"] == "account_quota"
+        assert refinement["attempted_models"] == calls
+        assert refinement["attempts"] == 1
+        assert refinement["model_attempts"] == [
+            {
+                "model": "qwen/qwen3.8-27b:free",
+                "outcome": "unavailable",
+                "error_type": "HTTPStatusError",
+                "http_status": "429",
+                "failure_scope": "account_quota",
+            }
+        ]
+        assert response.json()["trace"][-1]["failure_scope"] == "account_quota"
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            {
+                "code": 429,
+                "message": "The selected provider rate limit was reached for this model.",
+            },
+            {
+                "code": 429,
+                "message": "Free models per day quota exhausted for this model.",
+                "metadata": {"scope": "model"},
+            },
+            {
+                "code": 429,
+                "message": "Daily limit reached for this free model.",
+            },
+            {
+                "code": 429,
+                "message": "Daily free-model quota reached for model qwen/qwen3.8-27b:free.",
+            },
+            {"code": "rate_limit_exceeded", "message": "Too many requests; retry later."},
+        ],
+        ids=[
+            "provider-throttle",
+            "structured-model-scope",
+            "message-model-scope",
+            "message-named-model-scope",
+            "unclassified-429",
+        ],
+    )
+    def test_chat_continues_fallback_after_non_account_429(monkeypatch, error) -> None:
+        response, calls, result = _post_chat_after_first_429(monkeypatch, client, error)
+        assert response.status_code == 200
+        assert calls == ["qwen/qwen3.8-27b:free", "nvidia/nemotron-3.5-lightning:free"]
+        payload = response.json()
+        assert payload["answer"] == result.answer
+        assert payload["llm"]["refinement"]["status"] == "completed"
+        assert payload["llm"]["refinement"]["attempted_models"] == calls
+        assert payload["llm"]["refinement"]["model_attempts"][0] == {
+            "model": calls[0],
+            "outcome": "unavailable",
+            "error_type": "HTTPStatusError",
+            "http_status": "429",
+        }
 
     def test_chat_rejects_internal_reasoning_from_openrouter(monkeypatch) -> None:
         result = AgentResult(

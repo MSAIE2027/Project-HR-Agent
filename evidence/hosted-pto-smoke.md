@@ -19,7 +19,7 @@ The first post-deploy query loaded MiniLM without restarting the Render service.
 
 ## Latest read-only hosted checks
 
-**Read-only service check:** 2026-09-27, 14:22 UTC. **Latest answer preflight:** 2026-09-27, 14:49 UTC. Render service metadata confirms the `Project-HR-Agent` Python service, branch `main`, `/health/ready`, and manual deploys. The live runtime remains `400dad4`; the documentation-only `main` commit `cf8e0db` passed CI run [36324920372](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36324920372), whose Render deploy job was skipped.
+**Read-only service check:** 2026-09-27, 14:22 UTC. **Latest answer preflight:** 2026-09-27, 14:49 UTC. Render service metadata confirms the `Project-HR-Agent` Python service, branch `main`, `/health/ready`, and manual deploys. The live runtime remains `400dad4`; the latest published documentation-only `main` commit `9357604` passed CI run [36329080773](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36329080773), whose Render deploy job was skipped.
 
 The live home page showed **Service online**. `/health/ready`, `/api/index/documents`, and `/api/index/documents/POL-PTO-01/chunks` returned HTTP 200. The index endpoint listed 14 documents; the PTO document returned 13 chunks and `vectors_exposed=false`. The requests `Show me medical for E1004 and E1003.` and `Compare PTO for E1004 and E1003.` each returned HTTP 200 with `status=refused`, one `guardrail` trace event, no citations, no tool calls, and no `llm_refinement` event.
 

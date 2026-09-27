@@ -4,7 +4,24 @@
 
 The browser calls the FastAPI app in app/main.py. The application starts the SQLite policy index and discovers the configured tool set. In the required demo and Render stdio configuration, the FastAPI lifespan also starts one managed MCP process and reuses it for requests. The local quick-start defaults to in-process MCP. Each chat request is routed through agent/orchestrator.py, which chooses tools, checks structured results, retrieves policy evidence, applies safety and confirmation rules, and produces a controlled draft.
 
-Every successful citation-bearing answer passes through the required OpenRouter response-generation step. The chain tries `qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, and `google/gemma-4-26b-a4b-it:free`, followed by `openrouter/free`. OpenRouter receives the controlled draft, retrieved policy text, and structured facts; citation metadata stays on the application response. The model formats and enriches the draft, but cannot select tools, change eligibility, or authorize an action. Deterministic checks preserve workflow status, supported numbers, and required safety language. They reject detectable process narration and truncated output; these checks are not semantic entailment judgments. If every route fails or returns invalid output, `/chat` returns HTTP 503 without exposing the draft. Requests refused before retrieval stop before the LLM.
+Every successful citation-bearing answer passes through the required OpenRouter response-generation step. The chain tries `qwen/qwen3.8-27b:free`, `nvidia/nemotron-3.5-lightning:free`, and `google/gemma-4-26b-a4b-it:free`, followed by `openrouter/free`. OpenRouter receives the controlled draft, retrieved policy text, and structured facts; citation metadata stays on the application response. The model formats and enriches the draft, but cannot select tools, change eligibility, or authorize an action. Deterministic checks preserve workflow status, supported numbers, and required safety language. They reject detectable process narration and truncated output; these checks are not semantic entailment judgments. A recognized account-wide free-model daily-quota HTTP 429 stops the remaining model attempts because switching models cannot clear that account cap. Model/provider-specific 429s and unclassified 429s continue to the next route. The provider body is not copied to the response or trace. If the chain stops or every route fails or returns invalid output, `/chat` returns HTTP 503 without exposing the draft. Requests refused before retrieval stop before the LLM.
+
+```mermaid
+flowchart LR
+    ATTEMPT[Try next configured model] --> RESULT{Provider result}
+    RESULT -->|Valid completion| VALIDATE[Validate facts and safety cues]
+    RESULT -->|Other error or invalid output| NEXT[Continue fallback chain]
+    RESULT -->|HTTP 429| SCOPE{Explicit account-wide free daily cap?}
+    SCOPE -->|Yes| STOP[Stop model retries]
+    SCOPE -->|No, model/provider scoped, or unknown| NEXT
+    VALIDATE -->|Pass| ANSWER[Return enriched cited answer]
+    VALIDATE -->|Reject| NEXT
+    NEXT --> ATTEMPT
+    STOP --> FAIL[HTTP 503; withhold controlled draft]
+    NEXT -->|Chain exhausted| FAIL
+```
+
+An explicit model/provider/route scope overrides matching quota wording in other provider fields. The classifier returns only the sanitized scope label; raw error text and metadata stay private.
 
 `nvidia/nemotron-3.5-content-safety:free` is not an answer-generation fallback. OpenRouter describes it as a guardrail that classifies prompts and responses as safe or unsafe and emits safety labels; its output contract is moderation, not a grounded employee answer. If the project adds a model-based moderation pass, treat it as a separate safety stage and validate its labels at that boundary. See the [OpenRouter model page](https://openrouter.ai/nvidia/nemotron-3.5-content-safety:free).
 

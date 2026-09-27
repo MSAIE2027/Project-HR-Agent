@@ -23,6 +23,24 @@ OPENROUTER_PRIMARY_MODELS = (
 )
 OPENROUTER_FALLBACK_MODEL = OPENROUTER_MODEL
 OPENROUTER_MODEL_CHAIN = (*OPENROUTER_PRIMARY_MODELS, OPENROUTER_FALLBACK_MODEL)
+_ACCOUNT_FREE_QUOTA_MARKERS = (
+    re.compile(r"\bfree[-_ ]models?[-_ ]per[-_ ]day\b", re.I),
+    re.compile(r"\bfree[-_ ]models?\b.{0,80}\b(?:daily|per day)\b", re.I),
+    re.compile(r"\b(?:daily|per day)\b.{0,80}\bfree[-_ ]models?\b", re.I),
+)
+_MODEL_OR_PROVIDER_SCOPE_MARKER = re.compile(
+    r"^(?:model|provider|route)(?: (?:specific|scoped|level|limit|rate limit|quota))?$",
+    re.I,
+)
+_MODEL_OR_PROVIDER_SCOPE_TEXT_MARKER = re.compile(
+    r"\b(?:(?:for )?(?:this|that|the|selected|specific|upstream) (?:free )?(?:model|provider|route)"
+    r"|(?:free )?(?:model|provider|route)[-_ ]specific"
+    r"|per[-_ ](?:model|provider|route)"
+    r"|(?:model|provider|route)[-_ ]rate[-_ ]limit"
+    r"|for (?:(?:this|that|the|selected|specific)\s+)?(?:free[-_ ]?)?(?:model|provider|route)"
+    r"(?:\s+[a-z0-9][\w./:-]*)?)\b",
+    re.I,
+)
 
 
 def _fallback_model() -> str:
@@ -47,6 +65,51 @@ def _setting(primary: str, legacy: str | None = None, default: str = "") -> str:
             if value:
                 return value
     return default
+
+
+def _is_account_free_quota_429(response: httpx.Response) -> bool:
+    """Recognize an account-wide free-model daily cap without retaining provider text."""
+    if response.status_code != 429:
+        return False
+    try:
+        payload = response.json()
+    except (ValueError, json.JSONDecodeError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return False
+
+    candidates = [error.get("code"), error.get("message"), error.get("type")]
+    scope_candidates = [error.get("scope"), error.get("limit_scope"), error.get("quota_scope")]
+    metadata = error.get("metadata")
+    if isinstance(metadata, dict):
+        candidates.extend(
+            metadata.get(key)
+            for key in ("code", "type", "error_type", "limit_type", "message")
+        )
+        scope_candidates.extend(
+            metadata.get(key) for key in ("scope", "limit_scope", "quota_scope")
+        )
+    normalized_scopes = (
+        re.sub(r"[-_]+", " ", str(value)[:120]).strip()
+        for value in scope_candidates
+        if value is not None
+    )
+    if any(_MODEL_OR_PROVIDER_SCOPE_MARKER.fullmatch(scope) for scope in normalized_scopes):
+        return False
+    if any(
+        value is not None and _MODEL_OR_PROVIDER_SCOPE_TEXT_MARKER.search(str(value)[:500])
+        for value in (*candidates, *scope_candidates)
+    ):
+        return False
+    return any(
+        marker.search(str(value)[:500])
+        for marker in _ACCOUNT_FREE_QUOTA_MARKERS
+        for value in candidates
+        if value is not None
+    )
 
 _REFINEMENT_STATUS: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
     "msaie_llm_refinement_status",
@@ -395,6 +458,7 @@ class OpenAICompatibleProvider:
         )
         last_error: Exception | None = None
         last_validation_issue: str | None = None
+        failure_scope: str | None = None
         attempted_models: list[str] = []
         model_attempts: list[dict[str, Any]] = []
         for model in self.model_chain:
@@ -523,7 +587,12 @@ class OpenAICompatibleProvider:
                 }
                 if isinstance(exc, httpx.HTTPStatusError):
                     attempt_result["http_status"] = str(exc.response.status_code)
+                    if _is_account_free_quota_429(exc.response):
+                        failure_scope = "account_quota"
+                        attempt_result["failure_scope"] = failure_scope
                 model_attempts.append(attempt_result)
+                if failure_scope == "account_quota":
+                    break
 
         failed_validation = bool(model_attempts) and all(
             attempt["outcome"] == "rejected" for attempt in model_attempts
@@ -539,6 +608,7 @@ class OpenAICompatibleProvider:
             evidence_items=len(evidence),
             attempts=len(attempted_models),
             error_type=type(last_error).__name__ if last_error else "unknown",
+            **({"failure_scope": failure_scope} if failure_scope else {}),
             **({"validation_issue": last_validation_issue} if failed_validation and last_validation_issue else {}),
         )
         if failed_validation:

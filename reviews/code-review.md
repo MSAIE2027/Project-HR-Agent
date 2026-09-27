@@ -26,3 +26,31 @@
 - Documentation commit `cf8e0db` passed [GitHub Actions run 36324920372](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36324920372); its Render deploy job was skipped.
 - The current documentation diff passed `git diff --check`.
 - Live read-only checks returned HTTP 200 for readiness, document listing, and the PTO chunk preview. The hosted medical-record and multi-employee prompts were refused before MCP or LLM calls.
+
+## Review — OpenRouter quota-aware fallback
+
+**Review date:** 2026-09-27
+
+**Code baseline:** `9357604` (working-tree changes, including new ADR 0008)
+
+**Review scope:** Stop retrying only for an identifiable account-wide free-model daily quota 429; preserve fallback for model/provider-scoped and unclassified 429s; sanitize public trace data.
+
+### Standards
+
+- No documented-standard violations found. The behavior is covered through the public `/chat` seam as required by `AGENTS.md`.
+- No actionable Fowler smell remains; repeated fake-provider setup in the added regressions was consolidated into a shared helper.
+
+### Spec
+
+- No remaining mismatch with SRS FR-16 or ADR 0008. The review caught a false stop for model-scoped daily-limit wording; the classifier now gives structured scope and unambiguous model/provider wording precedence over account-quota markers.
+- No unrelated behavior or scope creep found.
+- Hosted generation acceptance remains open: the last deployed preflight failed closed after four HTTP 429 responses and did not resolve a model. Mocked local tests do not establish a successful hosted answer.
+
+### Verification for this change
+
+- TDD reproduced structured-scope, message-only, and named-model false positives before their fixes.
+- Focused public `/chat` regressions: **6 passed**, one third-party Starlette/AnyIO deprecation warning.
+- Python syntax compilation and `git diff --check` passed.
+- Full CI and deployment have not run for this working-tree change.
+
+**Review summary:** Standards — 0 violations and 0 actionable smells. Spec — 0 remaining implementation mismatches or scope-creep findings. Hosted answer acceptance is a separate open release gate.
