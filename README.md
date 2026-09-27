@@ -139,4 +139,5 @@ See the [retrieval comparison report](evaluation/retrieval-comparison.md) and [c
 
 - GitHub repository: [MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent).
 - Assigned Render URL: [project-hr-agent.onrender.com](https://project-hr-agent.onrender.com).
+- Deployment procedure: [local-to-Render workflow](docs/local-to-render-workflow.md).
 - See [deployed.md](deployed.md) for verified live status and current release evidence.

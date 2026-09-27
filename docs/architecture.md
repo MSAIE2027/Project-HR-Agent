@@ -15,7 +15,7 @@ sequenceDiagram
     participant Agent as Deterministic orchestrator
     participant MCP as MCP client/server
     participant HF as Hugging Face MiniLM
-    participant DB as Local SQLite vector index
+    participant DB as Service-local SQLite vector index
     participant OR as OpenRouter pinned free model chain
     Employee->>API: HR question
     API->>Agent: Validate and route request

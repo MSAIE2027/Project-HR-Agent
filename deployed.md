@@ -1,30 +1,30 @@
 # Deployment Status
 
-**Runtime:** Live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com), deployed from commit `6ce0da8fd3d410d5a1093006463b5896d114fea4` in Render deployment `dep-dasdc7fpn0mc73fu752g`.
+**Application:** [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com)
 
-**Demo readiness:** Not ready for recording. Render health and tool discovery are healthy, and the hosted PTO trace completes the four MCP calls, but OpenRouter refinement returns HTTP 503. Do not claim a resolved hosted PTO model until `/chat` returns a cited response with `llm_refinement.status=completed` and its resolved `model`.
+**Health:** [https://project-hr-agent.onrender.com/health/ready](https://project-hr-agent.onrender.com/health/ready)
 
-## Verified deployment configuration
+**Render service:** `Project-HR-Agent` in workspace `MSAIE2027`
 
-- Render service `Project-HR-Agent`, workspace `MSAIE2027`, linked to `MSAIE2027/Project-HR-Agent` on `main`.
-- Python runtime, `/health/ready` health check, and auto-deploy Off. The deploy was manually triggered only after hosted CI passed for the exact SHA.
-- GitHub Actions run [36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067) passed on `6ce0da8` in 5m03s, including the CPU-only assertion, dense Hugging Face SQLite index build, pytest, MCP stdio smoke, both 30-case evaluations, and evidence upload. The opt-in automatic Render job is not configured; the exact tested `main` SHA was manually deployed after CI passed.
-- `GET /health/ready` and `GET /health?deep=true` returned HTTP 200. The live index reports 14 documents, 182 chunks, 384-dimensional `sentence-transformers/all-MiniLM-L6-v2` embeddings from Hugging Face, and no embedding error. Deep health discovered all eight MCP tools over stdio. OpenRouter is configured with Qwen 3.8 27B, Nemotron 3.5 Lightning, Gemma 4 26B A4B, then `openrouter/free`.
+**Runtime commit:** `6ce0da8fd3d410d5a1093006463b5896d114fea4`
 
-## Hosted response evidence
+**Render deployment:** `dep-dasdc7fpn0mc73fu752g`
 
-Earlier synthetic `/chat` requests against the live SHA timed out at 55–65 seconds or received HTTP 502 from the public edge. Later instrumented PTO requests returned application HTTP 503 after 51.7–138 seconds with the complete four-tool MCP trace. The latest pre-key-change retry received HTTP 429 from every route; another run had Nemotron numeric validation failure and a fallback timeout, and another returned an empty fallback completion with `finish_reason=length`. No model resolved. After the OpenRouter key was replaced, health still returned HTTP 200 and reported the provider as configured; two synthetic E1002 PTO requests returned HTTP 503 after 56.97 and 64.16 seconds, with all four routes marked unavailable and no citations or resolved model. An intentionally invalid `/chat` payload returned the expected HTTP 422, confirming the endpoint is reachable. The hosted calls confirm tool execution but not successful answer generation.
+## Current status
 
-The latest request, against deployed commit `6ce0da8`, asked for synthetic employee `E1002`'s PTO balance. It returned HTTP 503 after 79.2 seconds. Policy search, profile lookup, balance lookup, and compliance all completed; each of the four OpenRouter routes returned HTTP 429, so the response contained no citations or resolved model. Separately, the current local `.env` key authenticated successfully at OpenRouter's current-key endpoint and reported a free-tier allowance of 50 daily requests, 51 used, and 0 remaining. This is consistent with the hosted 429 responses, though Render's stored key was not read back or compared. No paid route was called, and no key, provider response body, or generated answer is stored. OpenRouter currently lists a 50-request daily cap for its Free plan ([pricing](https://openrouter.ai/pricing/)).
+The service is live and readiness returned HTTP 200 on 2026-09-27. It reports the Hugging Face MiniLM 384-dimensional SQLite index and eight MCP tools over stdio. Readiness also reports OpenRouter as configured; that confirms configuration is present, not that generation succeeds.
 
-A local synthetic PTO request using the same configured model chain and real stdio MCP first returned HTTP 503 after 27.9 seconds: Qwen and Gemma returned 429, Nemotron failed numeric validation, and `openrouter/free` omitted a required structured number. A later local retry returned HTTP 200 with five `POL-PTO-01` citations and `llm_refinement.status=completed`; the requested route was `openrouter/free`, and the actual resolved model was `inclusionai/ling-3.0-flash-fin:free`. The prior successful local remote-work request resolved to `poolside/laguna-s-2.1:free`. Each model attribution applies only to its specific local request. The latest current-working-tree local PTO call after key replacement returned HTTP 503 in 10.72 seconds; all four routes returned HTTP 429 after the four MCP calls, with no citations or resolved model. No raw model output or key is retained.
+The deployed runtime commit passed [GitHub Actions run 36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067) before it was manually deployed. Render auto-deploy is off. The later documentation-only commits on `main` do not change the deployed runtime.
 
-Direct synthetic diagnostics then exercised the pinned InclusionAI route against five SQLite passages. Removing document/chunk/source-path metadata from the composer prompt produced three consecutive 2,000-token completions that passed the current validator in 1.3–3.3 seconds. This supports a prompt change for the app, but it does not prove a public `/chat` response or resolve the fact that the candidate is finance-focused. No raw model output or key is retained.
+**Hosted answer generation is not verified, so the app is not ready for recording.** The latest confirmed hosted synthetic PTO request completed policy search, employee lookup, balance lookup, and compliance, then returned HTTP 503 after all four free model routes returned HTTP 429. The application withheld the unrefined draft. The current local `.env` key, using the accepted `OPENROUTER_API_KEY` alias, authenticates at OpenRouter but reports the Free-tier allowance exhausted at 51 requests used of 50, with none remaining. Render's stored key was not read back or compared. No paid route was called. See the [hosted request evidence](evidence/hosted-pto-smoke.md) for the sanitized attempt history.
 
-Sanitized request details are recorded in [`evidence/hosted-pto-smoke.md`](evidence/hosted-pto-smoke.md); earlier local route results remain in [`evidence/openrouter-chain-smoke.md`](evidence/openrouter-chain-smoke.md).
+## Verification and demo gate
 
-## Required before recording
+Before recording, repeat synthetic requests on the deployed runtime and confirm:
 
-Keep the key restricted to synthetic validation. The current local OpenRouter free-tier allowance is exhausted; wait for its daily quota to become available, then repeat the hosted synthetic PTO request. The demo gate is a hosted HTTP 200 with `check_pto_balance`, policy citations, `llm_refinement.status=completed`, an actual resolved model, and no reasoning leakage. Verify the remote-work scenario and confirmation-gated action flow on the exact live build before recording.
+- PTO balance and policy response returns HTTP 200, citations, and `llm_refinement.status=completed` with the actual resolved model.
+- International remote-work guidance returns cited policy evidence and the structured compliance result.
+- The confirmation-gated email or ticket workflow stops before the mock action until the user confirms.
+- Responses show no internal reasoning and preserve the required safety language.
 
-The user records and submits the 7–10 minute course presentation. See [`demo/README.md`](demo/README.md) and [`docs/local-to-render-workflow.md`](docs/local-to-render-workflow.md) for the rehearsal and deployment procedures.
+The hosted cold-start latency has not been isolated and measured. Local evaluation latency excludes OpenRouter and is not a Render cold-start measurement. For setup and deployment procedures, see [`docs/local-to-render-workflow.md`](docs/local-to-render-workflow.md); for the presenter runbook, see [`demo/README.md`](demo/README.md).
