@@ -5,65 +5,69 @@ A fictional HR support assistant that combines policy retrieval, structured synt
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph EXPERIENCE[Employee experience]
-        EMP([Employee]) --> UI[Browser workspace]
+flowchart TB
+    EMP([Employee]) --> UI[Browser workspace]
+
+    subgraph APP[FastAPI application]
+        UI --> API[Chat API]
+        API --> G{Privacy, safety, and confirmation gates}
+        G -->|refuse or await confirmation| SAFE[Safe status response]
+        G -->|continue| AGENT[Deterministic orchestrator]
+        AGENT --> DRAFT[Controlled draft + evidence + facts]
+        DRAFT --> OR[OpenRouter model chain]
+        OR --> VALIDATE[Answer and safety validation]
+        VALIDATE -->|valid| ANSWER[Answer + citations + operational trace]
+        VALIDATE -->|unavailable or invalid| FAIL[HTTP 503; no draft exposed]
+        ANSWER --> UI
+        SAFE --> UI
+        FAIL --> UI
     end
 
-    subgraph CONTROL[Application and deterministic control]
-        API[FastAPI chat API] --> G[Safety and workflow gates]
-        INDEXAPI[Read-only SQLite index API]
-        G --> AGENT[Agent orchestrator]
-        AGENT --> DRAFT[Controlled draft + structured facts]
-        CHECK[Answer and safety validation]
-    end
-
-    subgraph PROTOCOL[Official MCP protocol over stdio]
-        CLIENT[MCP SDK client] --> SERVER[FastMCP server]
-        SERVER -->|tools/call| TOOLS[Synthetic HR tools]
-        TOOLS -->|read or update fixture| RECORDS[(Fictional employee records)]
-        RECORDS -->|structured result| TOOLS
+    subgraph MCP[Official MCP protocol over stdio]
+        AGENT --> CLIENT[Official MCP SDK client]
+        CLIENT -->|tools/list and tools/call| SERVER[FastMCP server]
+        SERVER --> TOOLS[Eight typed HR and policy tools]
+        TOOLS -->|structured lookup| HRDATA[(Synthetic HR records)]
+        HRDATA -->|structured facts| TOOLS
         TOOLS -->|MCP result| SERVER
+        SERVER --> CLIENT
+        CLIENT --> AGENT
     end
 
-    subgraph RETRIEVAL[Service-local policy retrieval]
-        SEARCH[Policy search] --> EMBED[Hugging Face MiniLM]
-        EMBED --> SQLITE[(Service-local SQLite vector index)]
-        SQLITE --> CITED[Evidence chunks + citations]
+    subgraph RAG[Policy retrieval]
+        TOOLS -->|policy search| QUERY[Search query]
+        QUERY --> EMBED[Hugging Face MiniLM query embedding]
+        EMBED --> RANK[Hybrid ranking + family routing + MMR]
+        SQLITE[(Service-local SQLite vector index)] --> RANK
+        RANK --> EVIDENCE[Evidence chunks + citation metadata]
+        EVIDENCE --> TOOLS
     end
 
-    subgraph GENERATION[Required answer composition]
-        OR[OpenRouter model chain<br/>Qwen → Nemotron → Gemma → free fallback]
+    subgraph INGESTION[Policy indexing]
+        POLICY[Policy files] --> INGEST[Chunk + embed with MiniLM]
+        INGEST --> SQLITE
     end
 
-    UI --> API
-    UI -. browse documents and chunks .-> INDEXAPI
-    INDEXAPI -. safe rows only .-> SQLITE
-    AGENT --> CLIENT
-    SERVER --> SEARCH
-    CITED --> SERVER
-    SERVER --> CLIENT
-    CLIENT --> AGENT
-    DRAFT --> OR
-    OR --> CHECK
-    CHECK --> OUT[Validated answer + citations + trace]
-    OUT --> UI
+    UI -. read-only document and chunk preview .-> INDEXAPI[SQLite index API]
+    INDEXAPI -. safe metadata and text rows .-> SQLITE
 
     classDef user fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
-    classDef service fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef app fill:#eff6ff,stroke:#2563eb,color:#172554
     classDef protocol fill:#ecfeff,stroke:#0891b2,color:#164e63
     classDef local fill:#ecfdf5,stroke:#059669,color:#064e3b
     classDef hosted fill:#fff7ed,stroke:#ea580c,color:#7c2d12
     classDef output fill:#f5f3ff,stroke:#7c3aed,color:#3b0764
     class EMP,UI user
-    class API,INDEXAPI,G,AGENT,DRAFT,CHECK service
+    class API,G,AGENT,DRAFT,VALIDATE,INDEXAPI app
     class CLIENT,SERVER,TOOLS protocol
-    class RECORDS,SEARCH,EMBED,SQLITE,CITED local
+    class HRDATA,QUERY,EMBED,RANK,EVIDENCE,POLICY,INGEST,SQLITE local
     class OR hosted
-    class OUT output
+    class ANSWER,SAFE,FAIL output
 ```
 
-Every citation-bearing response goes through OpenRouter before the application returns it. The chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. The model formats and enriches a controlled draft using retrieved policy text and structured facts. It cannot select tools, change eligibility, or authorize actions. If the response is unavailable, truncated, unsupported, or unsafe, the API withholds the draft and reports a safe failure.
+Embedding and retrieval run locally. OpenRouter is the required composition step between deterministic orchestration and the final answer: the chain tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`. It formats and enriches a controlled draft using retrieved policy text and structured facts; it cannot select tools, change eligibility, or authorize actions. The application validates the result and returns HTTP 503 without exposing the draft if generation is unavailable, truncated, unsupported, or unsafe.
+
+**Release status:** The Render service is live and health-checked, but the latest hosted preflight did not complete model refinement. See [deployment status](deployed.md) before recording a hosted workflow.
 
 The project uses fixed synthetic records so the same demo query produces a repeatable scenario. The workspace includes examples for several employee IDs and a read-only browser for the SQLite policy documents and chunks; vector payloads are not exposed.
 
@@ -101,17 +105,17 @@ Keep provider credentials in the ignored `.env` file or shell environment. Never
 | Deliverable | Location |
 |---|---|
 | Fictional HR policy corpus | `policies/` |
-| Requirements and traceability | `specs/`, `docs/traceability-matrix.md` |
-| Architecture and decisions | `docs/architecture.md`, `docs/adr/` |
+| Source review, requirements, and traceability | `docs/source-materials-review.md`, `specs/`, `docs/traceability-matrix.md` |
+| Architecture, design, and decisions | `docs/architecture.md`, `design-and-evaluation.md`, `docs/adr/` |
+| Tickets and TDD implementation slices | `tickets/README.md`, `docs/implementation-slices.md` |
 | Orchestrator, API, and browser app | `agent/`, `app/` |
-| MCP client, server, and tools | `mcp_client/`, `mcp_server/` |
+| MCP tools (`mcp/` equivalent) | `mcp_server/` (server and tools), `mcp_client/` (protocol client) |
 | Synthetic records | `mock_data/` |
 | Retrieval evaluation and visualizations | `evaluation/`, `visuals/` |
 | Tests and GitHub Actions | `tests/`, `.github/workflows/ci.yml` |
 | Review and acceptance evidence | `reviews/`, `evidence/` |
 | Demo runbook | `demo/README.md`, `docs/demo-script.md` |
-
-The brief's `mcp/` category is implemented as the separately named `mcp_client/` and `mcp_server/` packages.
+| AI tooling disclosure and deployment status | `ai-tooling.md`, `deployed.md` |
 
 ## Verification
 
@@ -124,6 +128,8 @@ python -m evaluation.run_evaluation --transport inprocess
 python -m evaluation.run_evaluation --transport stdio
 python scripts/smoke_mcp.py
 ```
+
+For hosted acceptance when the provider routes are available, run `python scripts/smoke_hosted_demo.py`. It sends synthetic chat requests through the live app and may consume Free-tier allowance; by default it stops before the confirmation-gated mock email action. The `--confirm-mock-email` option explicitly exercises that fictional local-only action. Output is sanitized. See [deployment status](deployed.md) before using it.
 
 The golden set measures orchestrator behavior and deterministic control-flow proxies; it does not include OpenRouter generation or independent semantic judging. See [evaluation limits and results](evaluation/), [the review](reviews/code-review.md), and the [evidence index](evidence/index.md) for the current acceptance record. Deployment health and live request evidence are in [deployed.md](deployed.md).
 

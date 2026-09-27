@@ -16,7 +16,7 @@ The service is live and readiness returned HTTP 200 on 2026-09-27. It reports th
 
 The deployed runtime commit passed [GitHub Actions run 36306573067](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36306573067) before it was manually deployed. Render auto-deploy is off. The later documentation-only commits on `main` do not change the deployed runtime.
 
-**Hosted answer generation is not verified, so the app is not ready for recording.** The latest confirmed hosted synthetic PTO request completed policy search, employee lookup, balance lookup, and compliance, then returned HTTP 503 after all four free model routes returned HTTP 429. The application withheld the unrefined draft. The current local `.env` key, using the accepted `OPENROUTER_API_KEY` alias, authenticates at OpenRouter but reports the Free-tier allowance exhausted at 51 requests used of 50, with none remaining. Render's stored key was not read back or compared. No paid route was called. See the [hosted request evidence](evidence/hosted-pto-smoke.md) for the sanitized attempt history.
+**Hosted answer generation is not verified, so the app is not ready for recording.** After the OpenRouter configuration was refreshed, the latest live preflight returned HTTP 200 for both privacy refusals, then HTTP 503 on the international remote-work request. All four configured model routes returned HTTP 429; `llm_refinement.status` was `unavailable`, and no model resolved. The public app failed closed. Render reports the provider as configured, but configuration and readiness do not establish a completed answer. See the [sanitized hosted acceptance evidence](evidence/hosted-pto-smoke.md).
 
 ## Verification and demo gate
 
@@ -26,5 +26,7 @@ Before recording, repeat synthetic requests on the deployed runtime and confirm:
 - International remote-work guidance returns cited policy evidence and the structured compliance result.
 - The confirmation-gated email or ticket workflow stops before the mock action until the user confirms.
 - Responses show no internal reasoning and preserve the required safety language.
+
+The sanitized automated preflight is `python scripts/smoke_hosted_demo.py`. It sends synthetic requests through the configured OpenRouter chain and uses free-model quota; by default it does not confirm the mock email action. See the [demo runbook](demo/README.md) for the optional explicit confirmation flag.
 
 The hosted cold-start latency has not been isolated and measured. Local evaluation latency excludes OpenRouter and is not a Render cold-start measurement. For setup and deployment procedures, see [`docs/local-to-render-workflow.md`](docs/local-to-render-workflow.md); for the presenter runbook, see [`demo/README.md`](demo/README.md).

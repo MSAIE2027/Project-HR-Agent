@@ -1,6 +1,6 @@
 # MiniLM Top-k, Routing, MMR, and Weight Comparison
 
-Retrieval-only experiment. MiniLM (384 dimensions), 120/20 chunks, corpus, and query labels are fixed. No pytest, LLM generation, employee lookups, or action tools are used.
+Retrieval-only experiment with MiniLM (384 dimensions), 120/20 chunks, a fixed corpus, and 15 hand-labeled policy queries. It measures ranking, family routing, and MMR; it does not measure generated-answer quality or HR workflow behavior.
 
 Queries: 15 total; 5 multi-family. Index chunks: 182.
 

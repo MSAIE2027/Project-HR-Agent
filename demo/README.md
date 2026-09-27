@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on commit `6ce0da8`; GitHub Actions passed for that exact SHA and the readiness check passes. Do not record the hosted workflow yet: the latest synthetic PTO request completed the MCP calls but OpenRouter returned HTTP 429 on all four configured routes, then the API failed closed with HTTP 503. The local key's free-tier daily request allowance is exhausted. The recording gate is a hosted HTTP 200 with the `check_pto_balance` trace, citations, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage after the free quota replenishes. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on commit `6ce0da8`; GitHub Actions passed for that exact SHA and readiness passes. Do not record the hosted workflow yet: after the OpenRouter configuration refresh, the latest preflight returned HTTP 503 after all four model routes returned HTTP 429, with no resolved model. The recording gate is a hosted HTTP 200 with the expected tool trace, citations, `llm_refinement.status=completed`, its resolved model, and no reasoning leakage. See [`../deployed.md`](../deployed.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
 
 ## Start and verify
 
@@ -22,6 +22,8 @@ Before recording, run:
 ```
 
 The smoke command makes read-only MCP policy and synthetic-profile calls. The full test run includes synthetic mock-action cases and writes only to the configured local mock-action log.
+
+When the provider routes are available, run `./.venv/bin/python scripts/smoke_hosted_demo.py` to check the live health endpoints, privacy refusals, remote-work answer, PTO citations, model refinement, and confirmation gate. This sends synthetic requests through the hosted LLM chain and may consume Free-tier allowance. It does not run a mock action by default; add `--confirm-mock-email` only to test the confirmed fictional draft, which sends no email. The command prints only sanitized acceptance metadata. See [`../deployed.md`](../deployed.md) for the current recording gate.
 
 Use `stdio` for the grader-facing demonstration so the visible workflows cross the official MCP client/server protocol. The generic local-development default remains `inprocess` for faster iteration. The launcher preserves an explicitly supplied `MSAIE_MCP_TRANSPORT` over the value in `.env`.
 
@@ -77,7 +79,7 @@ The browser includes fixed scenarios for E1001, E1002, E1003, E1004, and E1005. 
 | 6:10–7:10 | Show the 30-case evaluation, retrieval ablation, and metric limitations. |
 | 7:10–8:20 | Show CI/Render configuration and state the current hosted status accurately; record the final workflow only after the hosted success gate passes. |
 
-The course prompt asks for a 7–10 minute narrated screen-share of the deployed application, with both agentic tasks completed end-to-end. The narration must explain MCP tool names, arguments, results, citations, and final behavior, and briefly cover design, deployment, CI/CD, and evaluation. For group submissions, every group member must speak, appear on camera, and show government ID; follow the course's agreement and submission instructions. Keep identity documents and the final recording out of this repository; upload the recording only through the course's designated submission flow. A historical local smoke on the 182-chunk index returned five citations and `llm_refinement=completed` after four model attempts, but it does not verify current provider availability. The latest hosted request failed after the OpenRouter Free-tier quota was exhausted; repeat the preflight against the deployed service after quota replenishes and before recording. See [`../evidence/openrouter-chain-smoke.md`](../evidence/openrouter-chain-smoke.md) and [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md).
+The course prompt asks for a 7–10 minute narrated screen-share of the deployed application, with both agentic tasks completed end-to-end. The narration must explain MCP tool names, arguments, results, citations, and final behavior, and briefly cover design, deployment, CI/CD, and evaluation. For group submissions, every group member must speak, appear on camera, and show government ID; follow the course's agreement and submission instructions. Keep identity documents and the final recording out of this repository; upload the recording only through the course's designated submission flow. Current hosted acceptance evidence is in [`../evidence/hosted-pto-smoke.md`](../evidence/hosted-pto-smoke.md); local provider evidence does not establish current hosted availability.
 
 ## Recording checklist
 
