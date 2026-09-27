@@ -7,5 +7,5 @@ pytest==8.4.1
 numpy==1.26.4
 scipy==1.13.1
 sentence-transformers==3.4.1
-transformers>=4.41,<5
+transformers>=5.17.0,<6
 python-dotenv>=1.0,<2
