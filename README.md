@@ -96,13 +96,13 @@ python -m evaluation.run_evaluation --transport stdio
 python scripts/smoke_mcp.py
 ```
 
-GitHub Actions runs the suite, protocol smoke, and 25-case golden set over both in-process and stdio transports, then uploads the JSON and Markdown reports. The first hosted run for commit `42de2e8` passed all steps; see [the run](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289121722). A separate deploy job depends on the full `test` job and is disabled until the repository variable `RENDER_DEPLOY_ENABLED=true` and secret `RENDER_DEPLOY_HOOK_URL` are configured. The job requests the exact tested SHA. Render auto-deploy is Off so a commit cannot bypass that CI gate. The existing Render service still needs its Python runtime and `/health/ready` settings synchronized before use; see [deployment status](deployed.md).
+GitHub Actions builds and verifies the Hugging Face dense SQLite policy index, runs the suite, protocol smoke, and 25-case golden set over both in-process and stdio transports, then uploads the JSON and Markdown reports. The first hosted run for commit `42de2e8` passed all steps; see [the run](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36289121722). A separate deploy job depends on the full `test` job and is disabled until the repository variable `RENDER_DEPLOY_ENABLED=true` and secret `RENDER_DEPLOY_HOOK_URL` are configured. The job requests the exact tested SHA. Render auto-deploy is Off so a commit cannot bypass that CI gate. The live Render service still needs its Python runtime, build command, and `/health/ready` settings synchronized before use; see [deployment status](deployed.md).
 
 ### Hosting target
 
 - GitHub repository: [MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent) (`origin` is configured locally).
 - Assigned Render URL: [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com).
-- The Blueprint service name is `Project-HR-Agent`, which matches the assigned hostname. The URL is not verified as live: `main` is populated and hosted CI passed, but the existing Render service has no deploy history and its Docker runtime and empty health-check path still differ from `render.yaml`.
+- The Blueprint service name is `Project-HR-Agent`, which matches the assigned hostname. The URL is not verified as live: `main` is populated and hosted CI passed on the previous deployment commit, but the existing Render service has no deploy history and its Docker runtime and empty health-check path still differ from `render.yaml`.
 
 ## Retrieval comparison
 

@@ -4,7 +4,11 @@ services:
     runtime: python
     plan: free
     branch: main
-    buildCommand: pip install -r requirements.txt && python -m compileall app agent rag mcp_server mcp_client evaluation scripts
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python -m compileall app agent rag mcp_server mcp_client evaluation scripts &&
+      python scripts/build_index.py --force &&
+      python -c 'from rag.index import RagIndex; stats = RagIndex().stats(); assert stats["semantic_embeddings"] and stats["embedding_provider"] == "huggingface", stats; print("Hugging Face dense SQLite policy index is ready")'
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/ready
     autoDeployTrigger: "off"
@@ -22,4 +26,4 @@ services:
       - key: MSAIE_EMBEDDING_MODEL
         value: sentence-transformers/all-MiniLM-L6-v2
       - key: MSAIE_INDEX_PATH
-        value: /tmp/msaie-rag/rag_index.sqlite3
+        value: .data/rag_index.sqlite3

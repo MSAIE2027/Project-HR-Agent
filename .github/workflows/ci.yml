@@ -29,6 +29,13 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Check imports and syntax
         run: python -m compileall -q app agent rag mcp_server mcp_client evaluation scripts
+      - name: Build and verify Hugging Face SQLite policy index
+        env:
+          MSAIE_INDEX_PATH: .data/rag_index.sqlite3
+          MSAIE_EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+        run: |
+          python scripts/build_index.py --force
+          python -c 'from rag.index import RagIndex; stats = RagIndex().stats(); assert stats["semantic_embeddings"] and stats["embedding_provider"] == "huggingface", stats; print("Hugging Face dense SQLite policy index is ready")'
       - name: Run unit, API, workflow, and MCP protocol tests
         run: python -m pytest -q
       - name: Run MCP discovery and tool-call smoke check
