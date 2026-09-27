@@ -339,6 +339,13 @@ class MSAIEOrchestrator:
                             requires_confirmation=True,
                             confidence="high",
                             mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
+                            structured_facts={
+                                "eligible": bool(check["eligible"]),
+                                "requested_days": requested_days,
+                                "available_days": pto["available_days"],
+                                "remaining_if_approved": pto["remaining_if_approved"],
+                                "notice_days": check["notice_days"],
+                            },
                         )
                     if asks_action and confirm_action:
                         email = await call(
@@ -416,6 +423,12 @@ class MSAIEOrchestrator:
                         status="completed",
                         confidence="high",
                         mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
+                        structured_facts={
+                            "benefits_status": record["status"],
+                            "medical_plan": record["medical_plan"],
+                            "dental_plan": record["dental_plan"],
+                            "next_action": record["next_action"],
+                        },
                     )
 
                 prefixes = _topic_prefixes(message)
