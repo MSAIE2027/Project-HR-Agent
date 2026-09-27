@@ -346,6 +346,58 @@ with TestClient(app) as client:
         )
         assert response.json()["trace"][-1]["event"] == "llm_refinement"
 
+    def test_chat_rejects_internal_reasoning_from_openrouter(monkeypatch) -> None:
+        result = AgentResult(
+            answer="Maya Chen has 14 synthetic PTO days available.",
+            citations=[{"document_id": "POL-PTO-01", "snippet": "The structured PTO record is authoritative."}],
+            status="completed",
+            structured_facts={"available_days": 14},
+        )
+
+        class FakeOrchestrator:
+            def __init__(self) -> None:
+                pass
+
+            async def handle(self, message: str, confirm_action: bool = False) -> AgentResult:
+                return result
+
+        class ReasoningResponse:
+            status_code = 200
+            text = ""
+
+            def json(self):
+                return {
+                    "model": "qwen/qwen3.8-27b:free",
+                    "choices": [{
+                        "message": {
+                            "content": "The user requested a concise answer about 14 days. Let me reason through the facts."
+                        }
+                    }],
+                }
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args) -> None:
+                return None
+
+            async def post(self, url: str, **kwargs):
+                return ReasoningResponse()
+
+        monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(main_module, "get_provider", lambda: OpenAICompatibleProvider())
+        monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+        response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
+
+        assert response.status_code == 503
+        assert "The user requested" not in response.text
+        assert "Let me reason" not in response.text
+        assert response.json()["llm"]["refinement"]["validation_issue"] == "internal_reasoning_exposed"
+
     def test_chat_fails_closed_on_openrouter_provider_failure(monkeypatch) -> None:
         result = AgentResult(
             answer="Unrefined policy-derived text must not be returned.",
