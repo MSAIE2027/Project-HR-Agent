@@ -111,9 +111,15 @@ After the user confirms in the UI, the next turn calls `draft_hr_email(employee_
 
 ## Retrieval and embeddings
 
-Production uses sentence-transformers/all-MiniLM-L6-v2 at 384 dimensions and 120-word chunks with 20-word overlap. After expanding the 14 policy files to 15,034 indexed words, the chunk experiment found that 120/20, 160/24, and 220/30 yielded the same 182 chunks and tied on its quality metrics; 120/20 is the smallest of those tied settings. The current raw corpus and page-equivalent estimates are disclosed in the README. Details are in evaluation/ablation-results.md.
+Production uses `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions (Reimers & Gurevych, 2019; Wang et al., 2020) and 120-word chunks with 20-word overlap. After expanding the 14 policy files to 15,034 indexed words, the chunk experiment found that 120/20, 160/24, and 220/30 yielded the same 182 chunks and tied on quality metrics; 120/20 is the smallest of those tied settings. The current raw corpus and page-equivalent estimates are disclosed in the README. Details are in `evaluation/ablation-results.md`.
 
-The follow-up comparison holds MiniLM and 120/20 fixed. At global k=5, current ranking retrieved all expected families for 1/5 multi-family queries; MMR at λ=0.5 reached 2/5 and raised family recall from 0.76 to 0.81. k=8 reached 2/5 for both current ranking and MMR. Doubling lexical weight did not improve multi-family coverage. Based on this comparison, production uses λ=0.5 MMR over a top-ten candidate pool and returns five results. For explicit multi-family intent it seeds one best result per family, then fills with MMR. The measured gain is modest and the labels are hand-authored.
+The follow-up retrieval ablation held MiniLM and 120/20 fixed while testing baseline ranking against Maximal Marginal Relevance (MMR; Carbonell & Goldstein, 1998) at both $\lambda = 0.7$ and $\lambda = 0.5$:
+- At global $k=5$, baseline current ranking retrieved all expected families for only 1/5 multi-family queries (Family recall@5 = 0.76).
+- MMR at $\lambda = 0.7$ (favoring relevance) produced no coverage gain over baseline (1/5 multi-family coverage; Family recall@5 = 0.76).
+- MMR at $\lambda = 0.5$ (balanced relevance and diversity) doubled multi-family coverage to 2/5 (40%) and raised Family recall@5 from 0.76 to 0.81.
+- At $k=8$, both current ranking and MMR reached 2/5 multi-family coverage. Doubling lexical weight did not improve multi-family coverage.
+
+Based on this ablation, production standardizes on $\lambda = 0.5$ MMR over a top-ten candidate pool to return five results. For explicit multi-family queries, the orchestrator seeds one best result per detected family, then fills remaining citation slots using $\lambda = 0.5$ MMR. Details and limits are documented in `evaluation/retrieval-comparison.md`.
 
 The updated orchestrator route cited all expected families in 15/15 labeled queries, including 5/5 multi-family probes. The six-item read-only policy golden slice had 100% status, citation-prefix, and groundedness-proxy scores, with `huggingface_dense_cosine` observed. The full 30-case golden-set evaluation is recorded in `evaluation/results.md` and `evaluation/results-stdio.md`; its metric values are deterministic fixture proxies, not independent semantic judgments. The complete query-level matrix and limits are in `evaluation/retrieval-comparison.md`.
 
@@ -142,3 +148,15 @@ Each item defines its query, expected status, exact expected MCP tool sequence, 
 Both local transports scored 1.0 on deterministic status, groundedness-proxy, citation-prefix, exact-tool-sequence, workflow-completion (5/5 workflow cases), clarification/escalation, and action-safety metrics; mean keyword overlap was 0.95. The in-process run used a separate read-only priming request (6,005.88 ms), followed by a warm 15-task sample (p50 23.59 ms; p95 104.74 ms). Each stdio sample started a fresh MCP subprocess and includes process/model/index initialization; its priming request was 8,478.52 ms and the 15-task p50/p95 were 7,471.90/7,917.17 ms. These are local measurements; the stdio sample is not a Render host cold-start benchmark. Percentiles use nearest rank and are described with the reports.
 
 The chunk ablation and retrieval-only comparison are recorded in [`evaluation/ablation-results.md`](evaluation/ablation-results.md) and [`evaluation/retrieval-comparison.md`](evaluation/retrieval-comparison.md). Their hand-labeled corpus is small, so results justify the local configuration choice only; they are not a general retrieval benchmark.
+
+## References
+
+1. Anthropic. (2024). *Model Context Protocol (MCP) Specification*. Anthropic, PBC. https://modelcontextprotocol.io
+2. Carbonell, J., & Goldstein, J. (1998). The use of MMR, diversity-based reranking for reordering documents and producing summaries. In *Proceedings of the 21st Annual International ACM SIGIR Conference on Research and Development in Information Retrieval* (pp. 335–336). Association for Computing Machinery. https://doi.org/10.1145/290941.291025
+3. Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. In *Advances in Neural Information Processing Systems* (Vol. 33, pp. 9459–9474). Curran Associates, Inc.
+4. National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce. https://doi.org/10.6028/NIST.AI.100-1
+5. Nielsen, J. (1994). 10 usability heuristics for user interface design. *Nielsen Norman Group*. https://www.nngroup.com/articles/ten-usability-heuristics/
+6. Open Web Application Security Project. (2023). *OWASP Top 10 for Large Language Model Applications* (v1.1). OWASP Foundation. https://owasp.org/www-project-top-10-for-large-language-model-applications/
+7. Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)* (pp. 3982–3992). Association for Computational Linguistics. https://doi.org/10.18653/v1/D19-1410
+8. Wang, W., Wei, F., Dong, L., Bao, H., Yang, N., & Zhou, M. (2020). MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers. In *Advances in Neural Information Processing Systems* (Vol. 33, pp. 5776–5788). Curran Associates, Inc.
+9. World Wide Web Consortium. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1* (W3C Recommendation). W3C. https://www.w3.org/TR/WCAG21/

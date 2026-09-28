@@ -39,3 +39,14 @@ In accordance with Quantic's Academic Integrity Policy and disclosure guidelines
 1. **No Real PII or Production Access:** All employee IDs (`E1001`–`E1005`), names, jurisdictions, and leave figures are deterministic synthetic fixtures defined in `mock_data/`.
 2. **Deterministic Regression Tests vs. Live Generation:** The 30-case golden benchmark isolates orchestrator state transitions, tool dispatch, and citation synthesis deterministically (`llm_generation_included: false`) to ensure fast, zero-flakiness CI execution. Live multi-turn natural language generation is validated separately via unit tests (`tests/test_llm.py`) and live hosted smoke scripts (`scripts/smoke_hosted_demo.py`).
 3. **Repository Access:** An official collaborator invitation (ID: `335007413`, `permissions: "write"`) was created for `quantic-grader` on 2026-09-28T04:58:00Z and is pending acceptance.
+
+---
+
+## 4. Academic References
+
+1. Anthropic. (2024). *Model Context Protocol (MCP) Specification*. Anthropic, PBC. https://modelcontextprotocol.io
+2. Carbonell, J., & Goldstein, J. (1998). The use of MMR, diversity-based reranking for reordering documents and producing summaries. In *Proceedings of the 21st Annual International ACM SIGIR Conference on Research and Development in Information Retrieval* (pp. 335–336). Association for Computing Machinery. https://doi.org/10.1145/290941.291025
+3. National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce. https://doi.org/10.6028/NIST.AI.100-1
+4. Nielsen, J. (1994). 10 usability heuristics for user interface design. *Nielsen Norman Group*. https://www.nngroup.com/articles/ten-usability-heuristics/
+5. Wang, W., Wei, F., Dong, L., Bao, H., Yang, N., & Zhou, M. (2020). MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers. In *Advances in Neural Information Processing Systems* (Vol. 33, pp. 5776–5788). Curran Associates, Inc.
+6. World Wide Web Consortium. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1* (W3C Recommendation). W3C. https://www.w3.org/TR/WCAG21/

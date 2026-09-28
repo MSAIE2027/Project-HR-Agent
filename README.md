@@ -102,10 +102,10 @@ An enterprise human resources agent that implements verifiable policy retrieval,
 
 - **Model Context Protocol (MCP) Standard:** Exposes domain functionality via an official FastMCP server running over standard input/output (`stdio`) inter-process communication (IPC).
 - **Embedded Dense Vector Retrieval (RAG):** Evaluates dense semantic similarity entirely in-process using an INT8-quantized `all-MiniLM-L6-v2` ONNX model stored in SQLite. Operates without external vector database services.
-- **Hierarchical Document Routing & MMR:** Combines prefix-based policy domain routing with Maximal Marginal Relevance ($\lambda = 0.7$) to eliminate duplicate passage citations.
+- **Hierarchical Document Routing & MMR:** Combines prefix-based policy domain routing with Maximal Marginal Relevance (MMR, $\lambda = 0.5$; Carbonell & Goldstein, 1998) to eliminate duplicate intra-document passage citations and maximize multi-family policy recall.
 - **Fail-Closed Action Boundaries:** Isolates state-changing actions (`draft_hr_email`, `create_mock_hr_ticket`) behind a two-phase confirmation protocol. Unconfirmed requests return verified policy rationale and halt.
 - **Multi-Tier Resilience Cascade:** Protects against upstream LLM rate limits by cascading from OpenRouter to OpenCode Zen, with bounded SQLite templates serving standard read-only queries during full provider outages.
-- **WCAG 2.1 AA Compliant Interface:** Accessible browser workspace featuring semantic HTML5 landmarks, dynamic ARIA live regions, keyboard focus management, and color contrast ratios exceeding 4.5:1.
+- **WCAG 2.1 AA Compliant Interface:** Accessible browser workspace featuring semantic HTML5 landmarks, dynamic ARIA live regions, keyboard focus management, and color contrast ratios exceeding 4.5:1 (W3C, 2018; Nielsen, 1994).
 
 ---
 
@@ -167,14 +167,14 @@ To operate reliably within the strict memory constraints of containerized enviro
 
 - **Corpus Ingestion:** 14 policy documents (8 Markdown, 6 HTML; 16,010 total words).
 - **Chunking Strategy:** Heading-aware boundary preservation (`#`, `##`, `###`) followed by a 120-word sliding window with a 20-word overlap (182 total chunks).
-- **Quantized Embeddings:** Local ONNX INT8 AVX2 execution (`sentence-transformers/all-MiniLM-L6-v2`, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`).
+- **Quantized Embeddings:** Local ONNX INT8 AVX2 execution (`sentence-transformers/all-MiniLM-L6-v2`, revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`; Reimers & Gurevych, 2019; Wang et al., 2020).
 - **Memory Footprint:** Peak memory during vector inference is ~71 MB (compared to ~536 MB for unquantized PyTorch), eliminating out-of-memory container terminations.
 - **Storage & Distance Metric:** Vector embeddings are stored as packed binary blobs in SQLite. Similarity is computed via dot-product cosine similarity.
-- **Reranking:** Maximal Marginal Relevance (MMR, $\lambda = 0.7$) penalizes redundant passages from identical policy sections.
+- **Reranking:** Maximal Marginal Relevance (MMR, $\lambda = 0.5$; Carbonell & Goldstein, 1998) penalizes redundant passages from identical policy sections across a top-10 candidate pool, selecting the top 5 diverse citations.
 
 ### 3.3 Responsible Innovation & Safety Controls
 
-The system adheres to NIST AI Risk Management Framework (AI RMF 1.0) and OWASP Top 10 for LLMs:
+The system adheres to the NIST AI Risk Management Framework (AI RMF 1.0; NIST, 2023) and the OWASP Top 10 for LLMs (OWASP, 2023):
 
 1. **Medical Privacy (HIPAA / PII Shield):** Deterministic regex and keyword interceptors evaluate incoming prompts before tool execution. Queries requesting health, diagnosis, or disability details return HTTP 200 `status: refused` with zero tool calls and zero external LLM calls.
 2. **Multi-Employee Isolation:** Prompts requesting batch evaluations or cross-employee compensation queries are rejected to prevent internal data exposure.
@@ -206,12 +206,19 @@ Evaluated across both in-process and `stdio` IPC execution modes (`evaluation/ru
 > **Evaluation Metric Methodology:**
 > The golden benchmark validates orchestrator control-flow, tool dispatch, parameter binding, and citation extraction deterministically without network latency. The `_keyword_score` metric measures lexical substring recall against curated reference facts. This deterministic proxy prevents CI pipeline flakiness and is separate from open-ended natural language generation.
 
-### 4.2 Retrieval Optimization & Ablations
+### 4.2 Retrieval Optimization & Ablation Studies
 
-- **Chunk Size Ablation (`evaluation/ablation-results.md`):** Tested windows of 60, 90, 120, 160, and 220 words. A 120-word window with 20-word overlap produced the optimal trade-off: 100% Hit@1, 96.2% family recall, and an index size of 1.77 MB fitting inside the 256-token model limit.
-- **Retrieval Comparison (`evaluation/retrieval-comparison.md`):** Dense vector retrieval achieved 96.2% top-5 recall versus 82.5% for BM25 keyword search. Integrating hierarchical prefix routing with MMR reranking produced 100% target family coverage.
+Empirical parameter validation was conducted across chunk segmentation and diversity reranking:
+
+- **Chunk Boundary Ablation (`evaluation/ablation-results.md`):** Evaluated sliding windows of 60, 90, 120, 160, and 220 words across 15,034 words in the 14 policy documents. Window configurations of 120/20, 160/24, and 220/30 yielded identical retrieval quality (100% Hit@1, 96.2% family recall, 182 chunks). The 120-word window with 20-word overlap was selected as the minimal sufficient chunk size, producing an index size of 1.77 MB that operates well within the 256-token transformer context limit (Wang et al., 2020).
+- **Reranking & Diversity Ablation (`evaluation/retrieval-comparison.md`):** Evaluated baseline dense ranking against Maximal Marginal Relevance rerankers across candidate pools ($\lambda = 0.7$ vs $\lambda = 0.5$; Carbonell & Goldstein, 1998):
+  - **Baseline Dense & Cosine Weighting:** At global $k=5$, baseline dense retrieval retrieved all expected policy families for only 20% (1/5) of multi-family queries (Family recall@5 = 0.76).
+  - **MMR $\lambda = 0.7$ (Relevance-Favored):** Over-weighted query similarity, failing to diversify across distinct policy families. It produced no improvement over baseline (Multi-family coverage remained at 20%; Family recall@5 remained at 0.76).
+  - **MMR $\lambda = 0.5$ (Balanced Relevance & Diversity):** Doubled multi-family coverage from 20% to 40% (2/5) at $k=5$ and elevated Family recall@5 from 0.76 to 0.81.
+  - **Production Routed Architecture:** Pairing explicit family seed retrieval with $\lambda = 0.5$ MMR over a top-10 candidate pool achieves **100% multi-family coverage** and 100% family recall across all multi-document queries (see Figure 1).
 
 ![Retrieval Comparison Chart](visuals/retrieval-comparison.svg)
+*Figure 1: Multi-family policy retrieval coverage across top-$k$ candidate thresholds, contrasting baseline dense ranking with MMR ($\lambda = 0.5$).*
 
 ---
 
@@ -293,3 +300,17 @@ python -m evaluation.run_evaluation --transport stdio --fail-on-thresholds
 - **Academic Integrity:** Comprehensive AI tooling attribution, developer methodologies, and evaluation boundaries are documented in [`ai-tooling.md`](ai-tooling.md).
 - **Deployment Status:** Current live service health, release verification SHAs, and empirical hosted test records are maintained in [`deployed.md`](deployed.md).
 - **Security Control Mapping:** Formal mapping of system defenses against NIST AI RMF 1.0 and OWASP Top 10 for LLMs is provided in [`docs/security-control-map.md`](docs/security-control-map.md).
+
+---
+
+## 8. Academic References
+
+1. Anthropic. (2024). *Model Context Protocol (MCP) Specification*. Anthropic, PBC. https://modelcontextprotocol.io
+2. Carbonell, J., & Goldstein, J. (1998). The use of MMR, diversity-based reranking for reordering documents and producing summaries. In *Proceedings of the 21st Annual International ACM SIGIR Conference on Research and Development in Information Retrieval* (pp. 335–336). Association for Computing Machinery. https://doi.org/10.1145/290941.291025
+3. Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. In *Advances in Neural Information Processing Systems* (Vol. 33, pp. 9459–9474). Curran Associates, Inc.
+4. National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce. https://doi.org/10.6028/NIST.AI.100-1
+5. Nielsen, J. (1994). 10 usability heuristics for user interface design. *Nielsen Norman Group*. https://www.nngroup.com/articles/ten-usability-heuristics/
+6. Open Web Application Security Project. (2023). *OWASP Top 10 for Large Language Model Applications* (v1.1). OWASP Foundation. https://owasp.org/www-project-top-10-for-large-language-model-applications/
+7. Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)* (pp. 3982–3992). Association for Computational Linguistics. https://doi.org/10.18653/v1/D19-1410
+8. Wang, W., Wei, F., Dong, L., Bao, H., Yang, N., & Zhou, M. (2020). MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers. In *Advances in Neural Information Processing Systems* (Vol. 33, pp. 5776–5788). Curran Associates, Inc.
+9. World Wide Web Consortium. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1* (W3C Recommendation). W3C. https://www.w3.org/TR/WCAG21/
