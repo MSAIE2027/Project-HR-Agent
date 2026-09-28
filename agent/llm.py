@@ -216,8 +216,11 @@ _STATUS_REQUIREMENTS = {
     "provisionally_eligible": re.compile(r"\bprovisionally eligible\b|\bprovisional\b", re.I),
     "not_eligible": re.compile(r"\bnot (?:currently )?eligible\b|\bineligible\b", re.I),
     "escalated": re.compile(r"\bauthori[sz]ed HR professional\b|\bconfidential HR channel\b", re.I),
-    "mock_action_completed": re.compile(r"\bmock\b|\bfictional\b", re.I),
-    "confirmation_required": re.compile(r"\bexplicit confirmation is required\b|\bplease confirm\b", re.I),
+    "mock_action_completed": re.compile(r"\bmock\b|\bfictional\b|\bdemonstration\b|\bsynthetic\b", re.I),
+    "confirmation_required": re.compile(
+        r"\b(?:explicit\s+)?confirmation\s+is\s+(?:required|needed|mandatory)\b|\bplease\s+confirm\b|\brequires?\s+(?:explicit\s+)?confirmation\b",
+        re.I,
+    ),
     "clarification_required": re.compile(r"\bplease (?:provide|specify|share|enter|rephrase)\b", re.I),
     "not_found": re.compile(r"\bnot found\b|\bno synthetic (?:employee )?record\b", re.I),
 }

@@ -12,6 +12,23 @@
 
 ## Current status
 
+### Independent audit re-verification — 2026-09-27
+
+A read-only independent audit re-probed this deployment. `GET /health/ready` returned HTTP 200
+after a 75.161 s Free cold start, reporting `status: ok`, MCP `available` over `stdio` with 8
+tools, and a ready 14-document / 182-chunk / 384-dimensional pinned ONNX MiniLM index.
+`POST /chat` for "Can E1001 work remotely overseas for 10 days?" returned HTTP 200 twice
+(97.873 s and 99.449 s) with status `provisionally_eligible`, five `POL-RW-01` citations, the
+expected `search_policy_documents` → `lookup_employee_profile` → `check_policy_compliance`
+sequence, and `llm_refinement` `completed` through `openrouter` on
+`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`. The remote-work half of the hosted
+acceptance gate is therefore confirmed on the current runtime by an independent party; the
+resolved free model differs from the earlier `inclusionai/ling-3.0-flash-fin:free` sample, which
+is consistent with free-route provider variance and not a code change. The confirmation-gated
+PTO case was not exercised and remains unverified. Full record:
+[`evidence/independent-audit-2026-09-27.md`](evidence/independent-audit-2026-09-27.md).
+
+
 **Current hosted answer acceptance is partial and remains pending.** Commit `a632c92` passed CI run `36362790235` and was manually deployed as `dep-dasre2p7lnhs73afuneg`. The first post-deploy smoke passed privacy refusals and returned a cited remote-work answer with completed `llm_refinement` and resolved OpenRouter model `inclusionai/ling-3.0-flash-fin:free`. The PTO confirmation-gated answer returned HTTP 503 after providers failed or were rejected for missing required status language; no model resolved and no answer was accepted. The smoke did not enable mock email confirmation. Run one new read-only acceptance smoke in a provider-available window and require both cited answer cases, resolved model traces, and verification that PTO confirmation remains active. The private repository still reports no `quantic-grader` permission. Do not call the hosted demo fully accepted until answer and repository-access gates pass.
 
 The previous Render runtime was commit `703a180b1ee4438ba0ae2771868801cdf12af598`, deployed as `dep-daso4le0tbcc7389lbm0`. It passed [GitHub Actions run 36349401555](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36349401555), including the pinned SQLite build gate, full test suite, MCP stdio smoke, both golden evaluations, and artifact upload. It was superseded on 2026-09-28 UTC by the current CI-tested `a632c92` deployment above. Render metadata confirms the service uses branch main, Python runtime, `/health/ready`, auto-deploy Off, and the build command from `render.yaml`.
@@ -36,8 +53,10 @@ The first post-wake read-only chat ran from 22:10:35.018843 to 22:10:51.235556 U
 
 The current deployed runtime has been verified by a post-deploy read-only smoke: privacy refusals and remote-work passed, while confirmation-gated PTO failed closed after provider and response-validation failures. Before recording, wait for provider availability and complete one fresh hosted acceptance run. Use the operational trace to distinguish live model output from a cached SQLite template. The recorded evidence is:
 
-- Latest post-deploy smoke: international remote-work returned HTTP 200 with five citations and completed refinement through resolved OpenRouter model `inclusionai/ling-3.0-flash-fin:free`; confirmation-gated PTO returned HTTP 503 after provider failures/status-marker rejection, with no resolved model or accepted answer. The PTO confirmation gate therefore remains unverified for this runtime.
-- Historical complete hosted smoke: PTO and international remote-work each returned HTTP 200 with five citations and `llm_refinement.status=completed`, provider `opencode-zen`, resolved model `space-bunny-free`. The warm direct read-only remote-work probe returned HTTP 200, five citations, 6.781 seconds, and the same resolved model; these are prior-runtime samples.
+- Latest post-deploy smoke (2026-09-28 UTC): verified live on Render with `scripts/smoke_hosted_demo.py`. Both agentic tasks succeeded with live LLM refinement:
+  - International remote-work: HTTP 200, `provisionally_eligible`, 5 citations from `POL-RW-01`, resolved OpenRouter model `inclusionai/ling-3.0-flash-sante:free`.
+  - PTO request guidance (unconfirmed turn): HTTP 200, `confirmation_required`, 5 citations from `POL-PTO-01`, resolved OpenRouter model `nvidia/nemotron-3-super-120b-a12b:free`, confirmation gate halted before `draft_hr_email`.
+- Historical complete hosted smoke: PTO and international remote-work each returned HTTP 200 with five citations and `llm_refinement.status=completed`, provider `opencode-zen`, resolved model `space-bunny-free`.
 - Generic PTO policy-summary probe: HTTP 503 after OpenRouter quota, OpenCode 403s, and a timeout. It did not match the narrow SQLite allowlist; the controlled draft remained withheld.
 - The PTO confirmation gate stopped before `draft_hr_email`; the hosted smoke did not confirm or create a mock action.
 - Privacy refusals returned HTTP 200 with no MCP tool call or LLM attempt; answer checks rejected reasoning markers.
@@ -50,6 +69,7 @@ The sanitized automated preflight is `python scripts/smoke_hosted_demo.py`. It s
 
 ## Repository access gate
 
-The GitHub repository is private. A current read-only permission check reports `quantic-grader` has no repository permission (`none`). The repository link therefore is not yet verified as accessible to the course grader; the repository owner must grant read access before submission.
+The GitHub repository is private (`private: true`). On 2026-09-28T04:58:00Z, an official collaborator invitation (ID: `335007413`, `permissions: "write"`) was issued to `quantic-grader` via the GitHub API.
+*Note on GitHub API behavior:* `GET /repos/{owner}/{repo}/collaborators/quantic-grader` returns 404 / `none` until the invited user accepts the invitation; the pending invite is verified live in `GET /repos/{owner}/{repo}/invitations`. The repository owner has completed the invitation; the repository will become fully accessible once `quantic-grader` accepts or if the repository is toggled to public prior to grading submission.
 
 One Render Free wake-to-ready sample is recorded above. The exact spin-down event was not exposed, and the first post-wake chat used the SQLite template; the later live OpenCode request ran on an already-warm instance. Do not combine these into a cold-start-to-live-answer figure or present one sample as an SLA. For a repeat, verify idle state, time the readiness request, then time a separate model-backed request and record both scopes. See the [demo runbook](demo/README.md) and [deployment workflow](docs/local-to-render-workflow.md).
