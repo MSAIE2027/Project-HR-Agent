@@ -1,5 +1,5 @@
 # Quantic MSAIE HR Agent
-### Master of Science in AI Engineering (MSAIE) Capstone Project
+### Master of Science in AI Engineering (MSAIE)  Project
 
 [![CI](https://github.com/MSAIE2027/Project-HR-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/MSAIE2027/Project-HR-Agent/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/pytest-117%20passed-brightgreen)](https://github.com/MSAIE2027/Project-HR-Agent)
@@ -10,9 +10,9 @@
 
 > [!IMPORTANT]
 > **Academic Demonstration & Synthetic Data Notice:**
-> This application is an academic capstone project developed for the **Quantic School of Business and Technology Master of Science in AI Engineering (MSAIE)** degree program. All corporate policies, employee profiles, leave balances, email drafts, and support tickets are entirely fictional and synthetic. The system contains no real-world personal identifiable information (PII) and has no connection to production human resources information systems (HRIS).
+> This application is an academic project developed for the **Quantic School of Business and Technology Master of Science in AI Engineering (MSAIE)** degree program. All corporate policies, employee profiles, leave balances, email drafts, and support tickets are entirely fictional and synthetic. The system contains no real-world personal identifiable information (PII) and has no connection to production human resources information systems (HRIS).
 
-An enterprise human resources copilot that implements verifiable policy retrieval, relational employee record lookup, and human-in-the-loop action execution. The system couples Anthropic's **Model Context Protocol (MCP)** with an in-process **quantized INT8 ONNX vector retrieval pipeline** and a **two-phase confirmation gate** for state-changing side-effects.
+An enterprise human resources agent that implements verifiable policy retrieval, relational employee record lookup, and human-in-the-loop action execution. The system couples Anthropic's **Model Context Protocol (MCP)** with an in-process **quantized INT8 ONNX vector retrieval pipeline** and a **two-phase confirmation gate** for state-changing side-effects.
 
 ---
 
