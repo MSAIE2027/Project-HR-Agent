@@ -1,10 +1,13 @@
-# Design and Evaluation
+# Design and Evaluation Specification
+### Quantic School of Business and Technology — Master of Science in AI Engineering (MSAIE)
 
-This document describes the current MSAIE HR Agent architecture and the scope of the latest retrieval comparison.
+> [!IMPORTANT]
+> **Academic Demonstration & Synthetic Data Notice:**
+> This design and evaluation document specifies the architecture and empirical validation for the **Quantic MSAIE** capstone. All policy documents, employee records, leave calculations, and ticket actions are synthetic and fictional.
 
-## Design objective
+## 1. Design Objectives
 
-Provide a local-first, fictional HR support agent that answers policy questions with source citations, consults synthetic employee records, and prepares mock actions only after explicit confirmation.
+The system provides an enterprise human resources copilot that evaluates policy inquiries with verifiable source citations, references synthetic employee records, and enforces two-phase human confirmation boundaries before staging mock actions.
 
 ## Architecture
 

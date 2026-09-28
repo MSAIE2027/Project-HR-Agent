@@ -1,6 +1,7 @@
-# Project agent instructions
+# Agent Directives & Repository Rules
+### Quantic School of Business and Technology — Master of Science in AI Engineering (MSAIE)
 
-This is the standalone MSAIE HR Agent. Keep product behavior, documentation, and examples within this project.
+This repository contains the standalone Quantic MSAIE HR Agent. Maintain all code behavior, documentation, and evaluation examples within this project boundary.
 
 ## Source of truth
 
