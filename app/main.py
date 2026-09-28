@@ -252,13 +252,11 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
                 "attempted_models": [],
                 "attempts": 0,
             }
-            refinement = _cached_refinement(result, refinement) or refinement
-            if refinement.get("status") != "cached_template":
-                return _llm_failure_response(
-                    "OpenRouter is required to generate evidence-backed answers, but it is not configured.",
-                    result=result,
-                    refinement=refinement,
-                )
+            return _llm_failure_response(
+                "OpenRouter is required to generate evidence-backed answers, but it is not configured.",
+                result=result,
+                refinement=refinement,
+            )
         else:
             structured_facts = dict(result.structured_facts)
             if result.requires_confirmation:

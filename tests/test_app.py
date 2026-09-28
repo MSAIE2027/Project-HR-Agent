@@ -233,13 +233,15 @@ with TestClient(app) as client:
         assert 'message-meta">MSAIE <span>Demo assistant</span>' in response.text
         assert 'data-open-lab' not in response.text
         assert response.text.count('data-fill="Can E1001 work remotely overseas for 10 days?"') == 1
-        assert response.text.count('data-fill="How much PTO does E1002 have?"') == 1
+        assert response.text.count('data-fill="Can E1005 work remotely overseas for 3 days?"') == 1
+        assert response.text.count('data-fill="How much PTO does E1001 have and draft an email for 5 days?"') == 1
+        assert response.text.count('data-fill="What is the benefits status for E1002?"') == 1
+        assert response.text.count('class="example-button"') == 4
+        assert "Load fills the composer without sending" in response.text
+        assert "setAttribute('aria-label', `Load ${scenario} into chat`)" in response.text
         assert "readJsonResponse" in response.text
         assert "returned a non-JSON response" in response.text
         assert "E001" not in response.text
-        assert 'data-fill="How much PTO does E1003 have?"' in response.text
-        assert 'data-fill="How much PTO does E1004 have?"' in response.text
-        assert 'data-fill="Can E1005 work remotely overseas for 3 days?"' in response.text
         assert ".example-strip[hidden] { display: none; }" in response.text
         assert "exampleStrip.hidden = true" in response.text
         assert client.get("/legacy").status_code == 404
@@ -617,6 +619,15 @@ with TestClient(app) as client:
             answer="Unrefined policy-derived text must not be returned.",
             citations=[{"document_id": "POL-PTO-01", "snippet": "Policy evidence."}],
             status="completed",
+            structured_facts={
+                "workflow": "pto",
+                "employee_id": "E1001",
+                "employee_name": "Maya Chen",
+                "available_days": 14,
+                "requested_days": 0,
+                "notice_days": 14,
+                "eligible": True,
+            },
         )
 
         class FakeOrchestrator:
@@ -627,11 +638,26 @@ with TestClient(app) as client:
                 return result
 
         monkeypatch.setattr(main_module, "MSAIEOrchestrator", FakeOrchestrator)
+        monkeypatch.delenv("MSAIE_LLM_API_KEY", raising=False)
+        monkeypatch.setenv("OPENCODE_API_KEY", "test-opencode-key")
         monkeypatch.setattr(main_module, "get_provider", DeterministicProvider)
+        cache_calls: list[dict[str, Any]] = []
+
+        def fake_cached_refinement(result, refinement):
+            cache_calls.append(refinement)
+            return {
+                "status": "cached_template",
+                "cache_hit": True,
+                "template_key": "pto_balance",
+                "template_version": "1",
+            }
+
+        monkeypatch.setattr(main_module, "_cached_refinement", fake_cached_refinement)
         response = client.post("/chat", json={"message": "Ask about PTO"})
 
         assert response.status_code == 503
         assert "OpenRouter is required" in response.json()["detail"]
+        assert cache_calls == []
 
     def test_chat_returns_503_on_malformed_openrouter_payload(monkeypatch) -> None:
         result = AgentResult(

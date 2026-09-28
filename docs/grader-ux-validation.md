@@ -11,10 +11,13 @@ flowchart LR
   G -->|valid scope| D[Discover MCP tools]
   D --> W[Execute expected workflow]
   W --> C[Check citations and structured results]
-  C --> L[OpenRouter composes every citation-backed answer]
-  L --> V[Validate status facts and safety disclaimers]
-  V -->|valid| O[Emit final answer plus citations and trace]
-  V -->|provider unavailable or invalid| X[Return HTTP 503; do not expose unrefined draft]
+  C --> M[OpenRouter chain, then OpenCode Zen chain]
+  M -->|valid model response| V[Validate answer against evidence, status, facts, and safety rules]
+  V -->|valid| O[Emit answer, citations, and operational trace]
+  M -->|both chains exhausted| T{Allow-listed safe read-only template with fresh facts and matching citations?}
+  T -->|yes| S[Format current facts with build-seeded SQLite template]
+  S --> O
+  T -->|no| X[Return HTTP 503; withhold the controlled draft]
 ```
 
 The validator should assert:
@@ -25,9 +28,13 @@ The validator should assert:
 - Citation IDs match the evidence returned by policy search.
 - Confirmation is required for write-like mock actions.
 - Injection refusals that stop before retrieval do not call tools or the LLM.
-- Every citation-bearing response calls OpenRouter, including clarification and confirmation responses grounded in retrieved policy.
+- Every citation-bearing response attempts the configured model path: OpenRouter first, followed by OpenCode Zen. An identifiable account-wide OpenRouter free-quota 429 skips the remaining OpenRouter routes; other failures exhaust the OpenRouter chain before OpenCode.
+- The main chat shows four complete fictional sample questions with synthetic employee IDs. Selecting one fills the composer; it does not submit the request.
+- The single Evaluator & Test Lab entry point retains nine scenarios, each with stable `data-lab-load` and `data-lab-run` controls. Load fills without sending; Run now submits to the live service, and mock actions still require the explicit confirmation gate.
+- Each model candidate passes the same answer validator. Invalid, truncated, or unavailable candidates advance through the remaining configured routes.
+- If both live provider chains fail, only a supported read-only PTO or provisionally eligible remote-work workflow with fresh matching structured facts and policy citations may use its versioned SQLite template. The trace labels this `cached_template`; this formats current facts and is not a stored answer.
 - Missing inputs request clarification, unknown records return an explicit `not_found` result, and sensitive cases escalate; the agent does not invent records.
-- Missing provider configuration, provider errors, or invalid generated text fail closed with HTTP 503 instead of returning the controlled retrieval draft.
+- Unsupported questions, confirmation-gated actions, unsafe cases, and template misses fail closed with HTTP 503 if model generation is unavailable. No unrefined controlled draft is returned.
 
 ## Nielsen heuristic review
 
@@ -46,4 +53,4 @@ The validator should assert:
 
 ## Accessibility checks
 
-Use keyboard navigation, visible focus, semantic labels, live status announcements, sufficient contrast, responsive reflow, and controls large enough for touch. A local browser review was performed against the updated checkout; its scope and limitations are recorded in [`evidence/ui-review.md`](../evidence/ui-review.md). It does not substitute for screen-reader or automated contrast testing, nor does it claim validation of a deployed interface.
+Use keyboard navigation, visible focus, semantic labels, live status announcements, sufficient contrast, responsive reflow, and controls large enough for touch. The current local browser review includes 1280 × 800 and 390 × 844 viewports, verifies no horizontal overflow, and checks the sample and evaluator Load interactions without submitting a chat. Its scope and limitations are recorded in [`evidence/ui-review.md`](../evidence/ui-review.md). It does not substitute for screen-reader or automated contrast testing, nor does it claim validation of a deployed interface.

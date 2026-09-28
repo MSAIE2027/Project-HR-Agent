@@ -1,6 +1,6 @@
 # Demo Package
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. The public demo has no employee authentication or role authorization; all employee records are fictional. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on runtime commit 703a180 (deployment dep-daso4le0tbcc7389lbm0), which passed CI run [36349401555](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36349401555). The latest full preflight passed privacy refusals and cited remote-work/PTO confirmation-gate answers through OpenCode Zen space-bunny-free. A later read-only check after the OpenCode credential update also completed through space-bunny-free in 6.672 seconds on the warm service. The PTO confirmation gate held; no mock action was created. See [deployment status](../deployed.md) and [hosted acceptance evidence](../evidence/hosted-pto-smoke.md).
+This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. The public demo has no employee authentication or role authorization; all employee records are fictional. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on runtime commit 703a180 (deployment dep-daso4le0tbcc7389lbm0), which passed CI run [36349401555](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36349401555). Historical hosted requests completed cited answers through OpenCode Zen `space-bunny-free`. The latest acceptance attempt passed privacy and retrieval, then OpenRouter returned an account-wide free-tier quota 429; the fallback correctly returned 503 without a resolved model or exposed draft. Hosted answer acceptance remains pending fresh cited PTO and remote-work answers with completed refinement traces and resolved models, and confirmation-gate verification. See [deployment status](../deployed.md) and [hosted acceptance evidence](../evidence/hosted-pto-smoke.md).
 
 ## Start and verify
 
@@ -41,7 +41,7 @@ Expected operational trace:
 2. `search_policy_documents` for `POL-RW-*` evidence.
 3. `lookup_employee_profile` for `E1001`.
 4. `check_policy_compliance` with `workflow=remote_work` and `requested_days=10`.
-5. OpenRouter composes the final answer using the citations and structured eligibility facts; the trace records `llm_refinement`, the selected model, and any fallback attempts.
+5. The configured live provider chain composes the final answer using citations and structured eligibility facts. The trace records `llm_refinement`, the selected source/model, and fallback attempts; a supported SQLite template is labeled separately from LLM generation.
 
 Expected outcome: `provisionally_eligible`; the cited policy is `POL-RW-01`; the rolling total is 14/20 days. The answer must say that manager, HR, tax, information-security, and immigration review are still required and that policy eligibility is not final travel authorization.
 

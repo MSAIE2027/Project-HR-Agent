@@ -137,7 +137,7 @@ For the required protocol path, set `MSAIE_MCP_TRANSPORT=stdio`. `inprocess` is 
 Keep provider credentials in the ignored `.env` file or shell environment. Never commit secrets.
 
 - OpenRouter: `MSAIE_LLM_BASE_URL`, `MSAIE_LLM_API_KEY` (or legacy `OPENROUTER_API_KEY` for local runs), and `MSAIE_LLM_FALLBACK_MODEL`.
-- OpenCode Zen fallback: `OPENCODE_API_KEY`, `OPENCODE_ZEN_BASE_URL`, and `OPENCODE_ZEN_MODELS`. OpenCode currently lists Nemotron 3.5 Lightning Free, Big Pickle, and Space Bunny Free as zero-priced, limited-time routes; availability and access can change. See the [OpenCode Zen catalog](https://opencode.ai/docs/en/zen/).
+- OpenCode Zen fallback: `OPENCODE_API_KEY`, `OPENCODE_ZEN_BASE_URL`, and `OPENCODE_ZEN_MODELS`. OpenCode currently lists Nemotron 3.5 Lightning Free, Big Pickle, and Space Bunny Free as zero-priced, limited-time routes; availability and access can change. The environment setting can reorder or select a subset of the code allowlist; add replacement model IDs only through a reviewed code/test change. See the [OpenCode Zen catalog](https://opencode.ai/docs/en/zen/).
 - Embeddings: `MSAIE_EMBEDDING_*` settings are separate from LLM generation. The default model is `sentence-transformers/all-MiniLM-L6-v2` at 384 dimensions, pinned to Hugging Face revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` and run with the `onnx/model_quint8_avx2.onnx` CPU export. SQLite stores vectors; ONNX Runtime embeds queries locally.
 - `/`: synthetic HR workspace and evaluator lab.
 - `/health` and `/health/ready`: service, SQLite index, MCP, and provider status.
@@ -151,7 +151,7 @@ Keep provider credentials in the ignored `.env` file or shell environment. Never
 |---|---|
 | Fictional HR policy corpus | `policies/` |
 | Source review, requirements, and traceability | `docs/source-materials-review.md`, `specs/`, `docs/traceability-matrix.md` |
-| Architecture, design, and decisions | `docs/architecture.md`, `design-and-evaluation.md`, `docs/adr/` |
+| Architecture, design, and decisions | `docs/architecture.md`, [`docs/architecture-deepening-review.md`](docs/architecture-deepening-review.md), `design-and-evaluation.md`, `docs/adr/` |
 | Tickets and TDD implementation slices | `tickets/README.md`, `docs/implementation-slices.md` |
 | Orchestrator, API, and browser app | `agent/`, `app/` |
 | MCP tools (`mcp/` equivalent) | `mcp_server/` (server and tools), `mcp_client/` (protocol client) |

@@ -30,3 +30,18 @@ This was a local browser review using visible rendering and the browser accessib
 - The local page returned HTTP 200 and its accessibility tree showed the single evaluator entry, one example strip, and an online health state. A source-level regression checks that non-JSON responses are reported as an HTTP error; this follow-up did not inject a synthetic 500, and it does not diagnose the earlier reported local failure.
 
 The follow-up was not a hosted browser review or a security authorization test. See `tickets/README.md` for the separate authorization design work.
+
+## Curated prompt and evaluator review
+
+**Date:** 2026-09-27
+
+**Build:** updated local working tree served by the existing `http://127.0.0.1:8000/` process
+
+**Scope:** four employee-scoped sample prompts, single evaluator entry point, stable automation controls, accessible names, and wide/narrow layout. This was a UI-only browser review; no chat was submitted.
+
+- Replaced the ten-button starter wall with four full questions, each visibly including a synthetic employee ID: two contrasting remote-work examples, the E1001 PTO request, and E1002 benefits status. At 1280 × 800 the cards form a balanced two-column grid; at 390 × 844 they reflow to one column. Both viewports had no document-width overflow.
+- Clicked a sample and confirmed its complete text filled the composer while the conversation stayed unchanged. In the evaluator, the Task B Load button filled its full query and left the conversation unchanged. No Run now button, `/chat` request, confirmation control, or mock action was invoked.
+- Verified one evaluator launch control and all nine scenario cards. Each card retains one `[data-lab-load]` and one `[data-lab-run]` selector, with scenario-specific accessible names; visible button labels remain Load and Run now.
+- The local health panel reported the service online and showed the pinned 384-dimensional semantic embedding, 14 policy documents, 182 chunks, 120/20 chunking, and eight stdio MCP tools. It also reported OpenCode Zen fallback as not configured in this already-running local process. The process was left untouched; no provider request was made. This local observation does not establish Render configuration or hosted answer acceptance.
+
+This review does not claim screen-reader or automated contrast validation, self-identity authorization, hosted UI validation, provider completion, or deployment readiness. The hosted smoke and repository-access gates remain separate evidence.

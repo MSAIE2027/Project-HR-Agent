@@ -56,7 +56,7 @@ flowchart LR
     class Validate,Answer,Fail outcome
 ```
 
-The app, orchestrator, JSON records, and SQLite index run in one service. In the required demo and Render stdio configuration, one lifecycle-managed MCP subprocess runs alongside the app; the local quick-start defaults to in-process MCP. MiniLM weights are downloaded from Hugging Face and inference runs locally; OpenRouter is the external text-generation provider. Every successful citation-bearing response passes through OpenRouter and deterministic validation. Refusals that stop before retrieval do not call the provider.
+The app, orchestrator, JSON records, and SQLite index run in one service. In the required demo and Render stdio configuration, one lifecycle-managed MCP subprocess runs alongside the app; the local quick-start defaults to in-process MCP. MiniLM weights are downloaded from Hugging Face and inference runs locally. Citation-bearing responses try OpenRouter first, then the configured OpenCode Zen fallback, and pass live model text through deterministic validation. If both live routes fail, the bounded SQLite template path may format fresh facts and citations for supported read-only workflows; this is not LLM generation or an employee-answer cache. Refusals that stop before retrieval do not call a provider. See [`deployed.md`](deployed.md) for current hosted acceptance status.
 
 ## MCP transport behavior
 

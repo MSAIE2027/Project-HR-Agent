@@ -13,7 +13,7 @@
 
 ## Review and limits
 
-AI-generated code and documentation require human review. The golden-set and retrieval figures are deterministic, fixture-based measurements; they do not establish open-ended semantic accuracy. Hosted model composition passed the current synthetic preflight; it remains provider-dependent and is not measured by the golden evaluations. Sanitized evidence is in [`deployed.md`](deployed.md) and [`evidence/index.md`](evidence/index.md).
+AI-generated code and documentation require human review. The golden-set and retrieval figures are deterministic, fixture-based measurements; they do not establish open-ended semantic accuracy. Historical hosted traces completed synthetic answer composition through OpenCode Zen, but the latest acceptance attempt stopped after OpenRouter's account-wide free-tier quota 429; the fallback returned HTTP 503 without a resolved model or exposed draft. Hosted answer acceptance remains pending and is not measured by the golden evaluations. Sanitized evidence is in [`deployed.md`](deployed.md) and [`evidence/hosted-pto-smoke.md`](evidence/hosted-pto-smoke.md).
 
 The project uses fictional policies, employee records, tickets, and actions. It does not connect to a production HR system or use real employee data.
 
