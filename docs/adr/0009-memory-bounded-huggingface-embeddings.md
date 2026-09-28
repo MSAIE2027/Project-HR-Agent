@@ -1,6 +1,6 @@
 # ADR 0009: Run pinned MiniLM with quantized ONNX Runtime
 
-**Status:** Accepted; local and hosted first-query checks passed, hosted OpenRouter completion remains blocked by account quota
+**Status:** Accepted; current hosted index readiness passed, hosted answer acceptance is partial
 **Date:** 2026-09-27
 
 ## Context
@@ -26,7 +26,7 @@ Persist the embedding backend, revision, and tokenizer maximum length in SQLite 
 - Local process peak RSS was 121.6 MB during the ONNX experiment. That local result is not directly comparable to Render's prior memory sample and does not establish hosted capacity.
 - CI run [36336569726](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36336569726) passed the build gate, tests, MCP smoke, and both threshold-gated evaluations. Render deployment `dep-dasl2lh7lnhs739ltkb0` is live on the same tested commit `eeceda7`; the first policy request completed without a process restart. Render sampled 71,155,710 bytes after startup and 274,866,180 bytes after the first policy request against a 536,870,900-byte service limit. These two samples are not a peak or concurrency benchmark.
 - Follow-up commit `2ace284` adds tokenizer-limit index invalidation and strict semantic-index readiness. Commit `071dfb8` includes the shared exact-index verifier in the Render build; GitHub Actions run [36341666520](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36341666520) passed, and Render deployment `dep-dasm8l8473hc738v0dkg` is live on that tested SHA.
-- The latest hosted citation-bearing request reached OpenRouter after policy retrieval and MCP checks. Qwen returned HTTP 429; the smoke CLI omits failure scope, and the app returned HTTP 503 without the unrefined draft. No answer model resolved; hosted LLM generation remains pending provider availability. The local key's daily free counter was exhausted, but the Render key identity/quota is not independently confirmed.
+- Post-deploy smoke on `a632c92` reported the semantic SQLite index ready, passed remote-work through OpenRouter model `inclusionai/ling-3.0-flash-fin:free`, and returned 503 for confirmation-gated PTO after provider failures and status-marker validation. This is partial hosted answer evidence; successful PTO refinement remains pending.
 
 ## Consequences
 

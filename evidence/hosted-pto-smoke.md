@@ -1,7 +1,22 @@
 # Hosted LLM Acceptance Evidence
 
 > [!warning] Current acceptance gate: pending
-> The successful hosted traces below are historical evidence from runtime `703a180`; they do not verify the latest saved Render OpenCode key. Render auto-deploy is Off. After the reviewed candidate passes CI and is manually deployed, hosted acceptance still requires cited synthetic PTO and remote-work answers, completed `llm_refinement` events with resolved models, and the PTO confirmation gate. `quantic-grader` also still needs repository access. Do not treat this page as proof of current demo readiness until those gates pass.
+> The latest deployment is `a632c92` (`dep-dasre2p7lnhs73afuneg`). Its first hosted acceptance smoke is a partial pass: privacy refusals and remote-work passed with citations and a resolved live model; the confirmation-gated PTO case returned 503 after provider attempts failed or were rejected by response validation. Hosted acceptance remains pending a completed cited PTO answer with a resolved model and confirmation gate. `quantic-grader` also still needs repository access. Do not treat this page as proof of full demo readiness until those gates pass.
+
+## Latest hosted smoke after deployment `a632c92`
+
+**Date:** 2026-09-28 UTC | **Service:** [Project-HR-Agent](https://project-hr-agent.onrender.com) | **Deployed commit:** `a632c92d8eb4d39bc109782caeff3774f717f252` | **CI:** [run 36362790235](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36362790235) passed | **Render deployment:** `dep-dasre2p7lnhs73afuneg` | **Command:** `./.venv/bin/python scripts/smoke_hosted_demo.py --timeout 150` | **Inputs:** synthetic employee IDs only; `--confirm-mock-email` not enabled
+
+| Check | Result | Sanitized trace evidence |
+|---|---|---|
+| Deployment and readiness | Pass | Render reports deployment live on the CI-passing SHA. Smoke reported readiness `ok`, index `ready`, and eight MCP tools. |
+| Medical-record privacy refusal | Pass | HTTP 200, `refused`, no citations, no tool calls, no provider attempt. |
+| Multiple-employee privacy refusal | Pass | HTTP 200, `refused`, no citations, no tool calls, no provider attempt. |
+| International remote-work answer | Pass | HTTP 200, `provisionally_eligible`, five citations from `POL-RW-01`, expected policy/profile/compliance tools, four provider attempts; `llm_refinement` completed through OpenRouter with resolved model `inclusionai/ling-3.0-flash-fin:free`. |
+| PTO balance and confirmation gate | **Blocked** | HTTP 503 after seven provider attempts. Qwen and Gemma returned HTTP 429; Nemotron timed out; `openrouter/free` was rejected for missing required status marker; two OpenCode routes returned 403; Space Bunny was also rejected for missing status marker. No model resolved and no final response was accepted. The controlled draft was withheld. |
+| Mock email action | Not run | The smoke did not enable `--confirm-mock-email`; no `draft_hr_email` action was requested or created. The failed PTO response does not establish a successful rendered confirmation gate. |
+
+The deterministic validator behaved fail-closed when generated text omitted required workflow-status language. Remote-work acceptance is evidenced for this run; PTO answer acceptance and confirmation-gate verification remain open. Do not retry repeatedly against free routes; choose a later provider-available window and run one fresh acceptance smoke. This run's sanitized summary is the evidence above; raw prompts, answer text, provider bodies, and credentials were not retained.
 
 ## Previously successful hosted preflight
 
