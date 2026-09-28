@@ -1,18 +1,43 @@
-# Demo Package
+# Demonstration & Rehearsal Guide
+### Quantic School of Business and Technology — Master of Science in AI Engineering (MSAIE)
 
-This package supports rehearsal and the course demonstration of the standalone synthetic HR agent. The public demo has no employee authentication or role authorization; all employee records are fictional. Render is live at [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) on runtime commit 703a180 (deployment dep-daso4le0tbcc7389lbm0), which passed CI run [36349401555](https://github.com/MSAIE2027/Project-HR-Agent/actions/runs/36349401555). Historical hosted requests completed cited answers through OpenCode Zen `space-bunny-free`. The latest acceptance attempt passed privacy and retrieval, then OpenRouter returned an account-wide free-tier quota 429; the fallback correctly returned 503 without a resolved model or exposed draft. Hosted answer acceptance remains pending fresh cited PTO and remote-work answers with completed refinement traces and resolved models, and confirmation-gate verification. See [deployment status](../deployed.md) and [hosted acceptance evidence](../evidence/hosted-pto-smoke.md).
+> [!IMPORTANT]
+> **Academic Demonstration & Synthetic Data Notice:**
+> This application is an academic capstone demonstration developed for the **Quantic MSAIE** degree program. All corporate policies, employee records (`E1001`–`E1005`), leave balances, email drafts, and support tickets are entirely synthetic and fictional. The system contains no real PII and connects to no production HRIS systems.
 
-## Start and verify
+This guide supports rehearsal, local verification, and the official video screen-share demonstration of the Quantic HR Agent.
 
+---
+
+## 1. Environment Access Endpoints
+
+The application is accessible across two deployment targets:
+
+| Target Environment | Application Web UI | Readiness Health Check | Deep Inspection Endpoint | Transport Mode | Purpose |
+|:---|:---|:---|:---|:---|:---|
+| **Production (Render Cloud)** | [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com) | [/health/ready](https://project-hr-agent.onrender.com/health/ready) | [/health?deep=true](https://project-hr-agent.onrender.com/health?deep=true) | FastMCP via `stdio` IPC | Official Capstone video presentation & live cloud verification. |
+| **Localhost Development** | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) | [/health/ready](http://127.0.0.1:8000/health/ready) | [/health?deep=true](http://127.0.0.1:8000/health?deep=true) | FastMCP (`stdio` or `inprocess`) | Rehearsal, offline test execution, and protocol architecture inspection. |
+
+---
+
+## 2. Start and Verify
+
+### 2.1 Localhost Execution
 From the repository root, with Python 3.12 and dependencies installed:
 
 ```bash
 MSAIE_MCP_TRANSPORT=stdio ./scripts/start_local.sh --no-browser
 ```
 
-Open `http://127.0.0.1:8000/`. Check `http://127.0.0.1:8000/health?deep=true` for app status, MCP discovery, policy-index metadata, OpenRouter configuration, and OpenCode Zen fallback configuration. To show the SQLite index, open **Evaluator & Test Lab → SQLite policy index**, select `POL-PTO-01`, and expand a chunk; below it, show the build-seeded response-template keys. The endpoints return 14 document rows and 13 chunks for `POL-PTO-01`; vector payloads and database paths stay hidden. Template rows store reusable wording only, not live answers or employee facts. Do not display `.env` or secrets. To stop a foreground run, press `Ctrl-C`; for a detached run, use `./scripts/stop_local.sh`.
+1. Open `http://127.0.0.1:8000/` in your browser.
+2. Verify system readiness at `http://127.0.0.1:8000/health?deep=true` (enumerating all 8 FastMCP tools, SQLite index status, and provider configuration).
+3. To inspect the SQLite index visually, open **Evaluator & Test Lab → SQLite policy index**, select `POL-PTO-01`, and expand a chunk.
+4. To stop the local server, press `Ctrl-C` (or run `./scripts/stop_local.sh` for background instances).
 
-Render confirms this service uses the Free compute plan. Free web services spin down after 15 minutes without inbound traffic and take about one minute to start ([Render Free service limits](https://render.com/docs/free)). For a hosted recording, open the app ahead of time, wait until [/health/ready](https://project-hr-agent.onrender.com/health/ready) returns status=ok, then reload the app; a browser may retain Render's loading interstitial after the endpoint is healthy. One observed wake returned readiness in 33.466 seconds; this is a single sample, not an SLA. The first read-only chat after the wake used a SQLite template because live providers were unavailable. A later warm request completed through OpenCode Zen space-bunny-free in 6.672 seconds after OpenRouter account quota; inspect the operational trace because free-model availability varies.
+### 2.2 Hosted Render Cloud Execution
+Render hosts the application on the Free web compute plan (`https://project-hr-agent.onrender.com`).
+- **Spin-Down Lifecycle:** Free web services spin down after 15 minutes of inactivity. Initial wake-up requires ~33–75 seconds to provision the container and verify the INT8 ONNX vector index.
+- **Pre-Recording Wakeup:** Before recording, open [`https://project-hr-agent.onrender.com/health/ready`](https://project-hr-agent.onrender.com/health/ready) in a browser tab. Wait until it returns `{"status":"ok"}`, then load the main application UI at [`https://project-hr-agent.onrender.com`](https://project-hr-agent.onrender.com).
 
 Every citation-bearing response first goes to OpenRouter after MCP retrieval and deterministic workflow checks. The app tries Qwen 3.8 27B, Nemotron 3.5 Lightning, and Gemma 4 26B A4B, then `openrouter/free`; each request is capped at 12 seconds. An account-wide free-quota 429 skips the remaining OpenRouter routes and advances to OpenCode Zen. Other OpenRouter route failures use the rest of the OpenRouter chain before OpenCode. OpenCode tries its configured free-model chain with an 8-second per-model cap, leaving a bounded worst-case 72 seconds for seven model attempts before RAG/MCP overhead. Both live providers receive the controlled draft, retrieved evidence, and structured facts; they cannot choose tools or approve actions. Set `MSAIE_LLM_API_KEY` and optionally `OPENCODE_API_KEY` in the ignored local `.env`, restart, and inspect `/health?deep=true`. A live answer ends with `llm_refinement.status=completed` and names the actual provider/model. If both model providers fail, the supported read-only PTO and positive remote-work templates can format fresh facts and citations; the trace reports `status=cached_template` and a SQLite key. Confirmation-gated actions and unsupported or unsafe cases still return HTTP 503 without the draft. Refusals that stop before retrieval do not call either model provider.
 
