@@ -43,7 +43,7 @@ In accordance with Quantic's Academic Integrity Policy and disclosure guidelines
 
 1. **No Real PII or Production Access:** All employee IDs (`E1001`–`E1005`), names, jurisdictions, and leave figures are deterministic synthetic fixtures defined in `mock_data/`.
 2. **Deterministic Regression Tests vs. Live Generation:** The 34-case golden benchmark isolates orchestrator state transitions, tool dispatch, out-of-scope abstentions, and citation synthesis deterministically (`llm_generation_included: false`) to ensure fast, zero-flakiness CI execution. Live multi-turn natural language generation is validated separately via unit tests (`tests/test_llm.py`), live hosted smoke scripts (`scripts/smoke_hosted_demo.py`), and the live end-to-end latency benchmark (`evaluation/run_live_latency_benchmark.py`).
-3. **Repository Access & Grader Permissions:** An official collaborator invitation (ID: `335007413`, `permissions: "write"`) was created for `quantic-grader` on 2026-09-28T04:58:00Z. Additionally, the repository is configured for public visibility prior to final course grading to eliminate grading friction and guarantee immediate access for evaluation faculty.
+3. **Repository Access & Grader Permissions:** An official collaborator invitation (ID: `335007413`, `permissions: "write"`) was created for `quantic-grader` on 2026-09-28T04:58:00Z. Additionally, the repository is verified and set to **Public** (`visibility: "public"`) to eliminate grading access friction and guarantee immediate access for evaluation faculty.
 
 ---
 
