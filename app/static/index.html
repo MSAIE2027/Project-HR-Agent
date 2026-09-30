@@ -718,7 +718,16 @@
         const data = await readJsonResponse(response);
         loading.remove();
         if (!response.ok) {
-          appendAgentMessage({ answer: data.detail || `Service returned HTTP ${response.status}.`, status: response.status === 503 ? 'llm_unavailable' : 'mcp_unavailable', confidence: 'low', trace: data.trace || [], llm: data.llm || {} });
+          appendAgentMessage({
+            answer: data.detail || `Service returned HTTP ${response.status}.`,
+            status: response.status === 503 ? 'llm_unavailable' : 'mcp_unavailable',
+            confidence: 'low',
+            trace: data.trace || [],
+            citations: data.citations || [],
+            supporting_snippets: data.supporting_snippets || [],
+            requires_confirmation: Boolean(data.requires_confirmation),
+            llm: data.llm || {}
+          });
         } else {
           if (data.requires_confirmation) state.pendingQuery = text;
           appendAgentMessage(data);

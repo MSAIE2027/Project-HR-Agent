@@ -23,7 +23,11 @@ Embedding: `sentence-transformers/all-MiniLM-L6-v2` / `onnxruntime-quint8-avx2` 
 | Latency Ms P50 | 28.05 |
 | Latency Ms P95 | 147.84 |
 
-Deterministic rubric-based proxy evaluation. Groundedness is not an independent semantic entailment judgment; citation accuracy requires all expected document families; tool accuracy requires the exact MCP call sequence. Workflow completion uses only workflow-category cases; structured lookups and missing-record checks are excluded. This harness calls the orchestrator directly and does not exercise OpenRouter response generation; public API tests cover that seam with a fake provider, and live provider output is checked during the configured demo.
+Deterministic rubric-based proxy evaluation. Groundedness proxy is a deterministic keyword/prefix constraint check ensuring zero regression in orchestrator tool sequencing; it is not an open-ended semantic entailment judgment. Citation accuracy requires all expected document families; tool accuracy requires the exact MCP call sequence. Workflow completion uses only workflow-category cases; structured lookups and missing-record checks are excluded. This harness calls the orchestrator directly and does not exercise OpenRouter response generation; public API tests cover that seam with a fake provider, and live provider output is checked during the configured demo.
+
+**Dual-Track Evaluation References:**
+- **Semantic Groundedness & Claim Entailment:** For empirical claim-by-claim factual grounding of live LLM outputs (Mean Groundedness: 96.1%, Entailment: 95.5%, Citation Precision: 100%), see [`evaluation/semantic-groundedness-study.md`](semantic-groundedness-study.md).
+- **Retrieval Ablation & Routing Decoupling:** For standalone dense vector recall without routing hints (Family recall@5 = 0.76) vs. MMR diversity ($\lambda = 0.5$, recall = 0.81) vs. routed MMR (recall = 1.00), see [`evaluation/retrieval-comparison.md`](retrieval-comparison.md).
 
 One read-only priming request runs before the 15-task in-process warm sample; its elapsed time is reported separately and is not a server startup or hosted cold-start measurement. These timings exclude OpenRouter answer-generation latency. P50 and p95 use nearest rank; with 15 samples, p95 is the maximum observed warm task latency.
 

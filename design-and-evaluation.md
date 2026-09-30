@@ -149,6 +149,17 @@ Both local transports scored 1.0 on deterministic status, groundedness-proxy, ci
 
 The chunk ablation and retrieval-only comparison are recorded in [`evaluation/ablation-results.md`](evaluation/ablation-results.md) and [`evaluation/retrieval-comparison.md`](evaluation/retrieval-comparison.md). Their hand-labeled corpus is small, so results justify the local configuration choice only; they are not a general retrieval benchmark.
 
+### Dual-Track Evaluation Methodology
+
+To balance automated regression safety with semantic generation quality, the project uses a two-track evaluation framework:
+
+1. **Track 1: Deterministic CI Protocol & Orchestration Gate (`evaluation/run_evaluation.py`)**  
+   Evaluates 30 versioned synthetic cases against exact expected MCP tool sequences, HTTP/status outcomes, and keyword/prefix constraints without live model calls. This ensures zero API cost and zero non-deterministic flakiness during CI/CD.
+2. **Track 2: Semantic Groundedness & Claim-Level Entailment (`evaluation/semantic-groundedness-study.md`)**  
+   Evaluates 15 live model-generated completions against source policy Markdown chunks and synthetic employee records. Measures factual claim entailment (95.5%), citation precision (100%), and detects isolated stylistic model embellishments.
+3. **Decoupled Retrieval Recall vs. Family Routing:**  
+   As documented in [`evaluation/retrieval-comparison.md`](evaluation/retrieval-comparison.md), standalone dense MiniLM retrieval without family routing achieves 0.76 Family recall@5 and 20% multi-family coverage; applying Maximal Marginal Relevance ($\lambda = 0.5$) raises Family recall@5 to 0.81 and doubles multi-family coverage to 40%; hybrid domain-routed MMR achieves 1.00 recall while preserving low retrieval latency.
+
 ## References
 
 1. Anthropic. (2024). *Model Context Protocol (MCP) Specification*. Anthropic, PBC. https://modelcontextprotocol.io

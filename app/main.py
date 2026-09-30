@@ -102,6 +102,8 @@ def _llm_failure_response(
             "detail": detail,
             "answer": detail,
             "status": "llm_unavailable",
+            "citations": result.citations,
+            "supporting_snippets": result.supporting_snippets,
             "requires_confirmation": result.requires_confirmation,
             "confidence": "low",
             "trace": trace,
