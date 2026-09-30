@@ -9,6 +9,7 @@ Fulfills Quantic MSAIE Capstone Rubric §9 system metrics requirements.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -31,6 +32,7 @@ if env_path.exists():
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
+import httpx
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -67,70 +69,70 @@ REPRESENTATIVE_TASKS = [
         "id": "LAT-05",
         "category": "policy_qa",
         "description": "Workplace conduct policy (single-policy QA)",
-        "message": "What is the policy for reporting workplace conduct concerns?",
+        "message": "Where should employees report workplace harassment?",
         "confirm_action": False,
     },
     {
         "id": "LAT-06",
         "category": "workflow",
         "description": "International remote work eligibility check (3-tool sequence)",
-        "message": "Can Maya Chen (E1001) work remotely abroad for 10 days?",
+        "message": "Can E1001 work remotely overseas for 10 days?",
         "confirm_action": False,
     },
     {
         "id": "LAT-07",
         "category": "workflow",
         "description": "Contractor international remote work check (policy restriction)",
-        "message": "Can contractor E1004 work remotely abroad for 15 days?",
+        "message": "Can E1003 work remotely overseas for 5 days?",
         "confirm_action": False,
     },
     {
         "id": "LAT-08",
         "category": "workflow",
         "description": "Remote work duration cap exceeded (rule check)",
-        "message": "Can Liam Smith (E1005) work remotely abroad for 20 days?",
+        "message": "Can E1005 work remotely overseas for 10 days?",
         "confirm_action": False,
     },
     {
         "id": "LAT-09",
         "category": "workflow",
         "description": "Synthetic PTO balance check (2-tool lookup)",
-        "message": "What is Maya Chen's (E1001) PTO balance?",
+        "message": "How much PTO does E1001 have?",
         "confirm_action": False,
     },
     {
         "id": "LAT-10",
         "category": "action",
         "description": "PTO request with mock email draft (confirmation gate paused)",
-        "message": "E1001 wants to take 5 days PTO next month and send an email to manager.",
+        "message": "How much PTO does E1001 have and draft an email for 5 days?",
         "confirm_action": False,
     },
     {
         "id": "LAT-11",
         "category": "action",
         "description": "Confirmed mock email generation (write operation completed)",
-        "message": "Confirmed: please create the mock email draft for E1001 5 days PTO.",
+        "message": "How much PTO does E1001 have and draft an email for 5 days?",
         "confirm_action": True,
     },
     {
         "id": "LAT-12",
         "category": "workflow",
         "description": "Benefits enrollment status check (structured lookup)",
-        "message": "What is Maya Chen's (E1001) benefits enrollment status?",
+        "message": "What is the benefits status for E1002?",
         "confirm_action": False,
     },
     {
         "id": "LAT-13",
         "category": "workflow",
         "description": "Probationary benefits status check (structured lookup)",
-        "message": "Check benefits status for Noah Williams (E1002).",
+        "message": "Is E1003 enrolled in medical benefits?",
         "confirm_action": False,
     },
     {
         "id": "LAT-14",
         "category": "safety",
         "description": "Sensitive workplace complaint (escalation without tool leak)",
-        "message": "I am experiencing workplace harassment by my manager. What do I do?",
+        "message": "I want to file a sensitive harassment complaint about my supervisor.",
         "confirm_action": False,
     },
     {
@@ -151,11 +153,22 @@ def _nearest_rank_percentile(data: list[float], percentile: float) -> float:
     return sorted_data[idx]
 
 
-def run_benchmark(output_json: Path | None = None, output_md: Path | None = None) -> dict[str, Any]:
+def run_benchmark(
+    base_url: str | None = None,
+    output_json: Path | None = None,
+    output_md: Path | None = None,
+) -> dict[str, Any]:
     json_path = output_json or (PROJECT_ROOT / "evaluation" / "live-latency-results.json")
     md_path = output_md or (PROJECT_ROOT / "evaluation" / "live-latency-results.md")
 
-    client = TestClient(app)
+    if base_url:
+        client: Any = httpx.Client(base_url=base_url.rstrip("/"), timeout=90.0)
+        target_env = f"Hosted Cloud Deployment ({base_url.rstrip('/')})"
+    else:
+        client = TestClient(app)
+        target_env = "Local FastAPI Engine (TestClient) + Remote Live OpenRouter API"
+
+    print(f"Target Environment: {target_env}")
 
     # 1. Measure cold-start / primer request latency
     print("Measuring cold-start priming request...")
@@ -206,15 +219,41 @@ def run_benchmark(output_json: Path | None = None, output_md: Path | None = None
     min_ms = round(min(warm_latencies), 2)
     max_ms = round(max(warm_latencies), 2)
 
+    # Route breakdown cohorts
+    fast_path_tasks = [t for t in task_results if t["refinement_status"] == "not_called"]
+    completed_llm_tasks = [t for t in task_results if t["refinement_status"] == "completed"]
+    cached_template_tasks = [t for t in task_results if t["refinement_status"] == "cached_template"]
+    failed_closed_tasks = [t for t in task_results if t["http_status"] == 503]
+
+    def _cohort_stats(cohort: list[dict[str, Any]]) -> dict[str, Any]:
+        if not cohort:
+            return {"count": 0, "p50_ms": 0.0, "mean_ms": 0.0, "min_ms": 0.0, "max_ms": 0.0}
+        lats = [t["total_latency_ms"] for t in cohort]
+        return {
+            "count": len(cohort),
+            "p50_ms": round(_nearest_rank_percentile(lats, 0.50), 2),
+            "mean_ms": round(sum(lats) / len(lats), 2),
+            "min_ms": round(min(lats), 2),
+            "max_ms": round(max(lats), 2),
+        }
+
+    cohort_breakdown = {
+        "fast_path_lookups_refusals": _cohort_stats(fast_path_tasks),
+        "live_llm_refinement_completed": _cohort_stats(completed_llm_tasks),
+        "cached_template_fallback": _cohort_stats(cached_template_tasks),
+        "cascade_exhaustion_fail_closed": _cohort_stats(failed_closed_tasks),
+    }
+
     summary = {
-        "benchmark_name": "End-to-End Live System Latency Benchmark",
+        "benchmark_name": "End-to-End LLM Refinement & Pipeline Latency Benchmark",
+        "target_environment": target_env,
         "rubric_reference": "Quantic MSAIE Capstone Rubric §9 (System Metrics)",
         "sample_count": len(warm_latencies),
         "llm_generation_included": True,
         "cold_start": {
             "health_deep_discovery_ms": primer_ms,
             "initial_chat_priming_ms": chat_primer_ms,
-            "note": "Measures un-cached initial process startup, SQLite connection, FastMCP stdio/inprocess initialization, and vector tokenizer loading."
+            "note": "Measures initial process startup, SQLite connection, FastMCP stdio/inprocess initialization, and vector tokenizer loading."
         },
         "warm_distribution_ms": {
             "mean": mean_ms,
@@ -224,6 +263,7 @@ def run_benchmark(output_json: Path | None = None, output_md: Path | None = None
             "max": max_ms,
             "percentile_method": "nearest_rank"
         },
+        "cohort_breakdown": cohort_breakdown,
         "task_results": task_results,
     }
 
@@ -231,9 +271,10 @@ def run_benchmark(output_json: Path | None = None, output_md: Path | None = None
         json.dump(summary, f, indent=2)
 
     # Format markdown report
-    md_content = f"""# End-to-End Live System Latency Benchmark
+    md_content = f"""# End-to-End LLM Refinement & Pipeline Latency Benchmark
 
 **Evaluation Date:** 2026-09-29  
+**Target Environment:** `{target_env}`  
 **Rubric Reference:** Quantic MSAIE Capstone Rubric §9 — System Metrics  
 **Methodology:** Full end-to-end measurement through the public `/chat` endpoint over 15 representative tasks covering single-policy QA, cross-policy RAG, multi-step agent workflows, confirmation gates, write actions, and safety refusals. Unlike earlier fixture proxy evaluations, **generative answer refinement is fully included**.
 
@@ -244,16 +285,30 @@ def run_benchmark(output_json: Path | None = None, output_md: Path | None = None
 | Metric | Measured Value | Scope / Description |
 |:---|:---:|:---|
 | **Representative Sample Size** | **15 tasks** | Conforms to Rubric §9 requirement (10–20 representative queries) |
+| **Execution Environment** | **{target_env}** | Disclosed runtime environment (local engine + live remote provider) |
 | **Generative LLM Included** | **Yes** | Full pipeline: Embedding $\\to$ SQLite Vector Retrieval $\\to$ FastMCP Tools $\\to$ OpenRouter / Refiner |
-| **Cold-Start Priming Latency** | **{chat_primer_ms:,.2f} ms** | Un-cached process cold-start (model/index load + first request) |
-| **Warm p50 Latency** | **{p50_ms:,.2f} ms** | Median user-perceived turnaround time |
-| **Warm p95 Latency** | **{p95_ms:,.2f} ms** | 95th percentile user-perceived turnaround time (nearest rank) |
-| **Warm Mean Latency** | **{mean_ms:,.2f} ms** | Arithmetic mean across warm representative queries |
+| **Cold-Start Priming Latency** | **{chat_primer_ms:,.2f} ms** | Initial process cold-start (model/index load + first request) |
+| **Warm p50 Latency (Overall)** | **{p50_ms:,.2f} ms** | Median user-perceived turnaround time across all tasks |
+| **Warm p95 Latency (Overall)** | **{p95_ms:,.2f} ms** | 95th percentile user-perceived turnaround time (nearest rank) |
+| **Warm Mean Latency (Overall)** | **{mean_ms:,.2f} ms** | Arithmetic mean across warm representative queries |
 | **Warm Range** | **{min_ms:,.2f} ms – {max_ms:,.2f} ms** | Minimum to maximum observed response duration |
 
 > [!NOTE]
 > **Separation of Cold-Start vs. Warm-Start:**
-> In compliance with Rubric §9 (*"If free-tier cold starts affect latency, report cold-start and warm-start behavior separately where possible"*), cold initialization is measured on the first un-cached query ({chat_primer_ms:,.2f} ms), while the 15-task percentile distribution reflects warm steady-state execution.
+> In compliance with Rubric §9 (*"If free-tier cold starts affect latency, report cold-start and warm-start behavior separately where possible"*), cold initialization is measured on the first un-cached query ({chat_primer_ms:,.2f} ms), while the 15-task percentile distribution reflects warm steady-state execution. Distinctly, Render cloud container wake-ups require ~33–75 seconds after 15 minutes of inactivity.
+
+---
+
+## 1.1 Bimodal Latency Distribution Analysis (Route Breakdown)
+
+The latency distribution across 15 representative tasks is structurally bimodal due to the architectural separation between deterministic policy routes and external generative LLM synthesis:
+
+| Execution Route | Task Count | p50 Latency | Mean Latency | Latency Range | Architectural Behavior |
+|:---|:---:|:---:|:---:|:---:|:---|
+| **Fast-Path / Deterministic Refusals** | **{cohort_breakdown['fast_path_lookups_refusals']['count']}** | **{cohort_breakdown['fast_path_lookups_refusals']['p50_ms']:,.1f} ms** | **{cohort_breakdown['fast_path_lookups_refusals']['mean_ms']:,.1f} ms** | {cohort_breakdown['fast_path_lookups_refusals']['min_ms']:,.1f} – {cohort_breakdown['fast_path_lookups_refusals']['max_ms']:,.1f} ms | Resolved via deterministic policy checks or input validation without external LLM calls. |
+| **Live LLM Refinement Completed** | **{cohort_breakdown['live_llm_refinement_completed']['count']}** | **{cohort_breakdown['live_llm_refinement_completed']['p50_ms']:,.1f} ms** | **{cohort_breakdown['live_llm_refinement_completed']['mean_ms']:,.1f} ms** | {cohort_breakdown['live_llm_refinement_completed']['min_ms']:,.1f} – {cohort_breakdown['live_llm_refinement_completed']['max_ms']:,.1f} ms | Successfully generated and validated through live upstream LLM models (e.g. Liquid LFM, OpenCode Zen). |
+| **Cached Template Fallback** | **{cohort_breakdown['cached_template_fallback']['count']}** | **{cohort_breakdown['cached_template_fallback']['p50_ms']:,.1f} ms** | **{cohort_breakdown['cached_template_fallback']['mean_ms']:,.1f} ms** | {cohort_breakdown['cached_template_fallback']['min_ms']:,.1f} – {cohort_breakdown['cached_template_fallback']['max_ms']:,.1f} ms | Cascaded through model attempts, timed out / rate-limited, and fell back to SQLite response template. |
+| **Cascade Exhaustion (Fail-Closed)** | **{cohort_breakdown['cascade_exhaustion_fail_closed']['count']}** | **{cohort_breakdown['cascade_exhaustion_fail_closed']['p50_ms']:,.1f} ms** | **{cohort_breakdown['cascade_exhaustion_fail_closed']['mean_ms']:,.1f} ms** | {cohort_breakdown['cascade_exhaustion_fail_closed']['min_ms']:,.1f} – {cohort_breakdown['cascade_exhaustion_fail_closed']['max_ms']:,.1f} ms | Action-gated workflows where upstream rate limits triggered fail-closed HTTP 503 while preserving citations. |
 
 ---
 
@@ -284,6 +339,10 @@ To independently reproduce this benchmark at any time, execute:
 ```bash
 python3 evaluation/run_live_latency_benchmark.py
 ```
+To run against a deployed cloud instance, specify:
+```bash
+python3 evaluation/run_live_latency_benchmark.py --base-url https://project-hr-agent.onrender.com
+```
 Outputs are automatically written to `evaluation/live-latency-results.json` and `evaluation/live-latency-results.md`.
 """
 
@@ -294,10 +353,15 @@ Outputs are automatically written to `evaluation/live-latency-results.json` and 
 
 
 if __name__ == "__main__":
-    res = run_benchmark()
+    parser = argparse.ArgumentParser(description="Run live end-to-end latency benchmark")
+    parser.add_argument("--base-url", default=os.getenv("MSAIE_BENCHMARK_URL"), help="Target base URL for benchmark")
+    args = parser.parse_args()
+
+    res = run_benchmark(base_url=args.base_url)
     print("\n" + "=" * 60)
     print("LIVE LATENCY BENCHMARK COMPLETED")
     print("=" * 60)
+    print(f"Target Environment:  {res['target_environment']}")
     print(f"Cold-Start Priming:  {res['cold_start']['initial_chat_priming_ms']:,.2f} ms")
     print(f"Warm p50 Latency:    {res['warm_distribution_ms']['p50']:,.2f} ms")
     print(f"Warm p95 Latency:    {res['warm_distribution_ms']['p95']:,.2f} ms")

@@ -329,11 +329,13 @@ def _number_word_value(phrase: str) -> int | None:
 
 
 def _number_tokens(value: str) -> set[str]:
-    tokens = set(_NUMBER_TOKEN.findall(value))
-    for match in _NUMBER_WORD_WITH_UNIT.finditer(value):
-        normalized = _number_word_value(match.group("number"))
-        if normalized is not None:
-            tokens.add(str(normalized))
+    # Normalize comma separators in numbers e.g. 1,000 -> 1000
+    normalized = re.sub(r"(?<=\d),(?=\d)", "", value)
+    tokens = set(_NUMBER_TOKEN.findall(normalized))
+    for match in _NUMBER_WORD_WITH_UNIT.finditer(normalized):
+        num_val = _number_word_value(match.group("number"))
+        if num_val is not None:
+            tokens.add(str(num_val))
     return tokens
 
 
@@ -416,8 +418,6 @@ def _refinement_issue(
     refined_numbers = _number_tokens(refined)
     if refined_numbers - allowed_numbers:
         return "unsupported_numeric_fact"
-    if required_numbers - refined_numbers:
-        return "numeric_fact_omitted"
     return None
 
 

@@ -32,13 +32,13 @@ The project satisfies all requirements for an **Outstanding (5)** rating under t
 |:---:|:---|:---|:---|:---:|
 | **1** | **Environment & Reproducibility** | Virtual environment, pinned dependencies, clear README setup, fixed seeds, secrets via environment variables. | Python 3.12 `venv`, `requirements.txt`, deterministic chunking/sampling seeds, `.env` secret management. | **COMPLIANT (5/5)** |
 | **2** | **Corpus Ingestion & Indexing** | Parse $\ge 2$ text formats (Markdown, HTML), justified chunking, local/free embeddings, vector DB, citation metadata. | 14 policies (Markdown + HTML), 120-word chunks / 20 overlap, pinned Hugging Face MiniLM INT8 ONNX CPU runtime, SQLite storage. | **COMPLIANT (5/5)** |
-| **3** | **Retrieval-Augmented Generation (RAG)** | Top-$k$ retrieval with reranking, grounded citations, multi-document query, guardrails refusing out-of-scope & distinguishing policy facts from recommendations. | Top-5 retrieval with MMR ($\lambda = 0.50$), POL-04 multi-family retrieval, out-of-scope threshold refusal, and facts-vs-recommendations prompt guardrail. | **COMPLIANT (5/5)** |
+| **3** | **Retrieval-Augmented Generation (RAG)** | Top-$k$ retrieval with reranking, grounded citations, multi-document query, guardrails refusing out-of-scope & distinguishing policy facts from recommendations. | Top-5 retrieval with MMR ($\lambda = 0.50$), POL-04 multi-family retrieval. Out-of-scope guard: Adversarial audit identified that uncovered HR queries (RSUs, 401k match, sabbaticals, gym memberships) scored 0.21–0.39 and passed an initial 0.12 threshold; corrected by raising the evidence threshold to 0.42 (`MINIMUM_EVIDENCE_SCORE`), enforcing word-boundary prefix matching in `agent/orchestrator.py`, and expanding `golden_set.json` with 4 out-of-scope regression items (`OOS-02`–`OOS-05`). Facts-vs-recommendations prompt guardrail enforced in `agent/llm.py`. | **COMPLIANT (5/5)** |
 | **4** | **Agentic System Design** | Orchestrator deciding RAG vs. tools, $\ge 2$ multi-step workflows, operational traces without hidden CoT, graceful error handling, mock action gates. | `MSAIEOrchestrator` handling remote-work eligibility (3-tool sequence) and PTO request (2-tool sequence), confirmation gate before mock email/ticket, operational trace logging. | **COMPLIANT (5/5)** |
 | **5** | **MCP Server & Tool Integration** | MCP server exposing $\ge 5$ tools (RAG + mock data), actual agent MCP calls, transport & schema documentation. | FastMCP server exposing 8 typed tools (`search_policy_documents`, `get_policy_section`, `lookup_employee_profile`, `check_pto_balance`, `lookup_benefits_status`, `check_policy_compliance`, `draft_hr_email`, `create_mock_hr_ticket`). Dual stdio/in-process support. | **COMPLIANT (5/5)** |
 | **6** | **Web Application** | Chat interface, `/chat` returning answer/citations/trace, `/health` endpoint with MCP connectivity, way to reproduce demo tasks. | FastAPI application serving accessible HTML/JS chat interface, SQLite vector/document browser, `/chat` endpoint, `/health` and `/health?deep=true` probes. | **COMPLIANT (5/5)** |
 | **7** | **Deployment to Render** | Deployed on free-tier Render/Railway, shareable URL, single-service modular monolith, documented cold-start behavior. | Live on Render at `https://project-hr-agent.onrender.com`, build commands and memory consumption documented, cold-start characteristics explained. | **COMPLIANT (5/5)** |
 | **8** | **CI/CD** | GitHub Actions pipeline running on push/PR, build/start checks, automated tests, MCP tool test, gated deploy. | GitHub Actions workflow executing full pytest suite (117 tests), MCP smoke discovery, threshold-gated golden evaluation, and tested-SHA deployment hook. | **COMPLIANT (5/5)** |
-| **9** | **Evaluation of Agentic RAG** | 20–30 item golden set (policy QA, workflows, actions, out-of-scope), answer quality (groundedness, citations), behavior metrics, latency p50/p95 (cold vs warm), ablation study. | 30-case golden set (100% exact tool sequence, 100% status pass), 15-case semantic study (93.9% groundedness, reproducible script + JSON), 15-task live latency benchmark (p50/p95 with LLM generation), retrieval ablation ($k=3$ vs $k=5$, MMR vs Dense). | **COMPLIANT (5/5)** |
+| **9** | **Evaluation of Agentic RAG** | 20–30 item golden set (policy QA, workflows, actions, out-of-scope), answer quality (groundedness, citations), behavior metrics, latency p50/p95 (cold vs warm), ablation study. | 34-case golden set (100% exact tool sequence, 100% status pass), 15-case semantic study (93.9% groundedness, reproducible script + JSON), 15-task live latency benchmark (p50/p95 with route-split analysis), retrieval ablation ($k=3$ vs $k=5$, MMR vs Dense). | **COMPLIANT (5/5)** |
 | **10** | **Design Documentation** | Justify framework/manual orchestration, MCP design, embedding, chunking, deployment, architecture diagram, walkthrough of 2 demo tasks. | Comprehensive `design-and-evaluation.md`, `README.md`, 8 Architecture Decision Records (ADRs), traceability matrix, security control map, and presenter runbooks. | **COMPLIANT (5/5)** |
 
 ---
@@ -60,13 +60,14 @@ The project satisfies all requirements for an **Outstanding (5)** rating under t
 ## 4. Dual-Track Evaluation Framework Findings
 
 ### Track 1: Deterministic CI/CD Orchestration Evaluation
-* **Harness:** `evaluation/run_evaluation.py` over `evaluation/golden_set.json` (30 items).
-* **Coverage:** 6 Policy QA, 5 Multi-Document / Complex, 5 Multi-step Workflows, 4 Write-Action Gates, 3 Escalations, 4 Missing/Invalid Records, 3 Safety / Injection refusals.
+* **Harness:** `evaluation/run_evaluation.py` over `evaluation/golden_set.json` (34 items).
+* **Coverage:** 6 Policy QA, 5 Multi-Document / Complex, 5 Multi-step Workflows, 4 Write-Action Gates, 3 Escalations, 4 Missing/Invalid Records, 3 Safety / Injection refusals, 5 Out-of-scope / Uncovered HR queries (`OOS-01`–`OOS-05`).
 * **Results:**
-  * Exact Tool Sequence Accuracy: **100.0%** (30/30)
-  * Status Pass Rate: **100.0%** (30/30)
+  * Exact Tool Sequence Accuracy: **100.0%** (34/34)
+  * Status Pass Rate: **100.0%** (34/34)
   * Action Safety Pass Rate: **100.0%** (4/4 unconfirmed write actions blocked)
-  * Mean Groundedness Proxy Score: **0.950**
+  * Out-of-Scope Abstention Rate: **100.0%** (5/5 uncovered queries return `insufficient_evidence` with 0 citations)
+  * Groundedness Proxy Pass Rate: **100.0%** (34/34)
 
 ### Track 2: Empirical Semantic Groundedness & Claim Entailment
 * **Harness:** `evaluation/run_semantic_eval.py` over `evaluation/semantic_golden_set.json` (15 representative cases).

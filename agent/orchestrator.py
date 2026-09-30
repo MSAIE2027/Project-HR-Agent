@@ -26,6 +26,7 @@ SENSITIVE_TERMS = {
     "harassment", "discrimination", "retaliation", "legal advice", "lawsuit", "assault",
     "medical diagnosis", "suicide", "self-harm", "investigate my manager",
 }
+MINIMUM_EVIDENCE_SCORE = 0.42
 
 
 def _employee_id(message: str) -> str | None:
@@ -91,11 +92,19 @@ TOPIC_PREFIX_MAPPINGS = (
 
 def _topic_prefixes(message: str) -> list[str]:
     lowered = message.lower()
-    prefixes = [
-        prefix
-        for terms, prefix in TOPIC_PREFIX_MAPPINGS
-        if any(term in lowered for term in terms)
-    ]
+    prefixes: list[str] = []
+    for terms, prefix in TOPIC_PREFIX_MAPPINGS:
+        matched = False
+        for term in terms:
+            if len(term) <= 3 or term in ("pto", "vpn"):
+                pattern = rf"\b{re.escape(term)}\b"
+            else:
+                pattern = rf"\b{re.escape(term)}(?:s|es|ed|ing|ly|ion|ions)?\b"
+            if re.search(pattern, lowered):
+                matched = True
+                break
+        if matched and prefix not in prefixes:
+            prefixes.append(prefix)
     international_work = any(term in lowered for term in ("international", "internationally", "overseas"))
     work_context = any(term in lowered for term in ("work", "working", "remote"))
     if international_work and work_context and "POL-RW-" not in prefixes:
@@ -493,7 +502,7 @@ class MSAIEOrchestrator:
                     lambda_value=0.5,
                     seed_chunk_ids=seed_ids,
                 )
-                if missing_family or not citations or citations[0].get("score", 0) < 0.12:
+                if missing_family or not citations or citations[0].get("score", 0) < MINIMUM_EVIDENCE_SCORE:
                     return AgentResult(
                         answer="I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR.",
                         citations=[],

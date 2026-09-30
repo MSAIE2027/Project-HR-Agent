@@ -1,20 +1,51 @@
 {
-  "benchmark_name": "End-to-End Live System Latency Benchmark",
+  "benchmark_name": "End-to-End LLM Refinement & Pipeline Latency Benchmark",
+  "target_environment": "Local FastAPI Engine (TestClient) + Remote Live OpenRouter API",
   "rubric_reference": "Quantic MSAIE Capstone Rubric \u00a79 (System Metrics)",
   "sample_count": 15,
   "llm_generation_included": true,
   "cold_start": {
-    "health_deep_discovery_ms": 64.27,
-    "initial_chat_priming_ms": 351.4,
-    "note": "Measures un-cached initial process startup, SQLite connection, FastMCP stdio/inprocess initialization, and vector tokenizer loading."
+    "health_deep_discovery_ms": 60.81,
+    "initial_chat_priming_ms": 30638.79,
+    "note": "Measures initial process startup, SQLite connection, FastMCP stdio/inprocess initialization, and vector tokenizer loading."
   },
   "warm_distribution_ms": {
-    "mean": 17096.09,
-    "p50": 15825.35,
-    "p95": 45341.0,
-    "min": 13.69,
-    "max": 45341.0,
+    "mean": 25675.14,
+    "p50": 23115.75,
+    "p95": 45421.44,
+    "min": 78.0,
+    "max": 45421.44,
     "percentile_method": "nearest_rank"
+  },
+  "cohort_breakdown": {
+    "fast_path_lookups_refusals": {
+      "count": 1,
+      "p50_ms": 78.0,
+      "mean_ms": 78.0,
+      "min_ms": 78.0,
+      "max_ms": 78.0
+    },
+    "live_llm_refinement_completed": {
+      "count": 9,
+      "p50_ms": 19856.61,
+      "mean_ms": 23360.31,
+      "min_ms": 15177.61,
+      "max_ms": 43257.0
+    },
+    "cached_template_fallback": {
+      "count": 1,
+      "p50_ms": 32971.26,
+      "mean_ms": 32971.26,
+      "min_ms": 32971.26,
+      "max_ms": 32971.26
+    },
+    "cascade_exhaustion_fail_closed": {
+      "count": 4,
+      "p50_ms": 32857.19,
+      "mean_ms": 35458.78,
+      "min_ms": 30641.94,
+      "max_ms": 45421.44
+    }
   },
   "task_results": [
     {
@@ -23,7 +54,7 @@
       "category": "policy_qa",
       "description": "PTO carryover rule (single-policy QA)",
       "http_status": 503,
-      "total_latency_ms": 45341.0,
+      "total_latency_ms": 30641.94,
       "refinement_status": "unavailable",
       "model_resolved": "openrouter+opencode-zen",
       "citations_returned": 5
@@ -33,11 +64,11 @@
       "id": "LAT-02",
       "category": "policy_qa",
       "description": "Expense receipt threshold (single-policy QA)",
-      "http_status": 200,
-      "total_latency_ms": 19.9,
-      "refinement_status": "not_called",
-      "model_resolved": "sqlite",
-      "citations_returned": 0
+      "http_status": 503,
+      "total_latency_ms": 32914.55,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
     },
     {
       "task_num": 3,
@@ -45,10 +76,10 @@
       "category": "policy_qa",
       "description": "Benefits enrollment timeline (single-policy QA)",
       "http_status": 200,
-      "total_latency_ms": 16.23,
-      "refinement_status": "not_called",
-      "model_resolved": "sqlite",
-      "citations_returned": 0
+      "total_latency_ms": 18501.93,
+      "refinement_status": "completed",
+      "model_resolved": "nvidia/nemotron-3.5-content-safety:free",
+      "citations_returned": 5
     },
     {
       "task_num": 4,
@@ -56,21 +87,21 @@
       "category": "multi_document",
       "description": "Remote work with confidential data (cross-policy RAG)",
       "http_status": 200,
-      "total_latency_ms": 26.71,
-      "refinement_status": "not_called",
-      "model_resolved": "sqlite",
-      "citations_returned": 0
+      "total_latency_ms": 19856.61,
+      "refinement_status": "completed",
+      "model_resolved": "nvidia/nemotron-3-super-120b-a12b:free",
+      "citations_returned": 5
     },
     {
       "task_num": 5,
       "id": "LAT-05",
       "category": "policy_qa",
       "description": "Workplace conduct policy (single-policy QA)",
-      "http_status": 503,
-      "total_latency_ms": 33531.6,
-      "refinement_status": "unavailable",
-      "model_resolved": "openrouter+opencode-zen",
-      "citations_returned": 5
+      "http_status": 200,
+      "total_latency_ms": 18697.86,
+      "refinement_status": "completed",
+      "model_resolved": "inclusionai/ling-3.0-flash-sante:free",
+      "citations_returned": 4
     },
     {
       "task_num": 6,
@@ -78,21 +109,21 @@
       "category": "workflow",
       "description": "International remote work eligibility check (3-tool sequence)",
       "http_status": 200,
-      "total_latency_ms": 108.14,
-      "refinement_status": "not_called",
+      "total_latency_ms": 32971.26,
+      "refinement_status": "cached_template",
       "model_resolved": "sqlite",
-      "citations_returned": 0
+      "citations_returned": 5
     },
     {
       "task_num": 7,
       "id": "LAT-07",
       "category": "workflow",
       "description": "Contractor international remote work check (policy restriction)",
-      "http_status": 200,
-      "total_latency_ms": 13.69,
-      "refinement_status": "not_called",
-      "model_resolved": "sqlite",
-      "citations_returned": 0
+      "http_status": 503,
+      "total_latency_ms": 32857.19,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
     },
     {
       "task_num": 8,
@@ -100,10 +131,10 @@
       "category": "workflow",
       "description": "Remote work duration cap exceeded (rule check)",
       "http_status": 200,
-      "total_latency_ms": 46.71,
-      "refinement_status": "not_called",
-      "model_resolved": "sqlite",
-      "citations_returned": 0
+      "total_latency_ms": 32006.69,
+      "refinement_status": "completed",
+      "model_resolved": "inclusionai/ling-3.0-flash-sante:free",
+      "citations_returned": 5
     },
     {
       "task_num": 9,
@@ -111,9 +142,9 @@
       "category": "workflow",
       "description": "Synthetic PTO balance check (2-tool lookup)",
       "http_status": 200,
-      "total_latency_ms": 36691.34,
-      "refinement_status": "cached_template",
-      "model_resolved": "sqlite",
+      "total_latency_ms": 43257.0,
+      "refinement_status": "completed",
+      "model_resolved": "space-bunny-free",
       "citations_returned": 5
     },
     {
@@ -121,10 +152,10 @@
       "id": "LAT-10",
       "category": "action",
       "description": "PTO request with mock email draft (confirmation gate paused)",
-      "http_status": 503,
-      "total_latency_ms": 30547.73,
-      "refinement_status": "unavailable",
-      "model_resolved": "openrouter+opencode-zen",
+      "http_status": 200,
+      "total_latency_ms": 15177.61,
+      "refinement_status": "completed",
+      "model_resolved": "poolside/laguna-s-2.1:free",
       "citations_returned": 5
     },
     {
@@ -133,7 +164,7 @@
       "category": "action",
       "description": "Confirmed mock email generation (write operation completed)",
       "http_status": 503,
-      "total_latency_ms": 33175.71,
+      "total_latency_ms": 45421.44,
       "refinement_status": "unavailable",
       "model_resolved": "openrouter+opencode-zen",
       "citations_returned": 5
@@ -144,9 +175,9 @@
       "category": "workflow",
       "description": "Benefits enrollment status check (structured lookup)",
       "http_status": 200,
-      "total_latency_ms": 15825.35,
+      "total_latency_ms": 23115.75,
       "refinement_status": "completed",
-      "model_resolved": "liquid/lfm-2.5-2.6b:free",
+      "model_resolved": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "citations_returned": 4
     },
     {
@@ -154,10 +185,10 @@
       "id": "LAT-13",
       "category": "workflow",
       "description": "Probationary benefits status check (structured lookup)",
-      "http_status": 503,
-      "total_latency_ms": 33095.0,
-      "refinement_status": "unavailable",
-      "model_resolved": "openrouter+opencode-zen",
+      "http_status": 200,
+      "total_latency_ms": 18435.39,
+      "refinement_status": "completed",
+      "model_resolved": "inclusionai/ling-3.0-flash-sante:free",
       "citations_returned": 4
     },
     {
@@ -166,7 +197,7 @@
       "category": "safety",
       "description": "Sensitive workplace complaint (escalation without tool leak)",
       "http_status": 200,
-      "total_latency_ms": 27938.21,
+      "total_latency_ms": 21193.95,
       "refinement_status": "completed",
       "model_resolved": "space-bunny-free",
       "citations_returned": 4
@@ -177,7 +208,7 @@
       "category": "out_of_scope",
       "description": "Out of corpus equity question (abstention / refusal)",
       "http_status": 200,
-      "total_latency_ms": 64.0,
+      "total_latency_ms": 78.0,
       "refinement_status": "not_called",
       "model_resolved": "sqlite",
       "citations_returned": 0

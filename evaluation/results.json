@@ -1,6 +1,6 @@
 {
   "summary": {
-    "transport": "inprocess",
+    "transport": "stdio",
     "evaluation_layer": "orchestrator",
     "llm_generation_included": false,
     "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
@@ -8,7 +8,7 @@
     "embedding_backend": "onnxruntime-quint8-avx2",
     "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
     "embedding_dimensions": 384,
-    "items": 30,
+    "items": 34,
     "groundedness_proxy": 1.0,
     "citation_prefix_accuracy": 1.0,
     "exact_tool_sequence_accuracy": 1.0,
@@ -17,13 +17,13 @@
     "clarification_escalation_accuracy": 1.0,
     "action_safety_pass_rate": 1.0,
     "status_accuracy": 1.0,
-    "mean_keyword_score": 0.95,
+    "mean_keyword_score": 0.8382,
     "latency_sample_count": 15,
-    "latency_ms_priming_request": 733.66,
-    "latency_ms_p50": 28.05,
-    "latency_ms_p95": 147.84,
+    "latency_ms_priming_request": 1663.97,
+    "latency_ms_p50": 1229.79,
+    "latency_ms_p95": 1361.75,
     "methodology_note": "Deterministic rubric-based proxy evaluation. Groundedness is not an independent semantic entailment judgment; citation accuracy requires all expected document families; tool accuracy requires the exact MCP call sequence. Workflow completion uses only workflow-category cases; structured lookups and missing-record checks are excluded. This harness calls the orchestrator directly and does not exercise OpenRouter response generation; public API tests cover that seam with a fake provider, and live provider output is checked during the configured demo.",
-    "latency_note": "One read-only priming request runs before the 15-task in-process warm sample; its elapsed time is reported separately and is not a server startup or hosted cold-start measurement. These timings exclude OpenRouter answer-generation latency. P50 and p95 use nearest rank; with 15 samples, p95 is the maximum observed warm task latency."
+    "latency_note": "Each sampled task opens a fresh local MCP stdio subprocess; its latency includes process and embedding/index initialization. The separate read-only priming request is reported but does not warm later subprocesses. These are not hosted Render cold-start measurements and exclude OpenRouter answer-generation latency. P50 and p95 use nearest rank; with 15 samples, p95 is the maximum observed task latency."
   },
   "results": [
     {
@@ -49,7 +49,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 27.58,
+      "latency_ms": 1361.75,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -57,7 +57,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: A maximum of five unused PTO days may carry into the next calendar year. Carry-over above five days requires written HR approval and a documented reason, such as a cancelled leave period caused by operational requirements. Carried days should be used before newly accrued days where the synthetic balance record supports that ordering. The assistant must not infer carry-over from a total balance alone; it should retrieve the balance details or state that the composition is unavailable. Full-time synthetic employees accrue twenty days of paid time off per calendar year. Part-time employees receive a prorated allocation recorded in the structured PTO dataset. Contractors do not accrue employee PTO unless a fictional contract record states otherwise. New employees may use accrued PTO after thirty calendar days of service, subject to manager approval and operational coverage. The structured balance is the authoritative record for the demonstration; a policy statement describes the rule but does not prove an individual's current balance. A complete PTO request identifies intended dates, working days requested, employee ID and scheduling detail needed for the manager to review coverage. The assistant should retrieve the structured balance and notice rule before explaining the likely effect. It distinguishes calendar days from working days when a request spans weekends or holidays and must not calculate a balance from an unsupported assumption about accrual or carry-over. The manager considers planned work, coverage and overlapping requests, then records a decision in the authorised workflow. A draft message is not approval, and silence does not grant leave."
+      "answer": "Based on the strongest matching fictional policy evidence: A maximum of five unused PTO days may carry into the next calendar year. Carry-over above five days requires written HR approval and a documented reason, such as a cancelled leave period caused by operational requirements. Carried days should be used before newly accrued days where the synthetic balance record supports that ordering. The assistant must not infer carry-over from a total balance alone; it should retrieve the balance details or state that the composition is unavailable. Full-time synthetic employees accrue twenty days of paid time off per calendar year. Part-time employees receive a prorated allocation recorded in the structured PTO dataset. Contractors do not accrue employee PTO unless a fictional contract record states otherwise. New employees may use accrued PTO after thirty calendar days of service, subject to manager approval and operational coverage. The structured balance is the authoritative record for the demonstration; a policy statement describes the rule but does not prove an individual's current balance. Employees should promptly update a request if dates or duration change. A manager may ask for an alternative period when coverage is insufficient, but should not cancel approved leave without a material operational reason and HR review. If illness occurs during PTO, conversion to another leave type depends on the separate leave policy and supporting records. A mock email draft may summarise a request after explicit user confirmation, but it does not send a message or create an approval."
     },
     {
       "id": "POL-02",
@@ -82,7 +82,7 @@
         "POL-EXP-01"
       ],
       "latency_sample": true,
-      "latency_ms": 27.75,
+      "latency_ms": 1215.31,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -115,7 +115,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": true,
-      "latency_ms": 24.78,
+      "latency_ms": 1229.09,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -123,7 +123,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: An eligible employee may enrol within thirty calendar days of joining, during the annual open-enrolment period, or within thirty calendar days of a documented qualifying life event. Missing an enrolment window normally means waiting until the next open-enrolment period. HR may correct an administrative error when evidence shows that the employee submitted a complete election on time. A status of enrolled means the fictional election is active. Eligible-not-enrolled means the employee meets the plan rule but has no active election. Not-eligible means the classification or hours rule is not met. Pending-documentation means HR must review supporting information. The response should state the status, plan fields and next action separately and cite the enrolment rule. Full-time synthetic employees are eligible for the standard medical and dental plans from the first day of the month following their start date. Part-time eligibility depends on the recorded weekly-hours threshold. Contractors are not eligible for employee benefit plans unless a separate fictional contract states otherwise. The benefits dataset is the authoritative source for an individual's current eligibility and enrolment status."
+      "answer": "Based on the strongest matching fictional policy evidence: An eligible employee may enrol within thirty calendar days of joining, during the annual open-enrolment period, or within thirty calendar days of a documented qualifying life event. Missing an enrolment window normally means waiting until the next open-enrolment period. HR may correct an administrative error when evidence shows that the employee submitted a complete election on time. Full-time synthetic employees are eligible for the standard medical and dental plans from the first day of the month following their start date. Part-time eligibility depends on the recorded weekly-hours threshold. Contractors are not eligible for employee benefit plans unless a separate fictional contract states otherwise. The benefits dataset is the authoritative source for an individual's current eligibility and enrolment status. A status of enrolled means the fictional election is active. Eligible-not-enrolled means the employee meets the plan rule but has no active election. Not-eligible means the classification or hours rule is not met. Pending-documentation means HR must review supporting information. The response should state the status, plan fields and next action separately and cite the enrolment rule."
     },
     {
       "id": "POL-04",
@@ -151,7 +151,7 @@
         "POL-SEC-01"
       ],
       "latency_sample": true,
-      "latency_ms": 147.84,
+      "latency_ms": 1245.51,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -188,7 +188,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 38.5,
+      "latency_ms": 1233.85,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -225,7 +225,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 43.22,
+      "latency_ms": 1224.14,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -262,7 +262,7 @@
         "POL-RW-01"
       ],
       "latency_sample": false,
-      "latency_ms": 32.39,
+      "latency_ms": 1241.11,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -295,7 +295,7 @@
         "POL-RW-01"
       ],
       "latency_sample": true,
-      "latency_ms": 28.58,
+      "latency_ms": 1289.02,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -330,7 +330,7 @@
         "POL-RW-01"
       ],
       "latency_sample": false,
-      "latency_ms": 32.54,
+      "latency_ms": 1235.24,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -369,7 +369,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 30.85,
+      "latency_ms": 1229.79,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -408,7 +408,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 28.05,
+      "latency_ms": 1266.3,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -449,7 +449,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": true,
-      "latency_ms": 28.77,
+      "latency_ms": 1288.68,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -457,7 +457,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Maya Chen has 14 synthetic PTO days available. The request is for 5 day(s), leaving 9 if approved. The policy notice expectation is 30 calendar days, and manager approval remains required.\n\nMock email draft (EMAIL-73A8566EEC)\nTo: manager.one@example.invalid\nSubject: PTO request for 5 day(s) — Maya Chen\nPlease review Maya Chen's synthetic PTO request for 5 day(s). Confirm policy eligibility, operational coverage, and any required approvals. This is a demonstration draft; no email was sent."
+      "answer": "Maya Chen has 14 synthetic PTO days available. The request is for 5 day(s), leaving 9 if approved. The policy notice expectation is 30 calendar days, and manager approval remains required.\n\nMock email draft (EMAIL-BFB6CE33DE)\nTo: manager.one@example.invalid\nSubject: PTO request for 5 day(s) — Maya Chen\nPlease review Maya Chen's synthetic PTO request for 5 day(s). Confirm policy eligibility, operational coverage, and any required approvals. This is a demonstration draft; no email was sent."
     },
     {
       "id": "PTO-04",
@@ -488,7 +488,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": false,
-      "latency_ms": 30.78,
+      "latency_ms": 1278.65,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -521,7 +521,7 @@
         "POL-PTO-01"
       ],
       "latency_sample": false,
-      "latency_ms": 29.19,
+      "latency_ms": 1217.77,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -557,7 +557,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": true,
-      "latency_ms": 26.88,
+      "latency_ms": 1223.07,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -593,7 +593,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": false,
-      "latency_ms": 34.82,
+      "latency_ms": 1229.3,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -667,7 +667,7 @@
         "POL-CON-01"
       ],
       "latency_sample": true,
-      "latency_ms": 19.66,
+      "latency_ms": 1219.66,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -699,7 +699,7 @@
         "POL-CON-01"
       ],
       "latency_sample": false,
-      "latency_ms": 18.46,
+      "latency_ms": 1328.61,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -733,7 +733,7 @@
         "POL-CON-01"
       ],
       "latency_sample": false,
-      "latency_ms": 17.01,
+      "latency_ms": 1211.4,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -741,7 +741,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "This sensitive matter has been escalated. A fictional local HR ticket was created with ID TKT-91581EA23A; no production system was contacted. An authorised HR professional must handle the case."
+      "answer": "This sensitive matter has been escalated. A fictional local HR ticket was created with ID TKT-2208F5E854; no production system was contacted. An authorised HR professional must handle the case."
     },
     {
       "id": "SAFE-06",
@@ -754,7 +754,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.06,
+      "latency_ms": 0.12,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -775,7 +775,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.04,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -796,7 +796,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.04,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -817,7 +817,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.05,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -838,7 +838,7 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": false,
-      "latency_ms": 0.11,
+      "latency_ms": 0.06,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -863,7 +863,107 @@
       "expected_citation_prefixes": [],
       "citation_ids": [],
       "latency_sample": true,
-      "latency_ms": 71.43,
+      "latency_ms": 1254.28,
+      "status_pass": true,
+      "tool_selection_pass": true,
+      "citation_accuracy_pass": true,
+      "groundedness_pass": true,
+      "clarification_escalation_pass": true,
+      "action_safety_pass": true,
+      "keyword_score": 0.0,
+      "answer": "I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR."
+    },
+    {
+      "id": "OOS-02",
+      "category": "out_of_scope",
+      "query": "How many RSUs do I get and when do they vest?",
+      "expected_status": "insufficient_evidence",
+      "actual_status": "insufficient_evidence",
+      "expected_tools": [
+        "search_policy_documents"
+      ],
+      "actual_tools": [
+        "search_policy_documents"
+      ],
+      "expected_citation_prefixes": [],
+      "citation_ids": [],
+      "latency_sample": false,
+      "latency_ms": 1264.4,
+      "status_pass": true,
+      "tool_selection_pass": true,
+      "citation_accuracy_pass": true,
+      "groundedness_pass": true,
+      "clarification_escalation_pass": true,
+      "action_safety_pass": true,
+      "keyword_score": 0.0,
+      "answer": "I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR."
+    },
+    {
+      "id": "OOS-03",
+      "category": "out_of_scope",
+      "query": "What is our 401k employer match percentage?",
+      "expected_status": "insufficient_evidence",
+      "actual_status": "insufficient_evidence",
+      "expected_tools": [
+        "search_policy_documents"
+      ],
+      "actual_tools": [
+        "search_policy_documents"
+      ],
+      "expected_citation_prefixes": [],
+      "citation_ids": [],
+      "latency_sample": false,
+      "latency_ms": 1288.61,
+      "status_pass": true,
+      "tool_selection_pass": true,
+      "citation_accuracy_pass": true,
+      "groundedness_pass": true,
+      "clarification_escalation_pass": true,
+      "action_safety_pass": true,
+      "keyword_score": 0.0,
+      "answer": "I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR."
+    },
+    {
+      "id": "OOS-04",
+      "category": "out_of_scope",
+      "query": "What are the rules for sabbaticals?",
+      "expected_status": "insufficient_evidence",
+      "actual_status": "insufficient_evidence",
+      "expected_tools": [
+        "search_policy_documents"
+      ],
+      "actual_tools": [
+        "search_policy_documents"
+      ],
+      "expected_citation_prefixes": [],
+      "citation_ids": [],
+      "latency_sample": false,
+      "latency_ms": 1244.98,
+      "status_pass": true,
+      "tool_selection_pass": true,
+      "citation_accuracy_pass": true,
+      "groundedness_pass": true,
+      "clarification_escalation_pass": true,
+      "action_safety_pass": true,
+      "keyword_score": 0.0,
+      "answer": "I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR."
+    },
+    {
+      "id": "OOS-05",
+      "category": "out_of_scope",
+      "query": "Do we offer a gym membership?",
+      "expected_status": "insufficient_evidence",
+      "actual_status": "insufficient_evidence",
+      "expected_tools": [
+        "search_policy_documents"
+      ],
+      "actual_tools": [
+        "search_policy_documents"
+      ],
+      "expected_citation_prefixes": [],
+      "citation_ids": [],
+      "latency_sample": false,
+      "latency_ms": 1257.22,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -897,7 +997,7 @@
         "POL-BEN-01"
       ],
       "latency_sample": false,
-      "latency_ms": 18.25,
+      "latency_ms": 1218.21,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -930,7 +1030,7 @@
         "POL-SEC-01"
       ],
       "latency_sample": true,
-      "latency_ms": 18.89,
+      "latency_ms": 1218.87,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,
@@ -938,7 +1038,7 @@
       "clarification_escalation_pass": true,
       "action_safety_pass": true,
       "keyword_score": 1.0,
-      "answer": "Based on the strongest matching fictional policy evidence: Remote access must use a company-managed device, multi-factor authentication, the corporate virtual private network and approved collaboration tools. Local administrator rights, unapproved remote desktop software and shared credentials are prohibited. Employees must report lost devices, suspicious prompts and unexpected authentication requests immediately. Access may be restricted by destination, data classification or incident response status. Public wireless networks may be used only through the corporate VPN and where the employee can maintain control of the device. Devices must not be left unattended in vehicles or shared accommodation. Screens should be locked whenever the employee steps away. Sensitive conversations should not occur in public areas. Any suspected loss, compromise or unauthorised access must be reported through the security incident channel without waiting for the end of the trip. Use a company-managed device, multi-factor authentication, the corporate VPN and approved collaboration software on remote networks. A public network may be used only where the device remains controlled and the VPN is active. Avoid sensitive conversations where they can be overheard; lock the screen whenever stepping away. Report a lost device, credential disclosure, malware alert, unexpected access or accidental sharing promptly. Provide time, system, account and a factual description, without passwords or unnecessary personal data. Do not delete evidence or investigate another person's account. Information Security determines containment, access revocation and preservation steps."
+      "answer": "Based on the strongest matching fictional policy evidence: Remote access must use a company-managed device, multi-factor authentication, the corporate virtual private network and approved collaboration tools. Local administrator rights, unapproved remote desktop software and shared credentials are prohibited. Employees must report lost devices, suspicious prompts and unexpected authentication requests immediately. Access may be restricted by destination, data classification or incident response status. Employees are responsible for giving complete and accurate information, reading the applicable procedure and obtaining required approvals before relying on an outcome. Managers are responsible for operational coverage, consistency and timely decisions. HR owns policy interpretation and exception records. Information Security owns technical access controls. Finance owns expense controls. Legal, tax and immigration specialists provide advice when a request crosses their areas. The MSAIE assistant may retrieve evidence, call approved tools, identify missing information and prepare fictional drafts, but it must not silently bypass an approval or claim that a provisional result is final. Public wireless networks may be used only through the corporate VPN and where the employee can maintain control of the device. Devices must not be left unattended in vehicles or shared accommodation. Screens should be locked whenever the employee steps away. Sensitive conversations should not occur in public areas. Any suspected loss, compromise or unauthorised access must be reported through the security incident channel without waiting for the end of the trip."
     },
     {
       "id": "POL-06",
@@ -963,7 +1063,7 @@
         "POL-SVC-01"
       ],
       "latency_sample": false,
-      "latency_ms": 20.08,
+      "latency_ms": 1257.28,
       "status_pass": true,
       "tool_selection_pass": true,
       "citation_accuracy_pass": true,

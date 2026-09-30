@@ -796,3 +796,65 @@ def test_refinement_preserves_mock_action_no_contact_disclaimer(monkeypatch) -> 
     refinement = asyncio.run(refine_with_status())
     assert refinement["status"] == "rejected"
     assert refinement["validation_issue"] == "no_action_disclaimer_omitted"
+
+
+def test_refinement_permits_paraphrase_omitting_ancillary_numbers_and_matches_commas(monkeypatch) -> None:
+    monkeypatch.setenv("MSAIE_LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setenv("MSAIE_LLM_API_KEY", "test-secret-not-real")
+    monkeypatch.setenv("MSAIE_LLM_MODEL", "openrouter/free")
+
+    class FakeResponse:
+        status_code = 200
+        text = ""
+
+        def json(self) -> dict:
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": (
+                                "Binding Policy Requirements: Elias is provisionally eligible for 10 days of remote work abroad. "
+                                "Travel expenses up to $1,000 require manager approval. Final approval remains pending."
+                            )
+                        }
+                    }
+                ]
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def post(self, url: str, **kwargs):
+            return FakeResponse()
+
+    monkeypatch.setattr(llm_module.httpx, "AsyncClient", FakeClient)
+    provider = OpenAICompatibleProvider()
+    draft = (
+        "Elias is provisionally eligible for 10 calendar days. "
+        "The rolling total is 14/20 days. Notice expectation is 14 calendar days."
+    )
+    evidence = [{"document_id": "POL-EXP-01", "snippet": "Travel expenses up to 1000 require manager sign-off."}]
+    async def refine_with_status() -> tuple[str, dict]:
+        answer = await provider.refine(
+            draft,
+            evidence,
+            status="provisionally_eligible",
+            structured_facts={
+                "eligible": True,
+                "requested_days": 10,
+                "available_days": 14,
+            },
+        )
+        return answer, llm_module.get_refinement_status()
+
+    answer, refinement = asyncio.run(refine_with_status())
+    assert refinement["status"] == "completed"
+    assert "10 days" in answer
+

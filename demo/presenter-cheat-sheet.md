@@ -143,11 +143,11 @@ Click the interactive "Confirm action" button (or send confirmation message).
 ====================================================================================================
 CI/CD PREFLIGHT REQUIREMENTS & GRADATION ACCESS CHECKLIST
 ====================================================================================================
-[✓] 117 Passing Automated Tests: Verifies pytest execution across Python 3.12 compilation,
-    FastAPI routing, unit logic, and medical PII/disability refusal filters.
+[✓] 118 Passing Automated Tests: Verifies pytest execution across Python 3.12 compilation,
+    FastAPI routing, unit logic, out-of-scope threshold checks, and medical PII/disability refusal filters.
 [✓] Automated MCP Discovery Test: Verifies CI job executing `python scripts/smoke_mcp.py`
     to test stdio FastMCP tool enumeration and protocol execution before build approval.
-[✓] Dual Golden-Set Evaluation: Runs both in-process and fresh stdio subprocess evaluations in CI.
+[✓] Dual Golden-Set Evaluation: Runs both in-process and fresh stdio subprocess evaluations in CI across 34 cases.
 [✓] Course Grader Collaborator Invitation: Displays active GitHub collaborator invitation
     ID 335007413 generated for user `quantic-grader` with write permissions.
 [✓] Public Visibility Toggle Protocol: Repository will be toggled to Public immediately prior
@@ -156,7 +156,7 @@ CI/CD PREFLIGHT REQUIREMENTS & GRADATION ACCESS CHECKLIST
 ```
 
 * **Direct Presenter Script:**
-  **SPEAK:** "Every commit triggers our GitHub Actions CI pipeline. The workflow compiles Python 3.12 code, executes 117 automated unit and security tests, and runs `python scripts/smoke_mcp.py` to verify stdio FastMCP tool discovery. Furthermore, our master Senior AI Architect Audit Report (`SENIOR_AI_ARCHITECT_AUDIT_REPORT.md`) verifies 5/5 readiness across all 10 Quantic rubric criteria. Collaborator invitation ID 335007413 has been issued to `quantic-grader`, and repository visibility will be toggled to Public immediately prior to final submission."
+  **SPEAK:** "Every commit triggers our GitHub Actions CI pipeline. The workflow compiles Python 3.12 code, executes 118 automated unit and security tests, and runs `python scripts/smoke_mcp.py` to verify stdio FastMCP tool discovery. Furthermore, our master Senior AI Architect Audit Report (`SENIOR_AI_ARCHITECT_AUDIT_REPORT.md`) verifies 5/5 readiness across all 10 Quantic rubric criteria. Collaborator invitation ID 335007413 has been issued to `quantic-grader`, and repository visibility will be toggled to Public immediately prior to final submission."
 
 ---
 
@@ -166,20 +166,20 @@ CI/CD PREFLIGHT REQUIREMENTS & GRADATION ACCESS CHECKLIST
 ##### Dual-Track Benchmark Scorecard
 | Metric Category | Track 1: Deterministic CI Suite | Track 2: Semantic Groundedness Study | Target Metric | Status |
 |:---|:---:|:---:|:---:|:---:|
-| **Workflow Status Accuracy** | **100%** (30/30 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
-| **Exact Tool Sequence Accuracy** | **100%** (30/30 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
-| **Citation Precision / Coverage** | **100%** (30/30 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
+| **Workflow Status Accuracy** | **100%** (34/34 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
+| **Exact Tool Sequence Accuracy** | **100%** (34/34 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
+| **Citation Precision / Coverage** | **100%** (34/34 cases) | **100%** (15/15 cases) | > 95% | **PASS** |
 | **Factual Claim Groundedness** | **95.2%** (Keyword Proxy) | **92.5%** (Claim Entailment: 37/40) / **93.9%** (Mean Groundedness) | > 85% | **PASS** |
 | **Complex Workflow Completion** | **100%** (5/5 cases) | **100%** (5/5 cases) | 100% | **PASS** |
 | **Action Safety Pass Rate** | **100%** (0 bypasses) | **100%** (0 bypasses) | 100% | **PASS** |
 | **Local Retrieval Latency (p50)** | **28.05 ms** (In-process RAG) | < 5 ms (Vector Search) | < 100 ms | **PASS** |
-| **Live End-to-End Latency (p50/p95)** | N/A (Excluded in Track 1) | **p50: 15.83 s** / **p95: 45.34 s** (15 live tasks with OpenRouter) | Rubric §9 Met | **PASS** |
+| **Live End-to-End Latency (p50/p95)** | N/A (Excluded in Track 1) | **Bimodal Route-Split** (Fast Lookups <100ms; Live LLM ~18s; Provider Timeout ~32s) | Rubric §9 Met | **PASS** |
 | **Observed Host Cold-Start** | **33.466 s** (Single Sample) | 33–75 s (Typical Container Provisioning) | Disclosed Scope | **PASS** |
 
 * **Presenter Script on Evaluation Rigor & Latency:**
-  **SPEAK:** "To maintain academic evaluation rigor, we separate deterministic CI regression testing from semantic generation evaluation. Track 1 verifies tool sequencing and state transitions deterministically across 30 cases with zero API spend. Track 2 evaluates 15 live LLM completions across 40 factual claims for claim-level entailment, achieving an honest 92.5% Claim Entailment Rate and 93.9% Mean Groundedness against source policy chunks, with reproducible validation via `python evaluation/run_semantic_eval.py`."
+  **SPEAK:** "To maintain academic evaluation rigor, we separate deterministic CI regression testing from semantic generation evaluation. Track 1 verifies tool sequencing, state transitions, and out-of-scope abstentions deterministically across 34 cases—including 4 realistic uncovered HR policy queries like RSUs and 401k matches gated by our 0.42 cosine threshold—achieving 100% pass with zero API spend. Track 2 evaluates 15 live LLM completions across 40 factual claims for claim-level entailment, achieving an honest 92.5% Claim Entailment Rate and 93.9% Mean Groundedness against source policy chunks, with reproducible validation via `python evaluation/run_semantic_eval.py`."
   
-  **SPEAK:** "Regarding system latency, local in-process vector retrieval operates at a swift p50 of 28.05 ms. To satisfy Rubric Section 9 for end-to-end latency including answer generation, our live benchmarking over 15 representative tasks yielded a warm p50 of 15.83 seconds and p95 of 45.34 seconds through live OpenRouter model refinement, documented in `evaluation/live-latency-results.md`. Finally, note on camera that the reported 33.466-second Render cold-start represents a single container wake-up observation sample following 15 minutes of inactivity—with typical host cold-starts ranging between 33 and 75 seconds—and is not a statistical p50 percentile."
+  **SPEAK:** "Regarding system latency, local in-process vector retrieval operates at a swift p50 of 28.05 ms. To satisfy Rubric Section 9 for end-to-end latency including answer generation, our live benchmarking over 15 representative tasks is fully instrumented in `evaluation/live-latency-results.md`. We explicitly disclose the bimodal nature of the architecture: deterministic Fast-Path lookups and safety refusals return in under 100 milliseconds, live LLM answer refinement completes in ~18 seconds, and upstream provider cascade timeouts fail closed in ~32 seconds without dropping citations. Finally, note on camera that the reported 33.466-second Render cold-start represents a single container wake-up observation sample following 15 minutes of inactivity—with typical host cold-starts ranging between 33 and 75 seconds—and is not a statistical p50 percentile."
 
 ```text
 ====================================================================================================

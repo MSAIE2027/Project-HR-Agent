@@ -442,6 +442,62 @@
     "confirm_action": false
   },
   {
+    "id": "OOS-02",
+    "category": "out_of_scope",
+    "query": "How many RSUs do I get and when do they vest?",
+    "expected_status": "insufficient_evidence",
+    "expected_tools": [
+      "search_policy_documents"
+    ],
+    "expected_citation_prefixes": [],
+    "gold_keywords": [
+      "insufficient"
+    ],
+    "confirm_action": false
+  },
+  {
+    "id": "OOS-03",
+    "category": "out_of_scope",
+    "query": "What is our 401k employer match percentage?",
+    "expected_status": "insufficient_evidence",
+    "expected_tools": [
+      "search_policy_documents"
+    ],
+    "expected_citation_prefixes": [],
+    "gold_keywords": [
+      "insufficient"
+    ],
+    "confirm_action": false
+  },
+  {
+    "id": "OOS-04",
+    "category": "out_of_scope",
+    "query": "What are the rules for sabbaticals?",
+    "expected_status": "insufficient_evidence",
+    "expected_tools": [
+      "search_policy_documents"
+    ],
+    "expected_citation_prefixes": [],
+    "gold_keywords": [
+      "insufficient"
+    ],
+    "confirm_action": false
+  },
+  {
+    "id": "OOS-05",
+    "category": "out_of_scope",
+    "query": "Do we offer a gym membership?",
+    "expected_status": "insufficient_evidence",
+    "expected_tools": [
+      "search_policy_documents"
+    ],
+    "expected_citation_prefixes": [],
+    "gold_keywords": [
+      "insufficient"
+    ],
+    "confirm_action": false
+  },
+  {
     "id": "ERR-01",
     "category": "missing_record",
     "query": "What is the benefits status for E9999?",
