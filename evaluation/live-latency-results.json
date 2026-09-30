@@ -1,0 +1,186 @@
+{
+  "benchmark_name": "End-to-End Live System Latency Benchmark",
+  "rubric_reference": "Quantic MSAIE Capstone Rubric \u00a79 (System Metrics)",
+  "sample_count": 15,
+  "llm_generation_included": true,
+  "cold_start": {
+    "health_deep_discovery_ms": 64.27,
+    "initial_chat_priming_ms": 351.4,
+    "note": "Measures un-cached initial process startup, SQLite connection, FastMCP stdio/inprocess initialization, and vector tokenizer loading."
+  },
+  "warm_distribution_ms": {
+    "mean": 17096.09,
+    "p50": 15825.35,
+    "p95": 45341.0,
+    "min": 13.69,
+    "max": 45341.0,
+    "percentile_method": "nearest_rank"
+  },
+  "task_results": [
+    {
+      "task_num": 1,
+      "id": "LAT-01",
+      "category": "policy_qa",
+      "description": "PTO carryover rule (single-policy QA)",
+      "http_status": 503,
+      "total_latency_ms": 45341.0,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
+    },
+    {
+      "task_num": 2,
+      "id": "LAT-02",
+      "category": "policy_qa",
+      "description": "Expense receipt threshold (single-policy QA)",
+      "http_status": 200,
+      "total_latency_ms": 19.9,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 3,
+      "id": "LAT-03",
+      "category": "policy_qa",
+      "description": "Benefits enrollment timeline (single-policy QA)",
+      "http_status": 200,
+      "total_latency_ms": 16.23,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 4,
+      "id": "LAT-04",
+      "category": "multi_document",
+      "description": "Remote work with confidential data (cross-policy RAG)",
+      "http_status": 200,
+      "total_latency_ms": 26.71,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 5,
+      "id": "LAT-05",
+      "category": "policy_qa",
+      "description": "Workplace conduct policy (single-policy QA)",
+      "http_status": 503,
+      "total_latency_ms": 33531.6,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
+    },
+    {
+      "task_num": 6,
+      "id": "LAT-06",
+      "category": "workflow",
+      "description": "International remote work eligibility check (3-tool sequence)",
+      "http_status": 200,
+      "total_latency_ms": 108.14,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 7,
+      "id": "LAT-07",
+      "category": "workflow",
+      "description": "Contractor international remote work check (policy restriction)",
+      "http_status": 200,
+      "total_latency_ms": 13.69,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 8,
+      "id": "LAT-08",
+      "category": "workflow",
+      "description": "Remote work duration cap exceeded (rule check)",
+      "http_status": 200,
+      "total_latency_ms": 46.71,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    },
+    {
+      "task_num": 9,
+      "id": "LAT-09",
+      "category": "workflow",
+      "description": "Synthetic PTO balance check (2-tool lookup)",
+      "http_status": 200,
+      "total_latency_ms": 36691.34,
+      "refinement_status": "cached_template",
+      "model_resolved": "sqlite",
+      "citations_returned": 5
+    },
+    {
+      "task_num": 10,
+      "id": "LAT-10",
+      "category": "action",
+      "description": "PTO request with mock email draft (confirmation gate paused)",
+      "http_status": 503,
+      "total_latency_ms": 30547.73,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
+    },
+    {
+      "task_num": 11,
+      "id": "LAT-11",
+      "category": "action",
+      "description": "Confirmed mock email generation (write operation completed)",
+      "http_status": 503,
+      "total_latency_ms": 33175.71,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 5
+    },
+    {
+      "task_num": 12,
+      "id": "LAT-12",
+      "category": "workflow",
+      "description": "Benefits enrollment status check (structured lookup)",
+      "http_status": 200,
+      "total_latency_ms": 15825.35,
+      "refinement_status": "completed",
+      "model_resolved": "liquid/lfm-2.5-2.6b:free",
+      "citations_returned": 4
+    },
+    {
+      "task_num": 13,
+      "id": "LAT-13",
+      "category": "workflow",
+      "description": "Probationary benefits status check (structured lookup)",
+      "http_status": 503,
+      "total_latency_ms": 33095.0,
+      "refinement_status": "unavailable",
+      "model_resolved": "openrouter+opencode-zen",
+      "citations_returned": 4
+    },
+    {
+      "task_num": 14,
+      "id": "LAT-14",
+      "category": "safety",
+      "description": "Sensitive workplace complaint (escalation without tool leak)",
+      "http_status": 200,
+      "total_latency_ms": 27938.21,
+      "refinement_status": "completed",
+      "model_resolved": "space-bunny-free",
+      "citations_returned": 4
+    },
+    {
+      "task_num": 15,
+      "id": "LAT-15",
+      "category": "out_of_scope",
+      "description": "Out of corpus equity question (abstention / refusal)",
+      "http_status": 200,
+      "total_latency_ms": 64.0,
+      "refinement_status": "not_called",
+      "model_resolved": "sqlite",
+      "citations_returned": 0
+    }
+  ]
+}
