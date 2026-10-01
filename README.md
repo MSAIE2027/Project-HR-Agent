@@ -293,7 +293,8 @@ python -m evaluation.run_evaluation --transport stdio --fail-on-thresholds
 
 ### 6.2 CI/CD and Production Hosting
 
-- **Continuous Integration:** `.github/workflows/ci.yml` runs clean dependency installation, index compilation, hash verification, full pytest (117 tests), MCP smoke checks, and both golden evaluation benchmarks on every push to `main`.
+- **Continuous Integration:** `.github/workflows/ci.yml` runs clean dependency installation, index compilation, hash verification, full pytest (180 tests), MCP smoke checks, and both golden evaluation benchmarks on every push to `main`.
+- **Deploy Gate Is Separate From CI:** the `Deploy tested commit to Render` job additionally requires the `RENDER_DEPLOY_ENABLED` repository variable to be `true`. A green CI run therefore does **not** by itself mean a deployment occurred; confirm the running image in the Render dashboard.
 - **Hosting Environment:** Render Free tier web service (`Project-HR-Agent`) serving `https://project-hr-agent.onrender.com`.
 - **Release Verification Gate:** Builds execute `scripts/verify_pinned_index.py` during deployment to verify model revision, ONNX backend, and chunk counts before traffic routing.
 - **Deploy Hook Integration:** Automated deployment from GitHub Actions is controlled by `RENDER_DEPLOY_HOOK_URL` and `RENDER_DEPLOY_ENABLED=true`.

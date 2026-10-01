@@ -9,7 +9,7 @@
 > retained as written. Six commits have landed since, each answering a finding in it or in a later
 > audit: ADR 0011 (metered-first routing), 0012 (confirmation-gate template), 0013
 > (model-agnostic validation), 0014 (artifacts returned as structured data). The response contract
-> gained a `mock_action` field, and the test suite grew from 118 to 160 cases. Claims in this
+> gained a `mock_action` field, and the test suite grew from 118 to 180 cases. Claims in this
 > document about counts, chains, and response shape that are now superseded are corrected in
 > `specs/system-requirements.md` and `docs/adr/`; they are not silently rewritten here.
 **Deployment:** [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com)  
