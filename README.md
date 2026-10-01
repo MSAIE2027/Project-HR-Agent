@@ -222,6 +222,14 @@ Empirical parameter validation was conducted across chunk segmentation and diver
   - **MMR $\lambda = 0.5$ (Balanced Relevance & Diversity):** Doubled multi-family coverage from 20% to 40% (2/5) at $k=5$ and elevated Family recall@5 from 0.76 to 0.81.
   - **Production Routed Architecture:** Pairing explicit family seed retrieval with $\lambda = 0.5$ MMR over a top-10 candidate pool achieves **100% multi-family coverage** and 100% family recall across all multi-document queries (see Figure 1).
 
+> [!NOTE]
+> **Scope of these retrieval figures.** The query set is hand-authored and small, and its labels are
+> not independent semantic judgments. These are retrieval diagnostics, not answer-correctness
+> results. The 100% multi-family coverage comes from *explicit family routing* — the orchestrator
+> selects the policy family and seeds one result per family — so it measures the router and the
+> seeded retriever together, not dense retrieval alone. The number to quote for "what does the
+> retriever itself contribute" is **0.76 → 0.81**.
+
 ![Retrieval Comparison Chart](visuals/retrieval-comparison.svg)
 *Figure 1: Multi-family policy retrieval coverage across top-$k$ candidate thresholds, contrasting baseline dense ranking with MMR ($\lambda = 0.5$).*
 
