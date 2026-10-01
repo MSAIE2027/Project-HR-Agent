@@ -15,6 +15,10 @@ class AgentResult:
     confidence: str = "medium"
     mcp: dict[str, Any] = field(default_factory=dict)
     structured_facts: dict[str, Any] = field(default_factory=dict, repr=False)
+    # A created mock action (email draft or case). This is structured data, not
+    # prose: the refiner composes the narrative while the artifact is returned
+    # verbatim alongside it, so a paraphrase can never lose the deliverable.
+    mock_action: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -26,4 +30,5 @@ class AgentResult:
             "requires_confirmation": self.requires_confirmation,
             "confidence": self.confidence,
             "mcp": self.mcp,
+            "mock_action": self.mock_action,
         }

@@ -964,7 +964,7 @@ _ACTION_EVIDENCE = [
         "A local mock draft was created for your manager. Nothing was sent externally.",
         "The draft exists locally; the email has not been sent and no production system was contacted.",
         "Draft prepared locally. No email has left the system.",
-        "I did not send anything. The draft is local only.",
+        "I created a local draft and did not send anything. No production system was contacted.",
     ],
     ids=["not-sent-any-email", "nothing-sent", "has-not-been-sent", "no-email-left-system", "did-not-send"],
 )
@@ -1055,3 +1055,45 @@ def test_status_markers_accept_faithful_paraphrase(status: str, answer: str) -> 
 def test_status_markers_stay_distinct(status: str, answer: str) -> None:
     """Widening must not make one status's marker satisfy another status."""
     assert llm_module._STATUS_REQUIREMENTS[status].search(answer) is None
+
+
+_SUBJECT_DRAFT = (
+    "Noah Williams has 8 synthetic PTO days available. The request is for 4 day(s), leaving 4 if approved.\n\n"
+    "Mock email draft (EMAIL-8EAF85D58E)\n"
+    "To: manager.one@example.invalid\n"
+    "Subject: PTO request for 4 day(s) — Noah Williams\n"
+    "Please review Noah Williams's synthetic PTO request. This is a demonstration draft; no email was sent."
+)
+
+
+def test_artifact_dropped_from_narrative_is_rejected() -> None:
+    """Regression: the model returned this exact text and the email vanished silently."""
+    live = (
+        "You have 8 synthetic PTO days available. Your request for 4 days would leave 4 days if approved, "
+        "provided you give the required 7-calendar-day notice and obtain manager approval. Approval is not final "
+        "until the decision is recorded in the synthetic workflow. This is a demonstration draft; no email was sent."
+    )
+    issue = llm_module._refinement_issue(
+        _SUBJECT_DRAFT, live, _ACTION_EVIDENCE, status="mock_action_completed", structured_facts={}
+    )
+    assert issue == "created_artifact_omitted"
+
+
+def test_artifact_acknowledged_without_its_subject_is_rejected() -> None:
+    """Saying a draft exists is not enough when the draft has a subject line."""
+    answer = "I created a local mock draft for your manager. No email was sent."
+    issue = llm_module._refinement_issue(
+        _SUBJECT_DRAFT, answer, _ACTION_EVIDENCE, status="mock_action_completed", structured_facts={}
+    )
+    assert issue == "created_artifact_omitted"
+
+
+def test_artifact_acknowledged_with_its_subject_is_accepted() -> None:
+    answer = (
+        "Noah Williams has 8 days and a 7-day notice is required. I created a local mock email draft with the "
+        "subject 'PTO request for 4 day(s) — Noah Williams'. No email was sent."
+    )
+    issue = llm_module._refinement_issue(
+        _SUBJECT_DRAFT, answer, _ACTION_EVIDENCE, status="mock_action_completed", structured_facts={}
+    )
+    assert issue is None

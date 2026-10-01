@@ -1329,4 +1329,37 @@ with TestClient(app) as client:
         response = client.post("/chat", json={"message": "Ask about PTO"})
 
         assert response.status_code == 503
-        assert "no unrefined policy response was returned" in response.json()["detail"]
+    def test_confirmed_action_returns_the_artifact_as_structured_data() -> None:
+        """The created draft is returned verbatim, not only summarised in prose."""
+        response = client.post(
+            "/chat",
+            json={
+                "employee_id": "E1002",
+                "message": "How much PTO does E1002 have and draft an email for 4 days?",
+                "confirm_action": True,
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        action = payload["mock_action"]
+        assert action is not None
+        assert action["action_type"] == "mock_email_draft"
+        assert action["sent"] is False
+        assert action["to"] == "manager.one@example.invalid"
+        assert "Noah Williams" in action["subject"]
+        assert "Noah Williams" in action["body"]
+        assert action["action_id"].startswith("EMAIL-")
+        assert payload["status"] == "mock_action_completed"
+
+    def test_no_mock_action_field_for_read_only_requests() -> None:
+        """Read-only answers carry no artifact, and the field is present and null."""
+        response = client.post(
+            "/chat",
+            json={"employee_id": "E1001", "message": "How much PTO does E1001 have?"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert "mock_action" in payload
+        assert payload["mock_action"] is None

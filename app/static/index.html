@@ -179,6 +179,11 @@
     .sources { margin-top: 12px; }
     .sources h3 { margin: 0 0 7px; color: var(--muted); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
     .source-list { display: grid; gap: 7px; }
+    .mock-action { margin-top: 14px; }
+    .mock-action .source-card { border-left-color: var(--green, #2f9e6f); }
+    .mock-action-body { margin: 8px 0 0; padding: 9px 10px; white-space: pre-wrap; word-break: break-word;
+      font: inherit; font-size: 12px; line-height: 1.5; color: var(--text, inherit);
+      background: var(--panel, transparent); border-radius: 5px; }
     .source-card { padding: 9px 11px; border: 1px solid var(--line); border-left: 3px solid var(--blue); border-radius: 6px; background: var(--panel-soft); }
     .source-card strong { display: block; color: var(--blue); font-size: 11px; }
     .source-card span { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
@@ -598,6 +603,26 @@
       return [...groups.values()];
     }
 
+    function appendMockAction(parent, action) {
+      if (!action || typeof action !== 'object') return;
+      const isEmail = action.action_type === 'mock_email_draft';
+      const section = make('section', 'sources mock-action');
+      section.append(make('h3', '', isEmail ? 'Mock email draft created' : 'Mock HR record created'));
+      const card = make('div', 'source-card');
+      card.append(make('strong', '', action.subject || action.action_type || 'Mock action'));
+      const meta = [action.action_id, action.to ? `To: ${action.to}` : null].filter(Boolean).join(' · ');
+      card.append(make('span', '', meta));
+      if (action.sent === false) {
+        card.append(make('p', '', 'Not sent. This is a synthetic local record; no production system was contacted.'));
+      }
+      if (action.body) {
+        const body = make('pre', 'mock-action-body', action.body);
+        card.append(body);
+      }
+      section.append(card);
+      parent.append(section);
+    }
+
     function appendSourceList(parent, citations) {
       if (!Array.isArray(citations) || citations.length === 0) return;
       const groups = groupedCitations(citations);
@@ -683,6 +708,7 @@
         cancel.addEventListener('click', () => { state.pendingQuery = null; action.remove(); });
         actions.append(confirm, cancel); action.append(actions); card.append(action);
       }
+      appendMockAction(card, data.mock_action);
       appendSourceList(card, data.citations);
       appendTrace(card, data.trace);
       article.append(avatar, card);

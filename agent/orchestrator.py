@@ -202,13 +202,22 @@ class MSAIEOrchestrator:
                     )
                     citations = _citations(policy)
                     asks_ticket = "ticket" in lowered or "case" in lowered
+                    # Defined on every path below, not just the confirmed one.
+                    mock_action = None
                     employee_id = _employee_id(message)
                     if asks_ticket and employee_id and confirm_action:
                         ticket = await call(
                             "create_mock_hr_ticket",
                             {"employee_id": employee_id, "category": "sensitive_hr", "summary": message, "confirmed": True},
                         )
-                        ticket_id = ticket.get("data", {}).get("action_id", "unknown") if ticket.get("ok") else "unavailable"
+                        ticket_data = ticket.get("data", {}) if ticket.get("ok") else {}
+                        ticket_id = ticket_data.get("action_id", "unavailable")
+                        mock_action = {
+                            "action_id": ticket_id,
+                            "action_type": ticket_data.get("action_type", "mock_hr_ticket"),
+                            "sent": False,
+                            "category": "sensitive_hr",
+                        } if ticket_data else None
                         answer = (
                             "This sensitive matter has been escalated. A fictional local HR ticket was created with ID "
                             f"{ticket_id}; no production system was contacted. An authorised HR professional must handle the case."
@@ -234,6 +243,7 @@ class MSAIEOrchestrator:
                         status=status,
                         requires_confirmation=status == "confirmation_required",
                         confidence="high",
+                        mock_action=mock_action,
                         mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
                     )
 
@@ -343,6 +353,9 @@ class MSAIEOrchestrator:
                     if not check["eligible"]:
                         base += " The request is not eligible because " + "; ".join(check["reasons"]) + "."
                     asks_action = any(term in lowered for term in ("draft", "email", "submit"))
+                    # Set on every path below so the field is always defined for
+                    # this workflow, whether or not an artifact was created.
+                    mock_action = None
                     if asks_action and not confirm_action:
                         return AgentResult(
                             answer=base + " I can prepare a fictional manager-email draft, but explicit confirmation is required first.",
@@ -377,6 +390,14 @@ class MSAIEOrchestrator:
                         if not email.get("ok"):
                             return self._tool_error(email, trace, tools, citations)
                         draft = email["data"]
+                        mock_action = {
+                            "action_id": draft["action_id"],
+                            "action_type": draft.get("action_type", "mock_email_draft"),
+                            "sent": bool(draft.get("sent", False)),
+                            "to": draft["to"],
+                            "subject": draft["subject"],
+                            "body": draft["body"],
+                        }
                         answer = (
                             base
                             + f"\n\nMock email draft ({draft['action_id']})\nTo: {draft['to']}\nSubject: {draft['subject']}\n"
@@ -393,6 +414,7 @@ class MSAIEOrchestrator:
                         trace=trace,
                         status=status,
                         confidence="high",
+                        mock_action=mock_action,
                         mcp={"status": "available", "transport": self.gateway.transport, "tool_count": len(tools)},
                         structured_facts={
                             "workflow": "pto",

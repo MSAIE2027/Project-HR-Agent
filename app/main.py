@@ -82,6 +82,9 @@ class ChatResponse(BaseModel):
     confidence: str
     mcp: dict[str, Any]
     llm: dict[str, Any]
+    # The created artifact, returned verbatim. The narrative answer is
+    # model-composed and may summarise; this field is the deliverable itself.
+    mock_action: dict[str, Any] | None = None
 
 
 def _mcp_gateway() -> MCPGateway:
