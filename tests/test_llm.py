@@ -1097,3 +1097,83 @@ def test_artifact_acknowledged_with_its_subject_is_accepted() -> None:
         _SUBJECT_DRAFT, answer, _ACTION_EVIDENCE, status="mock_action_completed", structured_facts={}
     )
     assert issue is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "No email was sent.",
+        "No email has been dispatched.",
+        "The draft remains unsent.",
+        "Nothing left the local environment.",
+        "The email was never sent.",
+        "No message left the system.",
+        "I did not send anything.",
+        "The message has not been sent.",
+        "I have not sent any email.",
+        "This draft was created locally and has not been sent.",
+        "No mail was delivered.",
+        "Nothing was sent externally.",
+    ],
+    ids=[
+        "no-email-was-sent",
+        "no-email-has-been-dispatched",
+        "draft-remains-unsent",
+        "nothing-left",
+        "never-sent",
+        "no-message-left",
+        "did-not-send",
+        "message-has-not-been-sent",
+        "have-not-sent-any-email",
+        "created-locally-not-sent",
+        "no-mail-delivered",
+        "nothing-was-sent",
+    ],
+)
+def test_no_action_disclaimer_is_order_independent(answer: str) -> None:
+    """The refined side checks for a negation plus a transmission verb in one sentence.
+
+    Two earlier versions enumerated literal sentences. Each time a different model
+    was tried, its wording fell outside the list and every route was rejected for
+    restating the disclaimer correctly.
+    """
+    refined_pattern = llm_module._NO_ACTION_DISCLAIMERS[0][1]
+    assert refined_pattern.search(answer)
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "I have drafted and sent the email to manager.one@example.invalid.",
+        "The email was sent to your manager and a production ticket was created.",
+        "I sent the request and it is now in the production HRIS.",
+        "A real email went out to your manager a moment ago.",
+        "Your manager received the request and the record was updated in production.",
+        "The draft was created and sent immediately.",
+        "The message has been delivered to the manager.",
+    ],
+    ids=[
+        "drafted-and-sent",
+        "sent-and-ticketed",
+        "sent-to-hris",
+        "real-email-sent",
+        "manager-received",
+        "created-and-sent",
+        "has-been-delivered",
+    ],
+)
+def test_claims_of_a_real_send_stay_rejected_under_the_wide_rule(answer: str) -> None:
+    """The wide negation rule must never admit text asserting a transmission."""
+    refined_pattern = llm_module._NO_ACTION_DISCLAIMERS[0][1]
+    assert refined_pattern.search(answer) is None
+
+
+def test_rejection_is_logged_with_the_offending_text(caplog) -> None:
+    """Diagnosing a rejected completion must not require inferring what it said."""
+    import logging as _logging
+
+    rejected = "I created the draft for your manager. It is now in production."
+    with caplog.at_level(_logging.WARNING, logger="agent.llm"):
+        llm_module._log_rejection("no_action_disclaimer_omitted", rejected)
+    assert "no_action_disclaimer_omitted" in caplog.text
+    assert "production" in caplog.text

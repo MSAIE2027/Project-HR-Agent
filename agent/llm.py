@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextvars
 import json
+import logging
 import os
 import re
 from typing import Any, Protocol
@@ -335,26 +336,28 @@ _NEGATED_APPROVAL_CLAIM = re.compile(
     re.I,
 )
 _APPROVAL_CLAUSE_BOUNDARY = re.compile(r"[.!?;]|\b(?:but|however|although|though|whereas)\b", re.I)
+# Order-independent building blocks for the no-action disclaimer check. A
+# negation and a transmission verb in the same sentence assert that nothing left
+# the system, whichever way round the model words it.
+_NEGATION = r"(?:not|never|no|nothing|zero|neither|nor|without|unable|cannot|can't)"
+_SEND_VERB = (
+    r"(?:send|sent|sending|deliver|delivered|transmit|transmitted|dispatch|dispatched"
+    r"|left|leave|upload|uploaded|contact|contacted|forward|forwarded|share|shared"
+    r"|reach|reached|emailed)"
+)
 _NO_ACTION_DISCLAIMERS = (
     # The draft-side pattern decides whether a disclaimer is required at all.
-    # The refined-side pattern accepts any faithful restatement of "nothing was
-    # sent", because the phrasing a model chooses is not a property of the fact.
-    # Requiring one exact sentence caused every route to be rejected for
-    # paraphrasing a disclaimer that was present in meaning. The underlying
-    # guarantee is structural: the action tool returns sent=false and cannot run
-    # without an explicit confirmation turn.
+    # Two earlier versions enumerated literal sentences on the refined side; each
+    # time a different model was tried its phrasing fell outside the list and
+    # every route was rejected for restating the disclaimer correctly. The
+    # underlying guarantee is structural: the action tool returns sent=false and
+    # cannot run without an explicit confirmation turn.
     (
         re.compile(r"\bno email was sent\b", re.I),
         re.compile(
-            r"\bno (?:email|message|mail|draft)s?\s+(?:was|were|is|are|has|have|had)?\s*"
-            r"(?:sent|delivered|contacted|transmitted|left|dispatched)\b"
-            r"|\b(?:email|message|mail|draft)s?\s+(?:was|were|is|are|has|have|had)?\s*"
-            r"not\s+(?:been\s+)?(?:sent|delivered|contacted|transmitted|left|dispatched)\b"
-            r"|\bnot\s+(?:sent|delivered|contacted|transmitted|left)\b[^.]{0,40}\b(?:email|message|mail|draft)\b"
-            r"|\b(?:email|message|mail|draft)\b[^.]{0,40}\bnot\s+(?:been\s+)?(?:sent|delivered|contacted|transmitted|left)\b"
-            r"|\bnothing\b[^.]{0,40}\b(?:was|were|is|are|has|have|had)?\s*"
-            r"(?:sent|delivered|contacted|transmitted|created)\b"
-            r"|\b(?:did|do|does|have|has|had)\s+not\s+(?:send|deliver|contact|transmit)\b",
+            rf"\b{_NEGATION}\b[^.]{{0,45}}?\b{_SEND_VERB}\b"
+            rf"|\b{_SEND_VERB}\b[^.]{{0,30}}?\b{_NEGATION}\b"
+            r"|\b(?:unsent|undelivered|untransmitted)\b",
             re.I,
         ),
     ),
@@ -368,6 +371,20 @@ _NO_ACTION_DISCLAIMERS = (
         ),
     ),
 )
+
+def _log_rejection(issue: str, refined: str) -> None:
+    """Record why a completion was rejected, and the text that caused it.
+
+    Three waves of over-narrow disclaimer rules had to be diagnosed by inferring
+    what a model had said from the rejection reason alone. The rejected text is
+    the model's own output, never the app-owned controlled draft, and it stays in
+    the server log rather than in the response.
+    """
+    logging.getLogger(__name__).warning(
+        "refinement rejected: %s | text=%r", issue, " ".join(refined.split())[:400]
+    )
+
+
 _NUMBER_TOKEN = re.compile(r"(?<![A-Za-z0-9])\d+(?:\.\d+)?(?![A-Za-z0-9])")
 _NUMBER_WORD_VALUES = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -678,6 +695,7 @@ class OpenAICompatibleProvider:
                 )
                 if issue:
                     last_validation_issue = issue
+                    _log_rejection(issue, revised)
                     raise LLMValidationError("Generated answer failed a safety consistency check.")
                 resolved_model = payload.get("model") if isinstance(payload, dict) else None
                 model_attempts.append({"model": model, "outcome": "completed"})
@@ -802,6 +820,7 @@ class OpenAICompatibleProvider:
                     )
                     if issue:
                         last_validation_issue = issue
+                        _log_rejection(issue, revised)
                         raise LLMValidationError("OpenCode Zen answer failed a safety consistency check.")
                     resolved_model = payload.get("model") if isinstance(payload, dict) else None
                     model_attempts.append(

@@ -52,6 +52,22 @@ Two properties are enforced by test rather than by inspection:
 2. **Distinctness** — widening one marker never makes it satisfy a different status, so
    `_STATUS_CONTRADICTIONS` and the `_APPROVAL_*` rules keep operating on unambiguous input.
 
+### Amendment: order-independent disclaimer matching, and rejection logging
+
+A later deployment rejected **both** metered routes with `no_action_disclaimer_omitted`. The
+refined-side rule had been widened twice, and both times it was widened by **adding literal
+sentences to the enumeration**. A third provider's phrasing fell outside the list again.
+
+The rule is now **order-independent**: it asserts a disclaimer when a negation token and a
+transmission verb appear in the same sentence, regardless of word order, plus the explicit
+`unsent` / `undelivered` forms. Enumerating phrasings cannot converge; testing for the semantic
+pair can.
+
+Separately, `_log_rejection` now records the rejection reason **and the rejected text** in the
+server log. The text is the model's own output, never the app-owned controlled draft, and it stays
+out of the API response. Three waves of this defect had to be diagnosed by inferring what a model
+had said from the reason code alone; that inference is now unnecessary.
+
 The anti-fabrication layer is deliberately **unchanged**: `unsupported_numeric_fact`,
 `status_contradiction`, `internal_reasoning_exposed`, and the approval-claim rules stay narrow.
 Those checks prevent the model from asserting something untrue, and there is no cost to being
