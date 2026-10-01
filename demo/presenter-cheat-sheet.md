@@ -211,9 +211,20 @@ CI/CD PREFLIGHT REQUIREMENTS & GRADATION ACCESS CHECKLIST
 | **Observed Host Cold-Start** | **33.466 s** (Single Sample) | 33–75 s (Typical Container Provisioning) | Disclosed Scope | **PASS** |
 
 * **Presenter Script on Evaluation Rigor & Latency:**
-  **SPEAK:** "To maintain academic evaluation rigor, we separate deterministic CI regression testing from semantic generation evaluation. Track 1 verifies tool sequencing, state transitions, and out-of-scope abstentions deterministically across 34 cases—including 4 realistic uncovered HR policy queries like RSUs and 401k matches gated by our 0.42 cosine threshold—achieving 100% pass with zero API spend. Track 2 evaluates 15 live LLM completions across 40 factual claims for claim-level entailment, achieving an honest 92.5% Claim Entailment Rate and 93.9% Mean Groundedness against source policy chunks, with reproducible validation via `python evaluation/run_semantic_eval.py`."
-  
-  **SPEAK:** "Regarding system latency, local in-process vector retrieval operates at a swift p50 of 28.05 ms. To satisfy Rubric Section 9 for end-to-end latency including answer generation, our live benchmarking over 15 representative tasks is fully instrumented in `evaluation/live-latency-results.md`. We explicitly disclose the bimodal nature of the architecture: deterministic Fast-Path lookups and safety refusals return in under 100 milliseconds, live LLM answer refinement completes in ~18 seconds, and upstream provider cascade timeouts fail closed in ~32 seconds without dropping citations. Finally, note on camera that the reported 33.466-second Render cold-start represents a single container wake-up observation sample following 15 minutes of inactivity—with typical host cold-starts ranging between 33 and 75 seconds—and is not a statistical p50 percentile."
+  **SPEAK:** "Evaluation is dual-track, and I want to be precise about which one means anything.
+  Track 1 is 34 deterministic cases at 100 percent. I do not claim that proves answer quality —
+  those golden labels were authored against my own orchestrator, so it measures the orchestrator,
+  not the model. Track 2 is where quality is measured: 15 live completions, 40 factual claims,
+  scored for entailment against the retrieved policy chunks. 92.5 percent claim entailment,
+  93.9 percent mean groundedness. Those are not 100 percent, and I published the three failures."
+
+  **SPEAK:** "On latency: deterministic retrieval is 28 milliseconds p50. End-to-end is bimodal,
+  so I report it by route — fast lookups under 100 milliseconds, live generation around 18 seconds,
+  provider timeouts failing closed around 32 seconds without dropping citations."
+
+* **[SHOW THE SCORECARD, DO NOT READ IT ALOUD.]** The table is the evidence; the two numbers spoken
+  above are the honest ones. The retrieval ablation, the 0.42 threshold story, and the fitness-bug
+  finding are in the walkthrough appendix — show them if asked, do not narrate them.
 
 ```text
 ====================================================================================================
@@ -221,8 +232,37 @@ FINAL RECORDING WRAP-UP CHECKLIST
 ====================================================================================================
 [ ] 1. Express formal gratitude to the Quantic evaluation faculty:
        "Thank you to the Quantic evaluation faculty for reviewing the Quantic HR Agent Capstone."
-[ ] 2. Verify total recording duration is strictly between 8:00 and 9:00 minutes.
+[ ] 2. Verify total recording duration lands between 8:00 and 10:00 minutes.
+       The walkthrough plans 9:30 for the required path. Do NOT verify a tighter 9:00
+       ceiling here — it contradicts the walkthrough and will fail the checklist spuriously.
 [ ] 3. Stop screen capture and camera recording.
 [ ] 4. Upload recording and submit both video URL and GitHub repository URL to Quantic.
 ====================================================================================================
 ```
+
+---
+
+## Pacing note (added 2026-10-01)
+
+Spoken words per beat against its time budget, at **140 words per minute** — a realistic pace for
+technical delivery. Above ~150 wpm the beat will overrun; above ~185 it is not deliverable.
+
+| Beat | Budget | Words | Pace | |
+|---|---|---|---|---|
+| 1 Intro | 1:00 | 121 | 121 wpm | fits |
+| 2 System architecture | 1:15 | 199 | 159 wpm | **tightest beat — rehearse this** |
+| 3 Embedded RAG | 1:15 | 171 | 137 wpm | fits |
+| 4 Demo Task 1 (remote work) | 1:30 | 114 | 76 wpm | fits, with pauses |
+| 5 Demo Task 2 + gate | 1:15 | 69 | 55 wpm | fits |
+| 6 CI/CD | 1:00 | 71 | 71 wpm | fits |
+| 7 Evaluation | 0:45 | 127 | 169 wpm | tight |
+
+**Required path: 872 spoken words ≈ 6:12 of speech** inside an 8:30 timeline, leaving roughly two
+minutes for the app responding, tab switches, and pauses.
+
+**If you are running long, cut from beat 2 and beat 7** — they are the two tight beats, and the
+material they cover most heavily (architecture detail, latency breakdown) is duplicated in the
+walkthrough appendix. Beats 4 and 5 are the graded demonstration and must not be cut.
+
+**Show, do not read:** the scorecard table in beat 7 and the trace blocks in beats 4 and 5 are
+evidence on screen. Reading them aloud wastes the time the numbers are meant to buy you.
