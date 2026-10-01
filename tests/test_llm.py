@@ -853,3 +853,85 @@ def test_refinement_permits_paraphrase_omitting_ancillary_numbers_and_matches_co
     assert refinement["status"] == "completed"
     assert "10 days" in answer
 
+_CONFIRMATION_DRAFT = (
+    "Maya Chen has 14 synthetic PTO days available. The request is for 5 day(s), leaving 9 if approved. "
+    "The policy notice expectation is 30 calendar days, and manager approval remains required. "
+    "I can prepare a fictional manager-email draft, but explicit confirmation is required first."
+)
+_CONFIRMATION_FACTS = {
+    "workflow": "pto",
+    "employee_id": "E1001",
+    "employee_name": "Maya Chen",
+    "eligible": True,
+    "requested_days": 5,
+    "available_days": 14,
+    "remaining_if_approved": 9,
+    "notice_days": 30,
+}
+_CONFIRMATION_EVIDENCE = [
+    {"document_id": "POL-PTO-01", "snippet": "Requests of 5 or more days need 30 calendar days notice. Manager approval is required."}
+]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        # Original three phrasings.
+        "Maya Chen has 14 synthetic PTO days. Explicit confirmation is required before I create the draft.",
+        "You have 14 days of PTO. Requesting 5 leaves 9. Please confirm and I will draft the email.",
+        "You have 14 days. A 5-day request leaves 9. This requires confirmation before any draft exists.",
+        # Conversational phrasings observed from metered routes.
+        "Maya Chen has 14 synthetic PTO days available. A request for 5 days leaves 9 if approved. "
+        "I can draft the email, but I need your confirmation first.",
+        "Maya Chen has 14 PTO days available; requesting 5 leaves 9. Manager approval is required. "
+        "I can prepare a draft once you confirm.",
+        "E1001 has 14 synthetic PTO days. A 5-day request leaves 9 if approved. "
+        "Would you like me to draft the email?",
+        "Maya Chen (E1001) has 14 synthetic PTO days available. Requesting 5 days leaves 9 days if approved. "
+        "I will need your explicit approval before creating any draft.",
+        "You have 14 days. Requesting 5 leaves 9. Awaiting your confirmation before I prepare the draft.",
+    ],
+    ids=[
+        "original-confirmation-is-required",
+        "original-please-confirm",
+        "original-requires-confirmation",
+        "metered-i-need-your-confirmation",
+        "metered-once-you-confirm",
+        "metered-would-you-like-me-to",
+        "metered-explicit-approval-before",
+        "metered-awaiting-your-confirmation",
+    ],
+)
+def test_conversational_confirmation_phrasings_are_accepted(answer: str) -> None:
+    """Regression: metered routes phrased the gate conversationally and were rejected."""
+    issue = llm_module._refinement_issue(
+        _CONFIRMATION_DRAFT,
+        answer,
+        _CONFIRMATION_EVIDENCE,
+        status="confirmation_required",
+        structured_facts=_CONFIRMATION_FACTS,
+    )
+    assert issue is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Maya Chen has 14 synthetic PTO days available. A request for 5 days leaves 9 if approved. "
+        "The draft has been created and sent to your manager.",
+        "You have 14 PTO days. Requesting 5 leaves 9. This has been fully approved and your manager has been notified.",
+        "Maya Chen has 14 days available and the 5-day request is complete. No further action is needed from you.",
+        "You have 14 PTO days. I have drafted and sent the manager email.",
+    ],
+    ids=["claims-created-and-sent", "claims-approved", "claims-complete", "claims-sent"],
+)
+def test_unconfirmed_action_claims_stay_rejected(answer: str) -> None:
+    """Widening the status marker must never admit text that claims the action happened."""
+    issue = llm_module._refinement_issue(
+        _CONFIRMATION_DRAFT,
+        answer,
+        _CONFIRMATION_EVIDENCE,
+        status="confirmation_required",
+        structured_facts=_CONFIRMATION_FACTS,
+    )
+    assert issue is not None
