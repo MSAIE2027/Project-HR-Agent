@@ -166,7 +166,10 @@ def load_policy_sections(policy_dir: Path) -> list[Section]:
 
 
 def chunk_sections(
-    sections: Iterable[Section], *, chunk_words: int = 180, overlap_words: int = 30
+    # These defaults are the production settings. `RagIndex.build` passes 120/20
+    # explicitly, but a caller invoking `chunk_sections` directly previously got
+    # 180/30 and silently produced an index inconsistent with the deployed one.
+    sections: Iterable[Section], *, chunk_words: int = 120, overlap_words: int = 20
 ) -> list[dict[str, object]]:
     if chunk_words <= overlap_words:
         raise ValueError("chunk_words must be greater than overlap_words")

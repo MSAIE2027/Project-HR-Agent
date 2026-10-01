@@ -2,7 +2,7 @@
 ### Master of Science in AI Engineering (MSAIE)  Project
 
 [![CI](https://github.com/MSAIE2027/Project-HR-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/MSAIE2027/Project-HR-Agent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/pytest-117%20passed-brightgreen)](https://github.com/MSAIE2027/Project-HR-Agent)
+[![Tests](https://img.shields.io/badge/pytest-180%20passed-brightgreen)](https://github.com/MSAIE2027/Project-HR-Agent)
 [![Protocol](https://img.shields.io/badge/protocol-FastMCP%20stdio-blue)](https://modelcontextprotocol.io/)
 [![Embeddings](https://img.shields.io/badge/embeddings-MiniLM--L6--v2%20INT8%20ONNX-orange)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 [![Accessibility](https://img.shields.io/badge/accessibility-WCAG%202.1%20AA-purple)](https://www.w3.org/WAI/WCAG21/quickref/)
@@ -141,7 +141,7 @@ An enterprise human resources agent that implements verifiable policy retrieval,
 ├── policies/                    # Knowledge base: 14 Markdown and HTML enterprise policies
 ├── rag/                         # Retrieval engine: ingestion, chunking, ONNX runtime, and vector store
 ├── scripts/                     # Operational utilities (index build, pinned hash verification, smokes)
-├── tests/                       # Automated test suite (117 unit, API, protocol, and security tests)
+├── tests/                       # Automated test suite (180 unit, API, protocol, and security tests)
 ├── ai-tooling.md                # Academic integrity disclosure of AI assistant usage
 ├── deployed.md                  # Deployment verification record and hosted acceptance status
 └── render.yaml                  # Infrastructure-as-code specification for Render hosting
@@ -153,14 +153,14 @@ An enterprise human resources agent that implements verifiable policy retrieval,
 
 ### 3.1 Model Context Protocol (MCP) Implementation
 
-Domain functionality is decoupled from agent logic using Anthropic's Model Context Protocol. The server (`mcp_server/server.py`) registers eight strongly typed tools:
+Domain functionality is decoupled from agent logic using Anthropic's Model Context Protocol. The server (`mcp_server/server.py`) registers eight strongly typed tools. Tool discovery is performed through the MCP protocol's `tools/list` request, which appears in the agent trace as a `discover_tools` event; it is not itself a registered tool:
 
 | Tool Identifier | Input Parameters | Output Schema | Functional Description |
 |:---|:---|:---|:---|
-| `discover_tools` | None | `list[ToolDefinition]` | Enumerates available MCP tools and signatures. |
 | `search_policy_documents` | `query: str`, `limit: int`, `document_prefix: str \| null` | `list[PolicyChunk]` | Executes dense ONNX vector search against SQLite. |
 | `get_policy_section` | `document_id: str`, `section: str` | `PolicySection` | Retrieves full text and metadata for a specific policy section. |
 | `lookup_employee_profile` | `employee_id: str` | `EmployeeRecord` | Queries SQLite for jurisdiction, tenure, and rolling usage. |
+| `lookup_benefits_status` | `employee_id: str` | `BenefitsStatus` | Reads the synthetic benefits enrolment record for an employee. |
 | `check_pto_balance` | `employee_id: str`, `requested_days: int` | `PTOBalanceReport` | Computes available, accrued, and remaining leave balances. |
 | `check_policy_compliance` | `workflow: str`, `employee_id: str`, `requested_days: int`, `destination: str \| null` | `ComplianceReport` | Validates statutory notice, rolling limits, and approvals. |
 | `draft_hr_email` | `employee_id: str`, `requested_days: int`, `confirmed: bool` | `EmailDraft` | Formats synthetic email draft (**requires `confirmed: true`**). |
@@ -264,7 +264,7 @@ Run the complete test suite and verification commands:
 # Verify Python syntax and compilation
 python -m compileall -q app agent rag mcp_server mcp_client evaluation scripts
 
-# Run 117 automated unit, API, protocol, and safety tests
+# Run 180 automated unit, API, protocol, and safety tests
 pytest -q
 
 # Run MCP server smoke test over stdio

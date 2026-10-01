@@ -28,6 +28,47 @@ SENSITIVE_TERMS = {
 }
 MINIMUM_EVIDENCE_SCORE = 0.42
 
+# A similarity score alone cannot tell a topical hit from a vocabulary
+# coincidence. "What is the fitness reimbursement policy?" retrieves the
+# expense policy at 0.63 purely on the shared word "reimbursement", then
+# answers a question the corpus does not cover. These terms are the HR-policy
+# furniture that appears throughout the corpus and carries no topical signal,
+# so they are excluded when deciding whether the question was actually covered.
+_UNINFORMATIVE_QUERY_TERMS = frozenset(
+    {
+        "policy", "policies", "company", "employee", "employees", "employer",
+        "work", "working", "workplace", "need", "needs", "want", "wants",
+        "tell", "explain", "describe", "give", "show", "know", "about",
+        "question", "answer", "rule", "rules", "process", "procedure",
+        "reimbursement", "reimburse", "expense", "expenses", "cost", "costs",
+        "request", "requests", "requested", "manager", "hr", "approval",
+        "approvals", "approve", "approved", "day", "days", "week", "weeks",
+        "time", "synthetic", "fictional", "does", "the", "for", "and", "are",
+        "can", "what", "how", "many", "much", "my", "our", "their", "was",
+    }
+)
+_QUERY_TERM_PATTERN = re.compile(r"[a-z][a-z-]{2,}")
+
+
+def _question_is_covered(query: str, evidence: str) -> bool:
+    """Whether the retrieved evidence plausibly addresses this question.
+
+    Returns False only when the question carries distinctive vocabulary and
+    *none* of it appears in the evidence. That is the signature of a
+    vocabulary coincidence rather than a topical match. It is deliberately
+    conservative: a single distinctive term present is enough to proceed, so
+    synonym phrasing ("vacation" for "PTO") does not trigger a false refusal.
+    """
+    terms = {
+        term
+        for term in _QUERY_TERM_PATTERN.findall(query.lower())
+        if term not in _UNINFORMATIVE_QUERY_TERMS
+    }
+    if not terms:
+        return True
+    evidence_lower = evidence.lower()
+    return any(term in evidence_lower for term in terms)
+
 
 def _employee_id(message: str) -> str | None:
     match = EMPLOYEE_PATTERN.search(message)
@@ -524,7 +565,13 @@ class MSAIEOrchestrator:
                     lambda_value=0.5,
                     seed_chunk_ids=seed_ids,
                 )
-                if missing_family or not citations or citations[0].get("score", 0) < MINIMUM_EVIDENCE_SCORE:
+                retrieved_evidence = " ".join(_snippets(citations))
+                if (
+                    missing_family
+                    or not citations
+                    or citations[0].get("score", 0) < MINIMUM_EVIDENCE_SCORE
+                    or not _question_is_covered(message, retrieved_evidence)
+                ):
                     return AgentResult(
                         answer="I could not find sufficient policy evidence for that question. Please rephrase it or refer the matter to HR.",
                         citations=[],

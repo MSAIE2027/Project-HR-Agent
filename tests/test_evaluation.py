@@ -4,6 +4,9 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
+from agent import orchestrator
 from agent.orchestrator import MSAIEOrchestrator
 from evaluation.run_ablation import QUERIES, to_markdown as ablation_markdown
 from evaluation.run_evaluation import (
@@ -217,3 +220,78 @@ def test_read_only_multifamily_queries_cite_each_requested_policy_family() -> No
             any(document_id.startswith(prefix) for document_id in cited_ids)
             for prefix in item["expected_prefixes"]
         ), item["id"]
+
+
+class TestUncoveredQuestionAbstention:
+    """A similarity score alone cannot distinguish a topical hit from a
+    vocabulary coincidence.
+
+    "What is the fitness reimbursement policy?" retrieved the expense policy at
+    0.63 on the shared word "reimbursement" and returned `completed` with an
+    answer about expense scope and booking cancellations. The corpus does not
+    cover fitness reimbursement at all, so this is a confident false positive.
+    """
+
+    EXPENSE_EVIDENCE = (
+        "Scope and purpose This policy applies to business expenses paid by the company. "
+        "Reimbursement requires an itemised receipt and manager approval before payment. "
+        "Changes to the policy require version control, approval and an effective date."
+    )
+    PTO_EVIDENCE = (
+        "Requests for one to four consecutive working days should normally be submitted at "
+        "least seven calendar days before leave begins. The manager reviews coverage and "
+        "critical deadlines."
+    )
+    CARRYOVER_EVIDENCE = (
+        "A maximum of five unused PTO days may carry into the next calendar year. Carry-over "
+        "above five days requires written HR approval and a documented reason."
+    )
+
+    @pytest.mark.parametrize(
+        "query",
+        [
+            "What is the fitness reimbursement policy?",
+            "What is the policy on tuition reimbursement?",
+            "What is our dental insurance coverage?",
+        ],
+        ids=["fitness", "tuition", "dental"],
+    )
+    def test_uncovered_question_does_not_match_vocabulary_coincidence(self, query: str) -> None:
+        """Distinctive question vocabulary absent from the evidence means no answer."""
+        assert not orchestrator._question_is_covered(query, self.EXPENSE_EVIDENCE)
+
+    @pytest.mark.parametrize(
+        ("query", "evidence"),
+        [
+            ("What is the carryover policy for PTO?", CARRYOVER_EVIDENCE),
+            ("How much notice is required before leave?", PTO_EVIDENCE),
+            ("Can I carry over unused leave?", CARRYOVER_EVIDENCE),
+            ("What does the reimbursement process require?", EXPENSE_EVIDENCE),
+        ],
+        ids=["carryover", "notice", "carry", "reimbursement"],
+    )
+    def test_covered_question_still_proceeds(self, query: str, evidence: str) -> None:
+        """Synonym and paraphrase phrasing must not trigger a false refusal."""
+        assert orchestrator._question_is_covered(query, evidence)
+
+    def test_question_with_only_uninformative_terms_proceeds(self) -> None:
+        """A question built entirely from corpus-wide HR vocabulary is not distinctive."""
+        assert orchestrator._question_is_covered(
+            "Explain the expense approval rules", self.EXPENSE_EVIDENCE
+        )
+
+    def test_personal_use_question_legitimately_answers(self) -> None:
+        """A question the corpus genuinely covers must still be answered.
+
+        "Personal cell phones for work calls" retrieves the acceptable-use
+        section ("Limited personal use is acceptable when lawful, reasonable and
+        not disruptive"), which does address it. Treating that as a false
+        positive would be wrong.
+        """
+        acceptable_use = (
+            "Limited personal use is acceptable when lawful, reasonable and not disruptive. "
+            "Prohibited uses include credential sharing and circumvention of security controls."
+        )
+        assert orchestrator._question_is_covered(
+            "What is the policy on using personal cell phones for work calls?", acceptable_use
+        )
