@@ -220,8 +220,23 @@ def build_grounding_prompt(
 
 
 _STATUS_REQUIREMENTS = {
-    "provisionally_eligible": re.compile(r"\bprovisionally eligible\b|\bprovisional\b", re.I),
-    "not_eligible": re.compile(r"\bnot (?:currently )?eligible\b|\bineligible\b", re.I),
+    "provisionally_eligible": re.compile(
+        r"\bprovisionally eligible\b|\bprovisional(?:ly)?\b"
+        r"|\beligible to (?:proceed|do so|request|take|book)\b"
+        r"|\bqualif(?:y|ies|ied|ying)\b"
+        r"|\bmeets? the (?:eligibility )?requirements?\b"
+        r"|\bappears? to (?:meet|qualify)\b"
+        r"|\b(?:subject to|pending) (?:final |manager |HR |further )?(?:approval|sign-?off|review|authorization)\b",
+        re.I,
+    ),
+    "not_eligible": re.compile(
+        r"\b(?:not|isn't|aren't|wasn't|weren't) (?:currently )?eligible\b|\bineligible\b"
+        r"|\bnot qualified\b"
+        r"|\b(?:do|does|did) not qualif(?:y|ies|ied)\b"
+        r"|\b(?:do|does|did) not meet\b|\bnot meet the (?:eligibility )?requirements?\b"
+        r"|\beligibility (?:is|has not been) (?:not )?met\b",
+        re.I,
+    ),
     "escalated": re.compile(r"\bauthori[sz]ed HR professional\b|\bconfidential HR channel\b", re.I),
     # The marker signals that no real action occurred. Requiring one of four
     # literal words rejected correct answers that said "locally" or "nothing was
@@ -252,8 +267,19 @@ _STATUS_REQUIREMENTS = {
         r"|\b(?:awaiting|pending)\s+(?:your\s+)?(?:confirmation|approval|sign-?off)\b",
         re.I,
     ),
-    "clarification_required": re.compile(r"\bplease (?:provide|specify|share|enter|rephrase)\b", re.I),
-    "not_found": re.compile(r"\bnot found\b|\bno synthetic (?:employee )?record\b", re.I),
+    "clarification_required": re.compile(
+        r"\bplease (?:provide|specify|share|enter|rephrase|give|clarify|confirm)\b"
+        r"|\b(?:could|can|would) you (?:please )?(?:give|provide|share|tell|clarify|specify|enter|supply)\b"
+        r"|\bi (?:need|require) (?:the|a|your|which)\b"
+        r"|\bwhich (?:employee|one|policy)\b",
+        re.I,
+    ),
+    "not_found": re.compile(
+        r"\bnot found\b|\bno synthetic (?:employee )?record\b"
+        r"|\b(?:could not|couldn't|cannot|can't) find\b"
+        r"|\bno (?:such )?(?:employee )?record\b|\bno such employee\b",
+        re.I,
+    ),
 }
 _STATUS_CONTRADICTIONS = {
     "not_eligible": re.compile(

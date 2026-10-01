@@ -1000,3 +1000,58 @@ def test_claims_of_a_real_send_stay_rejected(answer: str) -> None:
         structured_facts=_ACTION_FACTS,
     )
     assert issue is not None
+
+@pytest.mark.parametrize(
+    ("status", "answer"),
+    [
+        ("provisionally_eligible", "Based on the policy, you are provisionally eligible for this request."),
+        ("provisionally_eligible", "You would be eligible to proceed, subject to final approval."),
+        ("provisionally_eligible", "E1001 appears to meet the requirements, pending sign-off."),
+        ("provisionally_eligible", "Maya qualifies for this under the policy, but approval is outstanding."),
+        ("not_eligible", "Unfortunately you do not qualify for this leave."),
+        ("not_eligible", "Eligibility is not met for this classification."),
+        ("not_eligible", "This does not meet the eligibility requirements."),
+        ("not_eligible", "You aren't eligible under the standard policy."),
+        ("clarification_required", "Could you give me the employee ID?"),
+        ("clarification_required", "Which employee is this about?"),
+        ("not_found", "I could not find a record for E9999."),
+        ("not_found", "There is no record for that employee."),
+    ],
+    ids=[
+        "prov-provisionally",
+        "prov-eligible-to-proceed",
+        "prov-appears-to-meet",
+        "prov-qualifies",
+        "notelig-do-not-qualify",
+        "notelig-not-met",
+        "notelig-does-not-meet",
+        "notelig-aint",
+        "clarify-could-you-give",
+        "clarify-which-employee",
+        "notfound-could-not-find",
+        "notfound-no-record",
+    ],
+)
+def test_status_markers_accept_faithful_paraphrase(status: str, answer: str) -> None:
+    """Regression: every status marker was tuned to one model family's exact wording.
+
+    Each of these is a faithful restatement of the required status. Requiring a
+    single literal phrasing made the validator model-specific, so a provider swap
+    turned correct answers into HTTP 503 across the whole cascade.
+    """
+    assert llm_module._STATUS_REQUIREMENTS[status].search(answer)
+
+
+@pytest.mark.parametrize(
+    ("status", "answer"),
+    [
+        ("not_eligible", "Maya Chen is provisionally eligible for this request."),
+        ("provisionally_eligible", "You are not eligible for this leave."),
+        ("not_found", "Please provide the employee ID."),
+        ("clarification_required", "No record was found for E9999."),
+    ],
+    ids=["notelig-vs-prov", "prov-vs-notelig", "notfound-vs-clarify", "clarify-vs-notfound"],
+)
+def test_status_markers_stay_distinct(status: str, answer: str) -> None:
+    """Widening must not make one status's marker satisfy another status."""
+    assert llm_module._STATUS_REQUIREMENTS[status].search(answer) is None
