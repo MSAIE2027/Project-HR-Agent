@@ -322,8 +322,8 @@ sequenceDiagram
     API->>Orch: handle(..., true)
     Orch->>GW: call_tool(draft_hr_email, {employee_id:"E1001", purpose:"PTO request", requested_days:5, confirmed:true})
     Tools-->>GW: {ok, data:{action_id, to, subject, body, sent:false}}
-    Orch->>Orch: Append mock email to answer, status="mock_action_completed"
-    Orch-->>API: AgentResult{answer with email draft, status:"mock_action_completed"}
+    Orch->>Orch: Attach mock_action artifact + status="mock_action_completed"
+    Orch-->>API: AgentResult{answer, mock_action{action_id,to,subject,body,sent}, status:"mock_action_completed"}
     API->>LLM: refine(...)
     LLM-->>API: Validated answer (preserves "no email was sent", "fictional")
     API-->>Browser: Final response
@@ -386,7 +386,7 @@ sequenceDiagram
 
 ### 8.1 OpenRouter Primary Chain
 ```
-nvidia/nemotron-3-nano-30b-a3b → qwen/qwen-2.5-7b-instruct → openrouter/free
+nvidia/nemotron-3-nano-30b-a3b → openai/gpt-oss-120b → openrouter/free
 ```
 - The first two routes are metered. The project brief permits the owner's own API keys, and a
   credit-backed first route removes the account-wide free-daily-quota 429 that otherwise stops

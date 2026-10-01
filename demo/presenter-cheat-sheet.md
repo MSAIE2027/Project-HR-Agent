@@ -32,7 +32,7 @@ This reference cheat sheet is designed for a solo presenter recording a **tight 
   **SPEAK:** "The architecture cleanly decouples agent orchestration from core domain logic through Anthropic's Model Context Protocol (MCP). All domain capabilities are exposed via 8 strongly typed FastMCP tools running over standard input/output (stdio) inter-process communication (IPC). During initialization, `agent/orchestrator.py` dynamically discovers tools via `tools/list` and executes them via `tools/call` using JSON-RPC over stdio IPC, proving zero hard-coded Python function shortcuts bypass protocol serialization."
 
 * **Resilience Cascade Script:**
-  **SPEAK:** "For final response synthesis, the system implements a 3-Tier LLM Provider Cascade. Tier 1 is OpenRouter, which leads with two metered models on the owner's own API key, then the zero-priced free router. I chose that order deliberately: the account-wide free daily quota returns HTTP 429 before any completion exists, which was stranding otherwise successful workflows at 503. Tier 2 is automatic failover to the OpenCode Zen free chain, so the service still composes live answers with no credit at all. Tier 3 is a bounded SQLite template fallback restricted strictly to read-only workflows. Any unconfirmed state-changing action or unverified context strictly fails closed with HTTP 503 `llm_unavailable`, while fully preserving retrieved policy citations and operational traces."
+  **SPEAK:** "For final response synthesis, the system implements a 3-Tier LLM Provider Cascade. Tier 1 is OpenRouter, which leads with two metered models on the owner's own API key, then the zero-priced free router. I chose that order deliberately: the account-wide free daily quota returns HTTP 429 before any completion exists, which was stranding otherwise successful workflows at 503. Tier 2 is automatic failover to the OpenCode Zen free chain, so the service still composes live answers with no credit at all. Tier 3 is a bounded SQLite template fallback for read-only workflows plus the confirmation-gated PTO case, which is reported as `response_mode: confirmation_gate_template` with `model_composed: false` so it is never mistaken for live generation. Any unconfirmed state-changing action or unverified context strictly fails closed with HTTP 503 `llm_unavailable`, while fully preserving retrieved policy citations and operational traces."
 
 ##### FastMCP Tool Schema Callouts
 * `search_policy_documents(query, limit=4, document_prefix=None)`: Dense ONNX vector search over 182 chunks in SQLite.
@@ -123,6 +123,9 @@ Click the interactive "Confirm action" button (or send confirmation message).
 
 [TURN 2 UI VERIFICATION POINTS]
 ├── Staged Draft Displayed: Local email draft rendered in UI workspace with Action ID.
+├── ARTIFACT CARD: the draft is returned in the `mock_action` field, verbatim from the tool result,
+│   NOT inside the model-written paragraph. A validator rule rejects any completion that drops the
+│   artifact or omits its subject (`created_artifact_omitted`).
 └── Safety Payload Flag: Sent status is explicitly flagged sent: false (no transmission occurs).
 ====================================================================================================
 ```

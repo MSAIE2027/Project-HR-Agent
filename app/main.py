@@ -111,6 +111,9 @@ def _llm_failure_response(
             "confidence": "low",
             "trace": trace,
             "llm": {"provider": provider_status(), "refinement": refinement},
+            # An action may already have been created before composition failed.
+            # Withholding it here would tell the user a draft exists while hiding it.
+            "mock_action": result.mock_action,
         },
     )
 

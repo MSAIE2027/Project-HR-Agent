@@ -4,6 +4,14 @@
 **Auditor:** Senior AI Engineering Architect & Validator (Antigravity, Google DeepMind)  
 **Project:** Quantic Master of Science in AI Engineering (MSAIE) Capstone — Project HR-Agent  
 **Repository:** [https://github.com/MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent)  
+
+> **Status note (2026-10-01).** This report records the audit as it stood on 2026-09-30 and is
+> retained as written. Six commits have landed since, each answering a finding in it or in a later
+> audit: ADR 0011 (metered-first routing), 0012 (confirmation-gate template), 0013
+> (model-agnostic validation), 0014 (artifacts returned as structured data). The response contract
+> gained a `mock_action` field, and the test suite grew from 118 to 160 cases. Claims in this
+> document about counts, chains, and response shape that are now superseded are corrected in
+> `specs/system-requirements.md` and `docs/adr/`; they are not silently rewritten here.
 **Deployment:** [https://project-hr-agent.onrender.com](https://project-hr-agent.onrender.com)  
 **Authority:** `AI ENGINEERING TECHNIQUES AND ARCHITECTURES project prompt.pdf` (Quantic Holdings, 2026)  
 

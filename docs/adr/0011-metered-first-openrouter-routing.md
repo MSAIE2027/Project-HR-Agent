@@ -24,18 +24,22 @@ Reorder the OpenRouter chain so two **metered** routes lead, and drop the explic
 down to a single final fallback:
 
 ```
-nvidia/nemotron-3-nano-30b-a3b  ->  qwen/qwen-2.5-7b-instruct  ->  openrouter/free
+nvidia/nemotron-3-nano-30b-a3b  ->  openai/gpt-oss-120b  ->  openrouter/free
 ```
 
 Rationale for the two specific models:
 
-- Both are general-purpose composers at roughly $0.10 per million input tokens.
-- Safeguard-tuned models (`openai/gpt-oss-safeguard-20b`) were considered and **rejected**. Their
-  refusal-leaning behaviour conflicts with the answer validator's requirement for binding status
-  language, so they would convert hedging into `status_marker_missing` rejections — trading a quota
-  failure for a validation failure.
-- `gpt-oss-120b` was considered as the second metered slot but is redundant with the nemotron family
-  and roughly twice the cost.
+- Both are general-purpose composers. Safeguard-tuned models are excluded because their hedging
+  trips the binding-status-language validator.
+- The two slots are deliberately from **different model families**. The second slot originally held
+  `qwen/qwen-2.5-7b-instruct`, which began returning **HTTP 404 on 2026-10-01 while still being
+  listed in `GET /api/v1/models`** — OpenRouter retires a slug's serving endpoint without removing
+  it from the catalogue. A same-family pair would have left the chain with a single point of
+  failure, and a catalogue check would not have caught it. Route health must be verified by
+  **calling** the route, not by reading the catalogue.
+- `openai/gpt-oss-120b` costs roughly $0.20 per million input tokens against the nano route's
+  $0.10. That is immaterial at the observed volume (about 1,400 input tokens per request) and buys a
+  second independent provider path.
 
 Per-route timeouts rise from 12s/8s to **15s/12s**, because free-tier generations were observed
 truncating at the previous cap and surfacing as timeouts rather than answers.

@@ -9,7 +9,10 @@ OPENROUTER_MODEL = "openrouter/free"
 # because they hedge, and the answer validator requires binding status language.
 OPENROUTER_METERED_MODELS = (
     "nvidia/nemotron-3-nano-30b-a3b",
-    "qwen/qwen-2.5-7b-instruct",
+    # Different model family from the first route on purpose: OpenRouter retires
+    # slugs without notice, and qwen/qwen-2.5-7b-instruct began returning HTTP 404
+    # on 2026-10-01 while still being listed in /api/v1/models.
+    "openai/gpt-oss-120b",
 )
 # Zero-priced routes come last so a live answer stays reachable with no credit.
 # The OpenCode Zen chain and the build-seeded SQLite templates sit after this
