@@ -314,6 +314,7 @@ with TestClient(app) as client:
         assert any(item["document_id"] == "POL-PTO-01" for item in documents["documents"])
         assert {item["template_key"] for item in documents["response_templates"]} == {
             "pto_balance",
+            "pto_confirmation_gate",
             "pto_request",
             "remote_work_eligible",
         }
@@ -757,6 +758,12 @@ with TestClient(app) as client:
         assert payload["trace"][-1]["failure_scope"] == "account_quota"
 
     def test_sqlite_template_does_not_bypass_confirmation_gate_after_quota_failure(monkeypatch) -> None:
+        """A formatted template may answer a gated request, but it must never run the action.
+
+        The template path is allowed for confirmation-gated PTO so that a total
+        provider outage cannot block the workflow. The invariant under test is
+        that no draft is created and the answer is labelled as locally formatted.
+        """
         action_result = AgentResult(
             answer="CONFIRMATION_GATED_DRAFT_MUST_NOT_BE_RETURNED",
             citations=[{"document_id": "POL-PTO-01", "snippet": "Manager approval is required."}],
@@ -769,7 +776,7 @@ with TestClient(app) as client:
                 "available_days": 14,
                 "requested_days": 5,
                 "remaining_if_approved": 9,
-                "notice_days": 14,
+                "notice_days": 30,
                 "eligible": True,
             },
         )
@@ -783,10 +790,19 @@ with TestClient(app) as client:
             result_override=action_result,
         )
 
-        assert response.status_code == 503
+        assert response.status_code == 200
         assert calls == [FIRST_ROUTE]
+        # The raw controlled draft is never surfaced.
         assert "CONFIRMATION_GATED_DRAFT_MUST_NOT_BE_RETURNED" not in response.text
-        assert "sqlite_template" not in response.text
+        refinement = response.json()["llm"]["refinement"]
+        assert refinement["status"] == "cached_template"
+        assert refinement["response_mode"] == "confirmation_gate_template"
+        assert refinement["model_composed"] is False
+        assert refinement["action_taken"] is False
+        assert refinement["template_key"] == "pto_confirmation_gate"
+        # The action boundary itself is untouched.
+        assert response.json()["requires_confirmation"] is True
+        assert "draft_hr_email" not in _tools(response.json())
 
     @pytest.mark.parametrize(
         "error",

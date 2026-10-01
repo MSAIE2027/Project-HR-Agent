@@ -34,6 +34,20 @@ RESPONSE_TEMPLATES: tuple[dict[str, str], ...] = (
         ),
     },
     {
+        "template_key": "pto_confirmation_gate",
+        "description": "PTO facts with the confirmation gate restated; no draft is created",
+        "document_prefix": "POL-PTO-",
+        "required_facts": "employee_id,employee_name,available_days,notice_days,requested_days,remaining_if_approved",
+        "answer_template": (
+            "{employee_name} ({employee_id}) has {available_days} synthetic PTO days available. "
+            "A request for {requested_days} day(s) would leave {remaining_if_approved} days if approved. "
+            "The policy notice expectation is {notice_days} calendar days, and manager approval "
+            "remains required. This answer was formatted locally because live model generation was "
+            "unavailable; it is not model-composed text. No draft has been created and nothing was "
+            "sent. Explicit confirmation is required before any manager email is prepared."
+        ),
+    },
+    {
         "template_key": "remote_work_eligible",
         "description": "Provisional international remote-work eligibility and outstanding reviews",
         "document_prefix": "POL-RW-",
@@ -54,18 +68,30 @@ RESPONSE_TEMPLATE_SIGNATURE = hashlib.sha256(
 def cached_response(index: Any, result: Any) -> tuple[str, dict[str, Any]] | None:
     """Render a seeded template only when live workflow facts and citations match it."""
     facts = result.structured_facts
-    if not result.citations or result.requires_confirmation:
+    if not result.citations:
         return None
-    if result.status not in {"completed", "provisionally_eligible"}:
+    confirmation_gate = result.requires_confirmation
+    if result.status not in {"completed", "provisionally_eligible", "confirmation_required"}:
         return None
 
     template_key: str
     if facts.get("workflow") == "pto":
-        requested_days = _bounded_integer(facts.get("requested_days"))
-        if facts.get("eligible") is not True or requested_days is None:
+        if facts.get("eligible") is not True:
             return None
-        template_key = "pto_request" if requested_days > 0 else "pto_balance"
+        requested_days = _bounded_integer(facts.get("requested_days"))
+        if requested_days is None:
+            return None
+        if confirmation_gate:
+            if result.status != "confirmation_required":
+                return None
+            template_key = "pto_confirmation_gate"
+        else:
+            template_key = "pto_request" if requested_days > 0 else "pto_balance"
     elif facts.get("workflow") == "remote_work" and facts.get("eligible") is True:
+        # This workflow never reaches the action gate, so a confirmation flag
+        # means the request escalated to a mock ticket rather than a PTO draft.
+        if confirmation_gate:
+            return None
         template_key = "remote_work_eligible"
     else:
         return None
@@ -124,8 +150,13 @@ def cached_response(index: Any, result: Any) -> tuple[str, dict[str, Any]] | Non
     except (KeyError, ValueError):
         return None
     return answer, {
-        "response_mode": "sqlite_template",
+        # The confirmation-gate case is formatted locally, not model-composed.
+        # It carries its own response_mode so a reviewer can never read it as
+        # live generation, which is what the action boundary depends on.
+        "response_mode": "confirmation_gate_template" if confirmation_gate else "sqlite_template",
         "cache_hit": True,
+        "model_composed": False,
+        "action_taken": False,
         "template_key": template_key,
         "template_version": str(template.get("version", RESPONSE_TEMPLATE_VERSION)),
     }

@@ -22,9 +22,10 @@ def test_persistent_index_and_citation_metadata(tmp_path: Path) -> None:
     stats = index.build(force=True)
     assert stats["documents"] == 14
     assert stats["chunks"] > 40
-    assert stats["response_templates"] == 3
+    assert stats["response_templates"] == 4
     assert {item["template_key"] for item in index.list_response_templates()} == {
         "pto_balance",
+        "pto_confirmation_gate",
         "pto_request",
         "remote_work_eligible",
     }
