@@ -138,7 +138,7 @@ with TestClient(app) as client:
         assert response.status_code == 200
         payload = response.json()
         assert payload["status"] == "ok"
-        assert payload["version"] == "2.2.0"
+        assert payload["version"] == "2.3.0"
         assert payload["mode"] == "agentic-rag-mcp-llm"
         assert payload["mcp"]["status"] == "available"
         assert payload["rag_index"]["documents"] == 14
