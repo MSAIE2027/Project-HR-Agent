@@ -17,7 +17,7 @@
 | **Compute Environment** | Render Free Web Service (`plan: free`, 512 MB RAM, 1 CPU) | Render service metadata |
 | **Service Identifier** | `Project-HR-Agent` (Render Workspace: `MSAIE2027`) | `render.yaml` specification |
 | **Repository Remote** | [https://github.com/MSAIE2027/Project-HR-Agent](https://github.com/MSAIE2027/Project-HR-Agent) | GitHub Git remote (`main`) |
-| **Release CI/CD Gate** | Automated deploy hook gated on 117-test passing CI (`RENDER_DEPLOY_ENABLED=true`) | `.github/workflows/ci.yml` |
+| **Release CI/CD Gate** | Automated deploy hook gated on 180-test passing CI (`RENDER_DEPLOY_ENABLED=true`) | `.github/workflows/ci.yml` |
 
 ---
 
@@ -31,8 +31,9 @@ The deployed service at `https://project-hr-agent.onrender.com` has been empiric
 | **Medical PII Refusal (`POST /chat`)** | HTTP 200 `status: refused`; zero MCP tool calls; zero external provider calls. | HTTP 200 `refused`; instant rejection; zero tool or LLM trace events. | **PASS** |
 | **Multi-Employee Privacy (`POST /chat`)** | HTTP 200 `status: refused`; zero tool calls; zero external provider calls. | HTTP 200 `refused`; batch inspection rejected; zero trace events. | **PASS** |
 | **Agentic Task 1: Remote Work (`POST /chat`)** | HTTP 200 `provisionally_eligible`; 5 citations from `POL-RW-01`; full 3-tool MCP sequence. | HTTP 200 `provisionally_eligible`; executed `search_policy_documents` → `lookup_employee_profile` → `check_policy_compliance`; completed LLM refinement. | **PASS** |
-| **Agentic Task 2: PTO Guidance (`POST /chat`)** | HTTP 200 `confirmation_required`; 5 citations from `POL-PTO-01`; 4-tool MCP sequence. | HTTP 200 `confirmation_required`; executed `search_policy_documents` → `lookup_employee_profile` → `check_pto_balance` → `check_policy_compliance`. | **PASS** |
-| **Action Safety Confirmation Gate** | Halts strictly before invoking `draft_hr_email`; draft withheld until confirmed turn. | Verified: `confirmation_gate` recorded in trace; zero unauthorized email creation. | **PASS** |
+| **Agentic Task 2: PTO Guidance (`POST /chat`)** | HTTP 200 `completed`; 5 citations from `POL-PTO-01`; 4-tool MCP sequence; no artifact created. | HTTP 200 `completed`; executed `search_policy_documents` → `lookup_employee_profile` → `check_pto_balance` → `check_policy_compliance`; 5 citations. | **PASS** |
+| **Action Safety Confirmation Gate** | Halts strictly before invoking `draft_hr_email`; `mock_action` is `null`; draft withheld until a confirmed turn. | Verified live 2026-10-01: status `confirmation_required`, `mock_action: null`, `draft_hr_email` absent from the trace. | **PASS** |
+| **Confirmed Action Returns Artifact (`confirm_action: true`)** | `mock_action_completed`; `mock_action` populated with `sent: false`; narrative acknowledges the subject. | Verified live 2026-10-01: `EMAIL-258BB224E9`, `sent: false`, `to: manager.one@example.invalid`. Landed on the final cascade route (`opencode-zen/space-bunny-free`) after both metered routes were rejected by validation. Succeeded in 3 of 4 post-deploy attempts, so it is treated as **optional** in the recorded demo. | **PASS (variable)** |
 
 ---
 
@@ -63,7 +64,9 @@ To ensure high availability during third-party API rate limits, the hosted servi
 
 ## 5. Course Grader Access Gate
 
-- **Repository Permissions:** The repository is private (`MSAIE2027/Project-HR-Agent`).
-- **Collaborator Invitation:** Official GitHub collaborator invitation ID `335007413` with `write` permissions was generated for `quantic-grader` on `2026-09-28T04:58:00Z` and is active (`expired: false`).
-- **API Technical Detail:** The GitHub REST API endpoint `/repos/{owner}/{repo}/collaborators/{username}` reports `{"permission": "none"}` until the recipient accepts the invitation.
-- **Submission Recommendation:** To avoid grading delays or authentication friction, repository visibility should be toggled to **Public** (`Settings -> Change repository visibility -> Make public`) immediately prior to capstone submission on the Quantic dashboard.
+- **Repository Permissions:** The repository is **public** (`MSAIE2027/Project-HR-Agent`). Confirmed
+  against the GitHub API on 2026-10-01: `{"visibility": "public", "private": false}`. Grader
+  access no longer depends on accepting an invitation.
+- **Collaborator Invitation:** Official GitHub collaborator invitation ID `335007413` with `write` permissions was generated for `quantic-grader` on `2026-09-28T04:58:00Z` and is active (`expired: false`). Retained for audit history; it is no longer the access path.
+- **API Technical Detail:** The GitHub REST API endpoint `/repos/{owner}/{repo}/collaborators/{username}` reports `{"permission": "none"}` until the recipient accepts the invitation. Read-only access does not depend on it.
+- **Submission Status:** Public visibility is already in place, so no pre-submission toggle is required.
