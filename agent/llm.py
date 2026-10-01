@@ -223,7 +223,16 @@ _STATUS_REQUIREMENTS = {
     "provisionally_eligible": re.compile(r"\bprovisionally eligible\b|\bprovisional\b", re.I),
     "not_eligible": re.compile(r"\bnot (?:currently )?eligible\b|\bineligible\b", re.I),
     "escalated": re.compile(r"\bauthori[sz]ed HR professional\b|\bconfidential HR channel\b", re.I),
-    "mock_action_completed": re.compile(r"\bmock\b|\bfictional\b|\bdemonstration\b|\bsynthetic\b", re.I),
+    # The marker signals that no real action occurred. Requiring one of four
+    # literal words rejected correct answers that said "locally" or "nothing was
+    # sent" instead, even though they conveyed the same fact.
+    "mock_action_completed": re.compile(
+        r"\bmock\b|\bfictional\b|\bdemonstration\b|\bsynthetic\b"
+        r"|\blocal(?:ly)?\b|\bnothing (?:was|has been) sent\b|\bno email was sent\b"
+        r"|\bno (?:external|production) system\b"
+        r"|\b(?:did|do|does|have|has|had) not (?:send|contact)\b|\bhas not been sent\b",
+        re.I,
+    ),
     # Accepts the three original phrasings plus the conversational ways a model
     # asks a user to confirm. The original three were always too narrow: the
     # phrase a given model happens to choose is not a property of the answer,
@@ -284,13 +293,36 @@ _NEGATED_APPROVAL_CLAIM = re.compile(
 )
 _APPROVAL_CLAUSE_BOUNDARY = re.compile(r"[.!?;]|\b(?:but|however|although|though|whereas)\b", re.I)
 _NO_ACTION_DISCLAIMERS = (
+    # The draft-side pattern decides whether a disclaimer is required at all.
+    # The refined-side pattern accepts any faithful restatement of "nothing was
+    # sent", because the phrasing a model chooses is not a property of the fact.
+    # Requiring one exact sentence caused every route to be rejected for
+    # paraphrasing a disclaimer that was present in meaning. The underlying
+    # guarantee is structural: the action tool returns sent=false and cannot run
+    # without an explicit confirmation turn.
     (
         re.compile(r"\bno email was sent\b", re.I),
-        re.compile(r"\b(?:no email was sent|email was not sent|no message was sent)\b", re.I),
+        re.compile(
+            r"\bno (?:email|message|mail|draft)s?\s+(?:was|were|is|are|has|have|had)?\s*"
+            r"(?:sent|delivered|contacted|transmitted|left|dispatched)\b"
+            r"|\b(?:email|message|mail|draft)s?\s+(?:was|were|is|are|has|have|had)?\s*"
+            r"not\s+(?:been\s+)?(?:sent|delivered|contacted|transmitted|left|dispatched)\b"
+            r"|\bnot\s+(?:sent|delivered|contacted|transmitted|left)\b[^.]{0,40}\b(?:email|message|mail|draft)\b"
+            r"|\b(?:email|message|mail|draft)\b[^.]{0,40}\bnot\s+(?:been\s+)?(?:sent|delivered|contacted|transmitted|left)\b"
+            r"|\bnothing\b[^.]{0,40}\b(?:was|were|is|are|has|have|had)?\s*"
+            r"(?:sent|delivered|contacted|transmitted|created)\b"
+            r"|\b(?:did|do|does|have|has|had)\s+not\s+(?:send|deliver|contact|transmit)\b",
+            re.I,
+        ),
     ),
     (
         re.compile(r"\bno production system was contacted\b", re.I),
-        re.compile(r"\b(?:no production system was contacted|production system was not contacted)\b", re.I),
+        re.compile(
+            r"\bno (?:external|production|real)\s+(?:system|service|record|ticket|message)s?\s+"
+            r"(?:was|were|is|are|has been|have been)?\s*(?:contacted|created|updated|sent|transmitted)\b"
+            r"|\bno production system was contacted\b",
+            re.I,
+        ),
     ),
 )
 _NUMBER_TOKEN = re.compile(r"(?<![A-Za-z0-9])\d+(?:\.\d+)?(?![A-Za-z0-9])")

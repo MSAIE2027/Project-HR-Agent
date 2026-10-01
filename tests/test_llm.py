@@ -935,3 +935,68 @@ def test_unconfirmed_action_claims_stay_rejected(answer: str) -> None:
         structured_facts=_CONFIRMATION_FACTS,
     )
     assert issue is not None
+
+_ACTION_DRAFT = (
+    "Aisha Rahman has 0 synthetic PTO days available. The request is for 2 day(s). "
+    "The request is not eligible for this classification.\n\n"
+    "Mock email draft (EMAIL-6D924E95EF)\n"
+    "Please review Aisha Rahman's synthetic PTO request for 2 day(s). "
+    "This is a demonstration draft; no email was sent."
+)
+_ACTION_FACTS = {
+    "workflow": "pto",
+    "employee_id": "E1003",
+    "employee_name": "Aisha Rahman",
+    "available_days": 0,
+    "requested_days": 2,
+    "notice_days": 7,
+    "eligible": False,
+}
+_ACTION_EVIDENCE = [
+    {"document_id": "POL-PTO-01", "snippet": "Requests for one to four working days need seven days notice."}
+]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "I have prepared a local draft for Aisha Rahman. I have not sent any email, and no production system was contacted.",
+        "A local mock draft was created for your manager. Nothing was sent externally.",
+        "The draft exists locally; the email has not been sent and no production system was contacted.",
+        "Draft prepared locally. No email has left the system.",
+        "I did not send anything. The draft is local only.",
+    ],
+    ids=["not-sent-any-email", "nothing-sent", "has-not-been-sent", "no-email-left-system", "did-not-send"],
+)
+def test_no_action_disclaimer_survives_paraphrase(answer: str) -> None:
+    """Regression: every route was rejected for paraphrasing 'no email was sent'."""
+    issue = llm_module._refinement_issue(
+        _ACTION_DRAFT,
+        answer,
+        _ACTION_EVIDENCE,
+        status="mock_action_completed",
+        structured_facts=_ACTION_FACTS,
+    )
+    assert issue is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "I have drafted and sent the email to manager.two@example.invalid.",
+        "The email was sent to your manager and a production ticket was created.",
+        "I sent the request and it is now in the production HRIS.",
+        "A real email went out to your manager a moment ago.",
+    ],
+    ids=["drafted-and-sent", "sent-and-ticketed", "sent-to-hris", "real-email-sent"],
+)
+def test_claims_of_a_real_send_stay_rejected(answer: str) -> None:
+    """Widening the disclaimer rule must never admit text claiming a real send."""
+    issue = llm_module._refinement_issue(
+        _ACTION_DRAFT,
+        answer,
+        _ACTION_EVIDENCE,
+        status="mock_action_completed",
+        structured_facts=_ACTION_FACTS,
+    )
+    assert issue is not None
