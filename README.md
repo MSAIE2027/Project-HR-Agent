@@ -86,7 +86,7 @@ An enterprise human resources agent that implements verifiable policy retrieval,
                                                                             v
                                                                  +---------------------+
                                                                  | LLM Provider Cascade|
-                                                                 | 1. OpenRouter Free  |
+                                                                 | 1. OpenRouter       |
                                                                  | 2. OpenCode Zen     |
                                                                  | 3. SQLite Templates |
                                                                  +---------------------+
@@ -102,9 +102,10 @@ An enterprise human resources agent that implements verifiable policy retrieval,
 
 - **Model Context Protocol (MCP) Standard:** Exposes domain functionality via an official FastMCP server running over standard input/output (`stdio`) inter-process communication (IPC).
 - **Embedded Dense Vector Retrieval (RAG):** Evaluates dense semantic similarity entirely in-process using an INT8-quantized `all-MiniLM-L6-v2` ONNX model stored in SQLite. Operates without external vector database services.
+- **Metered-First Answer Composition:** OpenRouter leads with `nvidia/nemotron-3-nano-30b-a3b` then `qwen/qwen-2.5-7b-instruct`, then the zero-priced `openrouter/free`. The credit-backed routes come first because the account-wide free daily quota returns HTTP 429 before any completion exists. Both are general-purpose composers; safeguard-tuned models are excluded because they hedge and the answer validator requires binding status language. See [ADR 0011](docs/adr/0011-metered-first-openrouter-routing.md).
 - **Hierarchical Document Routing & MMR:** Combines prefix-based policy domain routing with Maximal Marginal Relevance (MMR, $\lambda = 0.5$; Carbonell & Goldstein, 1998) to eliminate duplicate intra-document passage citations and maximize multi-family policy recall.
 - **Fail-Closed Action Boundaries:** Isolates state-changing actions (`draft_hr_email`, `create_mock_hr_ticket`) behind a two-phase confirmation protocol. Unconfirmed requests return verified policy rationale and halt.
-- **Multi-Tier Resilience Cascade:** Protects against upstream LLM rate limits by cascading from OpenRouter to OpenCode Zen, with bounded SQLite templates serving standard read-only queries during full provider outages.
+- **Multi-Tier Resilience Cascade:** Protects against upstream LLM rate limits by cascading from a metered-first OpenRouter chain (two credit-backed routes, then the zero-priced `openrouter/free`) to OpenCode Zen, with bounded SQLite templates serving standard read-only queries during full provider outages. Composition never depends on credit: the free router, the OpenCode chain, and the templates remain reachable with no credit at all.
 - **WCAG 2.1 AA Compliant Interface:** Accessible browser workspace featuring semantic HTML5 landmarks, dynamic ARIA live regions, keyboard focus management, and color contrast ratios exceeding 4.5:1 (W3C, 2018; Nielsen, 1994).
 
 ---

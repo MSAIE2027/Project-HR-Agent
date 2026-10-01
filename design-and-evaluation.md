@@ -17,7 +17,7 @@ The system provides an enterprise human resources copilot that evaluates policy 
 - mcp_client/client.py supports stdio MCP calls and a local in-process adapter.
 - rag/ingest.py reads Markdown and HTML policy sources and builds stable, heading-aware chunks.
 - rag/index.py stores vectors and metadata in SQLite, ranks with cosine similarity, and exposes embedding/index status.
-- agent/llm.py composes every citation-bearing final response through an ordered OpenRouter chain: pinned Qwen, Nemotron Lightning, and Gemma free model IDs, then `openrouter/free`; the actual resolved route and attempted list are included in the operational trace.
+- agent/llm.py composes every citation-bearing final response through an ordered OpenRouter chain: the metered `nvidia/nemotron-3-nano-30b-a3b` and `qwen/qwen-2.5-7b-instruct` routes, then the zero-priced `openrouter/free`. The metered tier leads because the account-wide free daily quota returns 429 before a completion exists, and the course brief permits the owner's own API keys; the zero-priced route and the OpenCode Zen chain keep composition reachable with no credit. The actual resolved route and attempted list are included in the operational trace.
 
 ```mermaid
 flowchart LR

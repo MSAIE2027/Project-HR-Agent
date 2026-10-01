@@ -30,7 +30,7 @@ services:
       - key: OPENCODE_ZEN_MODELS
         value: nemotron-3.5-lightning-free,big-pickle,space-bunny-free
       - key: OPENCODE_ZEN_TIMEOUT_SECONDS
-        value: "8"
+        value: "12"
       - key: MSAIE_EMBEDDING_MODEL
         value: sentence-transformers/all-MiniLM-L6-v2
       - key: MSAIE_INDEX_PATH

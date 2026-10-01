@@ -13,9 +13,14 @@ import pytest
 
 import agent.llm as llm_module
 from agent.llm import DeterministicProvider, OpenAICompatibleProvider, _set_refinement_status
+from agent.llm_routes import OPENROUTER_MODEL_CHAIN
 from agent.models import AgentResult
 import app.main as main_module
 from app.main import app
+
+
+FIRST_ROUTE = OPENROUTER_MODEL_CHAIN[0]
+SECOND_ROUTE = OPENROUTER_MODEL_CHAIN[1]
 
 
 def _tools(payload: dict) -> list[str]:
@@ -702,12 +707,9 @@ with TestClient(app) as client:
         assert "Required model answer generation failed" in response.json()["detail"]
         assert "Unrefined policy-derived text" not in response.text
         assert response.json()["llm"]["refinement"]["status"] == "rejected"
-        assert response.json()["llm"]["refinement"]["attempted_models"] == [
-            "qwen/qwen3.8-27b:free",
-            "nvidia/nemotron-3.5-lightning:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "openrouter/free",
-        ]
+        assert response.json()["llm"]["refinement"]["attempted_models"] == list(
+            OPENROUTER_MODEL_CHAIN
+        )
         assert all(
             item["outcome"] == "rejected"
             for item in response.json()["llm"]["refinement"]["model_attempts"]
@@ -727,7 +729,7 @@ with TestClient(app) as client:
         )
 
         assert response.status_code == 200, response.text
-        assert calls == ["qwen/qwen3.8-27b:free"]
+        assert calls == [FIRST_ROUTE]
         assert provider_body_sentinel not in response.text
         payload = response.json()
         assert "Maya Chen (E1001) has 14 synthetic PTO days available." in payload["answer"]
@@ -742,7 +744,7 @@ with TestClient(app) as client:
         assert refinement["attempts"] == 1
         assert refinement["model_attempts"] == [
             {
-                "model": "qwen/qwen3.8-27b:free",
+                "model": FIRST_ROUTE,
                 "outcome": "unavailable",
                 "error_type": "HTTPStatusError",
                 "http_status": "429",
@@ -782,7 +784,7 @@ with TestClient(app) as client:
         )
 
         assert response.status_code == 503
-        assert calls == ["qwen/qwen3.8-27b:free"]
+        assert calls == [FIRST_ROUTE]
         assert "CONFIRMATION_GATED_DRAFT_MUST_NOT_BE_RETURNED" not in response.text
         assert "sqlite_template" not in response.text
 
@@ -804,7 +806,7 @@ with TestClient(app) as client:
             },
             {
                 "code": 429,
-                "message": "Daily free-model quota reached for model qwen/qwen3.8-27b:free.",
+                "message": f"Daily free-model quota reached for model {FIRST_ROUTE}.",
             },
             {"code": "rate_limit_exceeded", "message": "Too many requests; retry later."},
         ],
@@ -819,7 +821,7 @@ with TestClient(app) as client:
     def test_chat_continues_fallback_after_non_account_429(monkeypatch, error) -> None:
         response, calls, result = _post_chat_after_first_429(monkeypatch, client, error)
         assert response.status_code == 200
-        assert calls == ["qwen/qwen3.8-27b:free", "nvidia/nemotron-3.5-lightning:free"]
+        assert calls == [FIRST_ROUTE, SECOND_ROUTE]
         payload = response.json()
         assert payload["answer"] == result.answer
         assert payload["llm"]["refinement"]["status"] == "completed"
@@ -904,7 +906,7 @@ with TestClient(app) as client:
             "https://openrouter.ai/api/v1/chat/completions",
             "https://opencode.ai/zen/v1/chat/completions",
         ]
-        assert requests[0][2] == "qwen/qwen3.8-27b:free"
+        assert requests[0][2] == FIRST_ROUTE
         assert requests[1][2] == "nemotron-3.5-lightning-free"
         assert requests[1][1] == "Bearer test-opencode-key"
         refinement = response.json()["llm"]["refinement"]
@@ -913,7 +915,7 @@ with TestClient(app) as client:
         assert refinement["model"] == "nemotron-3.5-lightning-free"
         assert refinement["failure_scope"] == "account_quota"
         assert refinement["attempted_models"] == [
-            "qwen/qwen3.8-27b:free",
+            FIRST_ROUTE,
             "opencode/nemotron-3.5-lightning-free",
         ]
 
@@ -985,25 +987,18 @@ with TestClient(app) as client:
 
         response = client.post("/chat", json={"message": "How much PTO does E1001 have?"})
 
-        openrouter_models = [
-            "qwen/qwen3.8-27b:free",
-            "nvidia/nemotron-3.5-lightning:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "openrouter/free",
-        ]
+        openrouter_models = list(OPENROUTER_MODEL_CHAIN)
         assert response.status_code == 200
         assert [url for url, _ in requests] == [
             "https://openrouter.ai/api/v1/chat/completions"
-        ] * 4 + ["https://opencode.ai/zen/v1/chat/completions"]
+        ] * len(openrouter_models) + ["https://opencode.ai/zen/v1/chat/completions"]
         assert [model for _, model in requests] == openrouter_models + ["nemotron-3.5-lightning-free"]
         refinement = response.json()["llm"]["refinement"]
         assert refinement["provider"] == "opencode-zen"
         assert refinement["attempted_models"] == openrouter_models + ["opencode/nemotron-3.5-lightning-free"]
         assert [attempt["outcome"] for attempt in refinement["model_attempts"]] == [
-            "unavailable",
-            "unavailable",
-            "unavailable",
-            "unavailable",
+            "unavailable"
+        ] * len(openrouter_models) + [
             "completed",
         ]
 

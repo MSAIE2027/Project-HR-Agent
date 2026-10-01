@@ -148,7 +148,7 @@ def _chat_response(
                 "template_key": template_key or "remote_work_positive_v1",
                 "template_version": "1",
                 "attempted_models": [
-                    "qwen/qwen3.8-27b:free",
+                    OPENROUTER_MODEL_CHAIN[0],
                     "opencode/nemotron-3.5-lightning-free",
                     "opencode/big-pickle",
                     "opencode/space-bunny-free",
@@ -156,7 +156,7 @@ def _chat_response(
                 "attempts": 4,
                 "model_attempts": [
                     {
-                        "model": "qwen/qwen3.8-27b:free",
+                        "model": OPENROUTER_MODEL_CHAIN[0],
                         "outcome": "unavailable",
                         "error_type": "HTTPStatusError",
                         "http_status": "429",
@@ -188,8 +188,8 @@ def _chat_response(
             refinement = {
                 "status": refinement_status,
                 "provider": refinement_provider,
-                "model": "qwen/qwen3.8-27b:free",
-                "attempted_models": ["qwen/qwen3.8-27b:free"],
+                "model": OPENROUTER_MODEL_CHAIN[0],
+                "attempted_models": [OPENROUTER_MODEL_CHAIN[0]],
             }
         refinement.update(refinement_overrides or {})
         trace_event = {"step": len(trace) + 1, "event": "llm_refinement", **refinement}
@@ -361,7 +361,7 @@ def test_hosted_smoke_cli_reports_demo_gates_without_printing_answers() -> None:
         "pto_confirmation_gate",
         "confirmed_mock_email",
     ]
-    assert report["checks"][2]["model"] == "qwen/qwen3.8-27b:free"
+    assert report["checks"][2]["model"] == OPENROUTER_MODEL_CHAIN[0]
     assert report["checks"][2]["citation_count"] == 3
     assert report["checks"][3]["status"] == "confirmation_required"
     assert "draft_hr_email" not in report["checks"][3]["tools"]
@@ -451,7 +451,7 @@ def test_hosted_smoke_cli_does_not_confirm_mock_email_by_default() -> None:
         ({}, {"upstream_provider": "openrouter"}, "failed"),
         ({}, {"template_version": "2"}, "failed"),
         ({"model_attempts": []}, {}, "failed"),
-        ({"attempted_models": ["qwen/qwen3.8-27b:free"]}, {}, "failed"),
+        ({"attempted_models": [OPENROUTER_MODEL_CHAIN[0]]}, {}, "failed"),
     ],
     ids=[
         "complete-trace",
@@ -648,7 +648,7 @@ def test_hosted_smoke_cli_fails_closed_and_redacts_provider_body() -> None:
                     "attempts": 4,
                     "model_attempts": [
                         {
-                            "model": "qwen/qwen3.8-27b:free",
+                            "model": OPENROUTER_MODEL_CHAIN[0],
                             "outcome": "unavailable",
                             "error_type": "HTTPStatusError",
                             "http_status": "429",
@@ -686,7 +686,7 @@ def test_hosted_smoke_cli_fails_closed_and_redacts_provider_body() -> None:
     assert report["failed_check"]["http_status"] == 503
     assert report["failed_check"]["model_attempts"] == [
         {
-            "model": "qwen/qwen3.8-27b:free",
+            "model": OPENROUTER_MODEL_CHAIN[0],
             "outcome": "unavailable",
             "error_type": "HTTPStatusError",
             "http_status": "429",

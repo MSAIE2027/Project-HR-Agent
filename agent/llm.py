@@ -15,7 +15,7 @@ from agent.llm_routes import (
     OPENROUTER_FALLBACK_MODEL,
     OPENROUTER_MODEL,
     OPENROUTER_MODEL_CHAIN,
-    OPENROUTER_PRIMARY_MODELS,
+    OPENROUTER_METERED_MODELS,
     OPENCODE_ZEN_BASE_URL,
     OPENCODE_ZEN_FREE_MODEL_ALLOWLIST,
     OPENCODE_ZEN_MODELS,
@@ -24,7 +24,10 @@ from rag.index import get_index
 
 EvidenceItem = dict[str, Any] | str
 LLM_TEMPERATURE = 0.0
-OPENCODE_ZEN_TIMEOUT_SECONDS = 8.0
+# Free-tier generations are often slow enough that an 8s cap truncated them, which
+# surfaced as cascade timeouts rather than answers. 12s keeps the fallback tier
+# responsive while letting a slow completion finish.
+OPENCODE_ZEN_TIMEOUT_SECONDS = 12.0
 _ACCOUNT_FREE_QUOTA_MARKERS = (
     re.compile(r"\bfree[-_ ]models?[-_ ]per[-_ ]day\b", re.I),
     re.compile(r"\bfree[-_ ]models?\b.{0,80}\b(?:daily|per day)\b", re.I),
@@ -57,7 +60,7 @@ def _model_chain() -> tuple[str, ...]:
     fallback = _fallback_model()
     if fallback == OPENROUTER_FALLBACK_MODEL:
         return OPENROUTER_MODEL_CHAIN
-    return (*OPENROUTER_PRIMARY_MODELS, fallback)
+    return (*OPENROUTER_METERED_MODELS, fallback)
 
 
 def _setting(primary: str, legacy: str | None = None, default: str = "") -> str:
@@ -453,7 +456,7 @@ class OpenAICompatibleProvider:
         )
         self.opencode_base_url, self.opencode_api_key, self.opencode_model_chain = _opencode_configuration()
         self.configured = bool(self.api_key)
-        self.model = OPENROUTER_PRIMARY_MODELS[0]
+        self.model = OPENROUTER_MODEL_CHAIN[0]
         self.model_chain = _model_chain()
         self.provider_type = (
             "openrouter"
@@ -462,13 +465,15 @@ class OpenAICompatibleProvider:
             if not self.api_key and self.opencode_api_key
             else "openai-compatible"
         )
-        configured_timeout = float(os.getenv("MSAIE_LLM_TIMEOUT_SECONDS", "12"))
+        configured_timeout = float(os.getenv("MSAIE_LLM_TIMEOUT_SECONDS", "15"))
         # Leave request time for MCP/RAG work before the public HTTP edge deadline.
-        self.timeout_seconds = max(1.0, min(configured_timeout, 12.0))
+        # Six OpenRouter routes at this cap plus three OpenCode routes at theirs is
+        # a bounded worst case; see docs/operator-sop.md for the computed figure.
+        self.timeout_seconds = max(1.0, min(configured_timeout, 15.0))
         configured_opencode_timeout = float(
             os.getenv("OPENCODE_ZEN_TIMEOUT_SECONDS", str(OPENCODE_ZEN_TIMEOUT_SECONDS))
         )
-        self.opencode_timeout_seconds = max(1.0, min(configured_opencode_timeout, 8.0))
+        self.opencode_timeout_seconds = max(1.0, min(configured_opencode_timeout, 12.0))
 
     async def refine(
         self,
@@ -844,7 +849,7 @@ def provider_status() -> dict[str, Any]:
         return {
             "status": "not_configured" if missing else "misconfigured",
             "type": "openrouter",
-            "model": OPENROUTER_PRIMARY_MODELS[0],
+            "model": _model_chain()[0],
             "model_chain": list(_model_chain()),
             "fallback_model": _fallback_model(),
             "endpoint_host": _safe_endpoint_host(base_url),

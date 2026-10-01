@@ -13,6 +13,11 @@ from agent.llm import (
     get_provider,
     provider_status,
 )
+from agent.llm_routes import OPENROUTER_MODEL_CHAIN
+
+
+FIRST_ROUTE = OPENROUTER_MODEL_CHAIN[0]
+SECOND_ROUTE = OPENROUTER_MODEL_CHAIN[1]
 
 
 def test_grounding_prompt_uses_policy_text_without_internal_citation_metadata() -> None:
@@ -62,13 +67,8 @@ def test_provider_status_requires_complete_configuration(monkeypatch) -> None:
     monkeypatch.setenv("MSAIE_LLM_MODEL", "openrouter/free")
     status = provider_status()
     assert status["status"] == "configured"
-    assert status["model"] == "qwen/qwen3.8-27b:free"
-    assert status["model_chain"] == [
-        "qwen/qwen3.8-27b:free",
-        "nvidia/nemotron-3.5-lightning:free",
-        "google/gemma-4-26b-a4b-it:free",
-        "openrouter/free",
-    ]
+    assert status["model"] == FIRST_ROUTE
+    assert status["model_chain"] == list(OPENROUTER_MODEL_CHAIN)
     assert status["fallback_model"] == "openrouter/free"
     assert status["endpoint_host"] == "openrouter.ai"
     assert status["temperature"] == 0.0
@@ -121,7 +121,7 @@ def test_provider_status_accepts_legacy_openrouter_key(monkeypatch) -> None:
     status = provider_status()
 
     assert status["status"] == "configured"
-    assert status["model"] == "qwen/qwen3.8-27b:free"
+    assert status["model"] == FIRST_ROUTE
     assert status["fallback_model"] == "openrouter/free"
     assert status["endpoint_host"] == "openrouter.ai"
 
@@ -233,14 +233,14 @@ def test_per_model_timeout_is_capped_to_leave_room_for_mcp_and_edge(monkeypatch)
     monkeypatch.setenv("MSAIE_LLM_TIMEOUT_SECONDS", "90")
     provider = OpenAICompatibleProvider()
 
-    assert provider.timeout_seconds == 12.0
+    assert provider.timeout_seconds == 15.0
 
 
-def test_per_model_timeout_defaults_to_twelve_seconds(monkeypatch) -> None:
+def test_per_model_timeout_defaults_to_fifteen_seconds(monkeypatch) -> None:
     monkeypatch.delenv("MSAIE_LLM_TIMEOUT_SECONDS", raising=False)
     provider = OpenAICompatibleProvider()
 
-    assert provider.timeout_seconds == 12.0
+    assert provider.timeout_seconds == 15.0
 
 
 def test_truncated_completion_is_rejected_and_falls_through_model_chain(monkeypatch) -> None:
@@ -367,7 +367,7 @@ def test_configured_refinement_sends_explicit_zero_temperature(monkeypatch) -> N
     answer = asyncio.run(provider.refine("Controlled draft", ["Policy evidence"]))
 
     assert answer == "Revised answer"
-    assert captured["json"]["model"] == "qwen/qwen3.8-27b:free"
+    assert captured["json"]["model"] == FIRST_ROUTE
     assert captured["json"]["temperature"] == 0.0
     assert captured["json"]["max_tokens"] == 2000
 
@@ -418,12 +418,7 @@ def test_refinement_uses_openrouter_free_after_specific_models_fail(monkeypatch)
     answer, refinement = asyncio.run(refine_with_status())
 
     assert answer == "A revised answer."
-    assert calls == [
-        "qwen/qwen3.8-27b:free",
-        "nvidia/nemotron-3.5-lightning:free",
-        "google/gemma-4-26b-a4b-it:free",
-        "openrouter/free",
-    ]
+    assert calls == list(OPENROUTER_MODEL_CHAIN)
     assert refinement["status"] == "completed"
     assert refinement["model"] == "openrouter/free"
     assert refinement["attempted_models"] == calls
@@ -431,7 +426,7 @@ def test_refinement_uses_openrouter_free_after_specific_models_fail(monkeypatch)
         {"model": model, "outcome": "unavailable", "error_type": "ConnectError"}
         for model in calls[:-1]
     ] + [{"model": "openrouter/free", "outcome": "completed"}]
-    assert refinement["attempts"] == 4
+    assert refinement["attempts"] == len(OPENROUTER_MODEL_CHAIN)
 
 
 def test_refinement_tries_next_model_after_invalid_answer(monkeypatch) -> None:
@@ -486,7 +481,7 @@ def test_refinement_tries_next_model_after_invalid_answer(monkeypatch) -> None:
     answer, refinement = asyncio.run(refine_with_status())
 
     assert "provisionally eligible" in answer
-    assert calls == ["qwen/qwen3.8-27b:free", "nvidia/nemotron-3.5-lightning:free"]
+    assert calls == [FIRST_ROUTE, SECOND_ROUTE]
     assert refinement["status"] == "completed"
     assert refinement["model"] == calls[-1]
     assert refinement["attempted_models"] == calls
@@ -537,7 +532,7 @@ def test_refinement_times_out_one_model_then_uses_next(monkeypatch) -> None:
     answer, refinement = asyncio.run(refine_with_status())
 
     assert answer == "A revised answer."
-    assert calls == ["qwen/qwen3.8-27b:free", "nvidia/nemotron-3.5-lightning:free"]
+    assert calls == [FIRST_ROUTE, SECOND_ROUTE]
     assert refinement["attempted_models"] == calls
     assert refinement["model"] == calls[-1]
     assert refinement["model_attempts"][0] == {

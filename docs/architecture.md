@@ -386,10 +386,17 @@ sequenceDiagram
 
 ### 8.1 OpenRouter Primary Chain
 ```
-qwen/qwen3.8-27b:free → nvidia/nemotron-3.5-lightning:free → google/gemma-4-26b-a4b-it:free → openrouter/free
+nvidia/nemotron-3-nano-30b-a3b → qwen/qwen-2.5-7b-instruct → openrouter/free
 ```
+- The first two routes are metered. The project brief permits the owner's own API keys, and a
+  credit-backed first route removes the account-wide free-daily-quota 429 that otherwise stops
+  composition before any completion exists. Both are general-purpose composers; safeguard-tuned
+  models are excluded because they hedge and the answer validator requires binding status language.
+- `openrouter/free` is retained last so a live answer stays reachable with no credit. Composition
+  still does not *depend* on credit: the OpenCode Zen chain and the build-seeded SQLite templates
+  sit after this provider.
 - Temperature: 0.0
-- Timeout: 12s (configurable, max 12s)
+- Timeout: 15s (configurable, max 15s)
 - System prompt: Constrained final-answer composer (no tool choice, no citations in output, no reasoning exposure)
 
 ### 8.2 OpenCode Zen Fallback Chain
