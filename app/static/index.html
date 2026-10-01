@@ -354,7 +354,7 @@
           <div class="example-actions">
             <button class="example-button" type="button" aria-label="Fill sample question: Can E1001 work remotely overseas for 10 days?" data-fill="Can E1001 work remotely overseas for 10 days?"><span class="example-label">Remote work · E1001</span><span class="example-question">Can E1001 work remotely overseas for 10 days?</span></button>
             <button class="example-button" type="button" aria-label="Fill sample question: Can E1005 work remotely overseas for 3 days?" data-fill="Can E1005 work remotely overseas for 3 days?"><span class="example-label">Remote work · E1005</span><span class="example-question">Can E1005 work remotely overseas for 3 days?</span></button>
-            <button class="example-button" type="button" aria-label="Fill sample question: How much PTO does E1001 have and draft an email for 5 days?" data-fill="How much PTO does E1001 have and draft an email for 5 days?"><span class="example-label">PTO and request · E1001</span><span class="example-question">How much PTO does E1001 have and draft an email for 5 days?</span></button>
+            <button class="example-button" type="button" aria-label="Fill sample question: Can E1001 take 3 days of PTO next week?" data-fill="Can E1001 take 3 days of PTO next week?"><span class="example-label">PTO guidance · E1001</span><span class="example-question">Can E1001 take 3 days of PTO next week?</span></button>
             <button class="example-button" type="button" aria-label="Fill sample question: What is the benefits status for E1002?" data-fill="What is the benefits status for E1002?"><span class="example-label">Benefits · E1002</span><span class="example-question">What is the benefits status for E1002?</span></button>
           </div>
         </section>
@@ -436,12 +436,17 @@
           <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Can E1001 work remotely overseas for 10 days?">Load</button><button type="button" data-lab-run data-lab-query="Can E1001 work remotely overseas for 10 days?">Run now</button></div>
         </article>
         <article class="lab-card">
-          <h4>Task B: PTO action gate</h4>
-          <p>Checks a PTO balance and pauses before preparing a mock email draft.</p>
+          <h4>Task B: PTO guidance</h4>
+          <p>E1001 asks about three days of PTO next week. Shows balance, notice, and approval requirements. Creates no action, so it never enters the confirmation path.</p>
+          <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Can E1001 take 3 days of PTO next week?">Load</button><button type="button" data-lab-run data-lab-query="Can E1001 take 3 days of PTO next week?">Run now</button></div>
+        </article>
+        <article class="lab-card">
+          <h4>Task C: PTO confirmation gate</h4>
+          <p>Requests a mock email draft and halts before any action. <code>draft_hr_email</code> must stay out of the trace until the user confirms.</p>
           <div class="lab-actions"><button type="button" data-lab-load data-lab-query="How much PTO does E1001 have and draft an email for 5 days?">Load</button><button type="button" data-lab-run data-lab-query="How much PTO does E1001 have and draft an email for 5 days?">Run now</button></div>
         </article>
         <article class="lab-card">
-          <h4>Task C: mock ticket confirmation</h4>
+          <h4>Task D: mock ticket confirmation</h4>
           <p>Exercises the explicit confirmation boundary for a fictional sensitive-case ticket.</p>
           <div class="lab-actions"><button type="button" data-lab-load data-lab-query="Create a case for E1001 about a harassment complaint.">Load</button><button type="button" data-lab-run data-lab-query="Create a case for E1001 about a harassment complaint.">Run now</button></div>
         </article>

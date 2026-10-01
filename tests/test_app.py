@@ -239,7 +239,15 @@ with TestClient(app) as client:
         assert 'data-open-lab' not in response.text
         assert response.text.count('data-fill="Can E1001 work remotely overseas for 10 days?"') == 1
         assert response.text.count('data-fill="Can E1005 work remotely overseas for 3 days?"') == 1
-        assert response.text.count('data-fill="How much PTO does E1001 have and draft an email for 5 days?"') == 1
+        assert response.text.count('data-fill="Can E1001 take 3 days of PTO next week?"') == 1
+        # The confirmation-gated draft prompt stays reachable as a lab benchmark
+        # card, but is deliberately not a one-click composer preset: the demo
+        # plan keeps the two required tasks off the artifact-validation path.
+        assert 'data-fill="How much PTO does E1001 have and draft an email for 5 days?"' not in response.text
+        assert response.text.count('data-lab-query="Can E1001 take 3 days of PTO next week?"') == 2
+        assert response.text.count('data-lab-query="How much PTO does E1001 have and draft an email for 5 days?"') == 2
+        assert "Task C: PTO confirmation gate" in response.text
+        assert "Task D: mock ticket confirmation" in response.text
         assert response.text.count('data-fill="What is the benefits status for E1002?"') == 1
         assert response.text.count('class="example-button"') == 4
         assert "Load fills the composer without sending" in response.text
