@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="MSAIE HR Agent",
-    version="2.3.0",
+    version="2.3.1",
     description="A synthetic agentic HR assistant with policy RAG, MCP workflows, and required OpenRouter answer generation.",
     lifespan=lifespan,
 )
